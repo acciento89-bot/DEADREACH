@@ -87,7 +87,17 @@ namespace Kamilunavo.Deadreach.Core
             BeginReturnToBunker();
         }
 
+        public void AbandonRun()
+        {
+            FailRun();
+        }
+
         private void HandlePlayerDeath()
+        {
+            FailRun();
+        }
+
+        private void FailRun()
         {
             if (IsCompleted || IsFailed)
                 return;
