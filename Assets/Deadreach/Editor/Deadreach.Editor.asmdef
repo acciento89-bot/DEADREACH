@@ -2,7 +2,8 @@
   "name": "Deadreach.Editor",
   "rootNamespace": "Kamilunavo.Deadreach.Editor",
   "references": [
-    "Deadreach.Runtime"
+    "Deadreach.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime"
   ],
   "includePlatforms": [
     "Editor"
