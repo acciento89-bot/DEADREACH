@@ -39,11 +39,12 @@ Key pillars:
 ## 3. Technical direction — LOCKED
 
 - **Engine:** Unity 6.3 LTS
-- **Render pipeline:** URP
+- **Pinned editor:** Unity `6000.3.22f1`
+- **Render pipeline:** URP 17.3
 - **Language:** C#
 - **Target:** mobile-first high-quality 3D
-- **Input:** Unity Input System
-- **Camera:** Cinemachine / perspective high-angle camera
+- **Input:** Unity Input System 1.17
+- **Camera:** Cinemachine 3.x / perspective high-angle camera
 - **Content delivery:** Addressables planned
 - **AI / navigation:** Unity AI Navigation / NavMesh planned
 - **Animation:** Mecanim + Animation Rigging planned
@@ -83,8 +84,8 @@ Required flow:
 
 Initial feature order:
 
-1. Unity 6.3 LTS URP project foundation
-2. Mobile project settings and render configuration
+1. ✅ Unity 6.3 LTS URP project foundation
+2. ◐ Mobile project settings and render configuration
 3. Perspective isometric / high-angle camera
 4. Mobile movement controls
 5. Player controller
@@ -100,15 +101,52 @@ Initial feature order:
 
 ## 5. Current repository state
 
-- Repository exists and is reachable.
-- `main` has been initialized with `README.md`.
-- Initialization commit: `ca8d0b6b2175ea1c92b2e0fa6c5e37d346573230`
-- Working branch created: `foundation/unity-6.3`
-- Unity project files have **not yet been added**.
-- No gameplay code exists yet.
-- No art assets have been committed yet.
-- No backend exists yet.
-- No TestFlight / Android build exists yet.
+### Branches
+
+- `main` — initialized repository / README
+- `foundation/unity-6.3` — active development branch
+
+### Completed foundation work
+
+- Repository initialized.
+- Canonical handoff file created: `docs/PROJECT_STATE.md`.
+- Unity `.gitignore` added.
+- `.gitattributes` added with Git LFS rules for large 3D, texture, audio and video assets.
+- Unity editor pinned through `ProjectSettings/ProjectVersion.txt` to `6000.3.22f1`.
+- Core package manifest added with:
+  - URP 17.3
+  - Input System 1.17
+  - Cinemachine 3.1.5
+  - Unity UI
+- Runtime assembly created: `Deadreach.Runtime`.
+- Editor assembly created: `Deadreach.Editor`.
+- Runtime mobile bootstrap created:
+  - target 60 FPS
+  - VSync disabled to avoid conflicting frame caps
+  - device sleep disabled during gameplay
+- Editor project bootstrap created to automatically apply production identity/settings:
+  - company: Kamilunavo
+  - product: DEADREACH
+  - iOS bundle ID: `de.kamilunavo.deadzone`
+  - Android package ID: `de.kamilunavo.deadzone`
+  - initial version: `0.1.0`
+  - IL2CPP for iOS and Android
+  - landscape-only autorotation
+  - Linear color space
+  - Force Text serialization
+
+### Not yet implemented
+
+- No playable scene yet.
+- No player controller yet.
+- No camera rig yet.
+- No mobile touch controls yet.
+- No weapons or combat yet.
+- No enemies yet.
+- No loot / inventory / extraction yet.
+- No production art assets yet.
+- No backend yet.
+- No TestFlight / Android build yet.
 
 ## 6. Decisions already made
 
@@ -145,22 +183,22 @@ Reasoning:
 - Keep gameplay systems modular and data-driven where practical.
 - Commit meaningful progress regularly.
 - Update this file after every major pass.
-- Keep store-facing name as **DEADREACH** even though the technical iOS bundle identifier remains `de.kamilunavo.deadzone`.
+- Keep store-facing name as **DEADREACH** even though the technical bundle identifier remains `de.kamilunavo.deadzone`.
+- No advertising SDKs or ad-driven gameplay rewards.
 
 ## 8. Immediate next step
 
-Initialize the actual Unity 6.3 LTS URP project on branch `foundation/unity-6.3`, including:
+Continue Vertical Slice 0.1 on `foundation/unity-6.3`:
 
-- Unity project structure
-- `.gitignore`
-- `.gitattributes` / Git LFS rules
-- package manifest
-- project version metadata
-- base folder architecture
-- initial rendering / mobile quality configuration
-- first gameplay architecture skeleton
+1. Add gameplay architecture and state model.
+2. Implement perspective high-angle camera rig.
+3. Implement player movement abstraction suitable for both touch and desktop testing.
+4. Add mobile twin-stick control layer.
+5. Add first playable character controller.
+6. Establish initial URP/mobile quality profiles.
+7. Then begin shooting, damage and enemy AI.
 
-Then begin Vertical Slice 0.1.
+Before merging the foundation branch, open the project once in Unity 6000.3.22f1 and verify package resolution / compilation.
 
 ## 9. Handoff protocol
 
