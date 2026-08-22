@@ -70,7 +70,6 @@ namespace Kamilunavo.Deadreach.UI
         {
             _paused = paused;
             Time.timeScale = paused ? 0f : 1f;
-            AudioListener.pause = paused;
         }
 
         private void OnDestroy()
@@ -79,10 +78,7 @@ namespace Kamilunavo.Deadreach.UI
                 _instance = null;
 
             if (_paused)
-            {
                 Time.timeScale = 1f;
-                AudioListener.pause = false;
-            }
         }
 
         private void EnsureStyles()
