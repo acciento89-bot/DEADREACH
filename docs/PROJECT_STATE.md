@@ -2,19 +2,21 @@
 
 _Last updated: 2026-08-22_
 
-This file is the canonical project handoff and progress record for DEADREACH. Update it after every major development, design, build, release, architecture, backend, monetization, or store-related step so work can continue across chat-length limits without losing context.
+This file is the canonical handoff and progress record for DEADREACH. Update it after every major development, design, build, architecture, backend, monetization, store, or release step so work can continue across chat-length limits without relying on chat history.
 
 ## 1. Product identity
 
 - **Game name:** DEADREACH
 - **Studio / umbrella:** Kamilunavo
-- **GitHub repository:** `acciento89-bot/DEADREACH`
-- **App Store Connect app:** created
+- **GitHub:** `acciento89-bot/DEADREACH`
+- **App Store Connect:** app created
 - **iOS Bundle Identifier:** `de.kamilunavo.deadzone`
 - **App Store Connect SKU:** `deadzone-001`
-- **Primary platforms:** iOS and Android
-- **Monetization:** In-app purchases only
+- **Primary platforms:** iOS + Android
+- **Monetization:** in-app purchases only
 - **Advertising:** none
+
+The store-facing brand remains **DEADREACH**. The older technical identifier `de.kamilunavo.deadzone` is intentional and must not trigger a new App Store Connect app or Bundle ID migration.
 
 ## 2. Core game concept
 
@@ -22,191 +24,451 @@ DEADREACH is a premium-feeling mobile 3D survival-extraction roguelite with pers
 
 Core loop:
 
-**Bunker → Expedition → Combat → Loot → Risk decision → Extraction → Persistent progression → Bunker upgrades**
+**Bunker → Deploy → Expedition → Combat → Loot → Risk decision → Extraction / Death → Persistent result → Bunker**
 
-Key pillars:
+Long-term pillars:
 
-- Real-time isometric / high-angle 3D combat
-- Extraction risk: continue deeper for better loot or extract safely
-- Persistent survivor progression
-- Loot-driven weapon and equipment builds
-- Permanent bunker progression and visible base upgrades
-- Bosses and replayable zones
-- Daily / weekly challenges and later seasonal live content
-- Long-term collection, achievements, streaks and leaderboards
-- No ad-based revives, rewards or banners
+- real-time high-angle / isometric-style 3D combat
+- extraction risk: continue deeper for stronger rewards or leave safely
+- persistent survivor progression
+- loot-driven weapon/equipment builds
+- visible bunker progression and upgrades
+- bosses and replayable zones
+- daily / weekly challenges
+- seasons and later live content
+- collections, achievements, streaks and leaderboards
+- no ad rewards, banners or forced advertising
 
 ## 3. Technical direction — LOCKED
 
 - **Engine:** Unity 6.3 LTS
-- **Pinned editor:** Unity `6000.3.22f1`
+- **Pinned editor:** `6000.3.22f1`
 - **Render pipeline:** URP 17.3
 - **Language:** C#
 - **Target:** mobile-first high-quality 3D
-- **Input:** Unity Input System 1.17
-- **Camera:** Cinemachine 3.x / perspective high-angle camera
-- **Content delivery:** Addressables planned
-- **AI / navigation:** Unity AI Navigation / NavMesh planned
-- **Animation:** Mecanim + Animation Rigging planned
-- **Materials:** PBR + Shader Graph where useful
+- **Input package:** Unity Input System 1.17
+- **Camera package available:** Cinemachine 3.1.5
+- **Current prototype camera:** custom perspective high-angle follow rig
 - **Version control:** GitHub
-- **Large binary assets:** Git LFS
-- **Backend:** not yet implemented; Supabase is an option for accounts, leaderboards, events and cloud state
+- **Large assets:** Git LFS
+- **Serialization:** Force Text
+- **iOS / Android scripting backend:** IL2CPP
+- **Orientation:** landscape
+- **Color space:** Linear
+- **Backend:** not implemented yet; Supabase remains an option for accounts / cloud state / leaderboards / events
 - **IAP:** Apple + Google storefront integration planned
+- **Addressables:** planned, not installed/configured yet
+- **AI Navigation/NavMesh:** planned for production enemies; current slice uses lightweight direct steering
 
 ### Graphics target
 
-The project must not be built as a throwaway low-detail prototype and upgraded later. The visual foundation should support the intended final quality from the start:
+The final game must not inherit the temporary primitive art used to validate systems. Production visuals should use:
 
-- Real 3D environments
+- real 3D environment kits and characters
 - PBR materials
-- Proper lighting / baked GI where appropriate
-- Reflection and light probes
-- Post-processing and color grading
-- VFX for weapons, hits, fire, smoke, electricity, particles and atmosphere
-- Scalable graphics presets for mobile hardware
+- baked / mixed lighting where appropriate
+- light + reflection probes
+- color grading and post-processing
+- proper VFX for muzzle flash, tracers, impacts, blood, electricity, smoke, fire and atmosphere
+- animation blending and rigging
+- scalable mobile quality settings
 
-Planned quality presets:
+Runtime quality presets already exist:
 
 - Performance
 - Balanced
 - Ultra
 
-## 4. First production milestone
+## 4. Vertical Slice 0.1 goal
 
-### Vertical Slice 0.1
+Target flow:
 
-Goal: prove the complete playable loop in one compact but visually representative slice.
+**Bunker → Deploy to Dead City → Move → Aim/fire → Fight infected → Collect Scrap → Extract → Scrap persists → Return to bunker**
 
-Required flow:
+Failure flow:
 
-**Bunker → Start expedition → Dead City test area → Move → Shoot → Fight enemy → Loot → Extract → Loot persists → Return to bunker**
+**Bunker → Expedition → Death or Abandon → carried loot lost → extraction streak reset → Return to bunker**
 
-Initial feature order:
-
-1. ✅ Unity 6.3 LTS URP project foundation
-2. ◐ Mobile project settings and render configuration
-3. Perspective isometric / high-angle camera
-4. Mobile movement controls
-5. Player controller
-6. Weapon / shooting system
-7. Health and damage framework
-8. First enemy AI
-9. Loot drop and pickup system
-10. Basic inventory
-11. Extraction system
-12. Persistent run result / save state
-13. Bunker hub shell
-14. First visually representative Dead City environment
-
-## 5. Current repository state
+## 5. Current branch / repository state
 
 ### Branches
 
-- `main` — initialized repository / README
+- `main` — repository initialization only
 - `foundation/unity-6.3` — active development branch
 
-### Completed foundation work
+At the last comparison before this status update, `foundation/unity-6.3` was **36 commits ahead of `main`** with no divergence.
 
-- Repository initialized.
-- Canonical handoff file created: `docs/PROJECT_STATE.md`.
-- Unity `.gitignore` added.
-- `.gitattributes` added with Git LFS rules for large 3D, texture, audio and video assets.
-- Unity editor pinned through `ProjectSettings/ProjectVersion.txt` to `6000.3.22f1`.
-- Core package manifest added with:
-  - URP 17.3
-  - Input System 1.17
+### Foundation completed
+
+- Unity `.gitignore`
+- Git LFS `.gitattributes` for large models/textures/audio/video
+- Unity editor pin: `6000.3.22f1`
+- package manifest with:
+  - URP 17.3.0
+  - Input System 1.17.0
   - Cinemachine 3.1.5
-  - Unity UI
-- Runtime assembly created: `Deadreach.Runtime`.
-- Editor assembly created: `Deadreach.Editor`.
-- Runtime mobile bootstrap created:
-  - target 60 FPS
-  - VSync disabled to avoid conflicting frame caps
-  - device sleep disabled during gameplay
-- Editor project bootstrap created to automatically apply production identity/settings:
-  - company: Kamilunavo
-  - product: DEADREACH
-  - iOS bundle ID: `de.kamilunavo.deadzone`
-  - Android package ID: `de.kamilunavo.deadzone`
-  - initial version: `0.1.0`
-  - IL2CPP for iOS and Android
-  - landscape-only autorotation
+  - Unity UI 2.0.0
+- `Deadreach.Runtime` assembly
+- `Deadreach.Editor` assembly
+- automatic project configuration:
+  - company `Kamilunavo`
+  - product `DEADREACH`
+  - bundle/package ID `de.kamilunavo.deadzone`
+  - version `0.1.0`
+  - iOS build number `1`
+  - Android version code `1`
+  - IL2CPP
+  - landscape
   - Linear color space
   - Force Text serialization
+- runtime bootstrap:
+  - 60 FPS target
+  - VSync disabled
+  - device sleep disabled during gameplay
 
-### Not yet implemented
+### URP hardening completed
 
-- No playable scene yet.
-- No player controller yet.
-- No camera rig yet.
-- No mobile touch controls yet.
-- No weapons or combat yet.
-- No enemies yet.
-- No loot / inventory / extraction yet.
-- No production art assets yet.
-- No backend yet.
-- No TestFlight / Android build yet.
+`DeadreachUrpBootstrap.cs` now creates/assigns a DEADREACH URP asset on first project open if it does not already exist:
 
-## 6. Decisions already made
+`Assets/Deadreach/Settings/Deadreach_URP.asset`
 
-### Engine choice
+This prevents the project from silently remaining on the Built-in Render Pipeline merely because the URP package is installed.
 
-Unity 6.3 LTS + URP is the production choice for DEADREACH.
+### Gameplay systems implemented
 
-Reasoning:
+#### Input
 
-- Strong mobile deployment workflow for iOS and Android
-- Better fit for a mobile-first title than a heavier Unreal pipeline for this project
-- C# codebase works well with Git-driven development
-- URP gives a better performance/quality balance for a visually strong mobile title
-- Easier to maintain scalable quality levels across devices
+`DeadreachInput.cs`
 
-### Camera / presentation
+- desktop WASD
+- gamepad left stick movement
+- mouse aim
+- left mouse automatic fire
+- mobile left-half virtual movement gesture
+- mobile right-half aim + automatic fire gesture
+- Input System / Enhanced Touch based
 
-- True perspective 3D camera
-- High-angle / isometric-style presentation
-- Not a flat 2D or orthographic presentation by default
+#### Player
+
+`PlayerMotor.cs`
+
+- CharacterController-based movement
+- camera-relative movement
+- acceleration / deceleration
+- gravity
+- facing from movement when not actively aiming
+
+#### Camera
+
+`HighAngleCameraRig.cs`
+
+- perspective camera
+- high-angle/isometric-style composition
+- smooth position follow
+- smooth rotation follow
+- target auto-discovery or explicit assignment
+
+#### Combat
+
+`Damageable.cs`
+
+- health
+- factions: Neutral / Survivor / Infected
+- same-faction damage rejection
+- damage events
+- death events
+
+`HitscanWeapon.cs`
+
+- screen/touch aim projection into world
+- survivor rotation toward aim point
+- automatic fire rate
+- range
+- hitscan raycast
+- faction-aware damage
+
+#### Enemy AI
+
+`InfectedChaser.cs`
+
+- aggro range
+- chase behavior
+- melee range
+- melee cooldown / damage
+- per-enemy configuration
+- Scrap drop on death
+
+Current AI is intentionally lightweight for the first slice. Production enemy pathfinding/navmesh is still pending.
+
+#### Loot
+
+`LootPickup.cs`
+
+- collectible Scrap
+- rotating/bobbing pickup presentation
+- enemy death drops
+- placed caches supported
+- collected loot goes into the active run, not directly into permanent progression
+
+#### Run state / extraction
+
+`RunSession.cs`
+
+- carried Scrap
+- extraction progress
+- successful-run state
+- failed-run state
+- successful extraction banks loot
+- death loses carried loot
+- abandoning a run loses carried loot
+- death/abandon resets current extraction streak
+- result is shown briefly before returning to bunker
+
+`ExtractionZone.cs`
+
+- trigger-based extraction zone
+- hold duration
+- optional requirement that the player carries loot
+- normalized extraction progress
+
+#### Persistence
+
+`SaveService.cs`
+
+Local JSON profile at:
+
+`Application.persistentDataPath/deadreach-profile.json`
+
+Currently persisted:
+
+- secured Scrap
+- successful extractions
+- failed runs
+- current extraction streak
+- best extraction streak
+
+#### Scene flow
+
+`SceneFlowService.cs`
+
+- Bunker scene
+- Dead City expedition scene
+- guarded scene loading
+- missing Build Settings scenes produce an explicit error rather than a blind load failure
+
+#### Bunker shell / menu
+
+`BunkerPrototypeMenu.cs`
+
+- secured Scrap display
+- extraction count
+- current/best streak
+- Deploy to Dead City
+- switch Performance / Balanced / Ultra graphics preset
+
+This is a functional prototype menu, not final UI art.
+
+#### Pause
+
+`PauseController.cs`
+
+- mobile-visible pause button during expedition
+- Escape / controller Start support
+- resume
+- abandon run and return to bunker
+- abandon routes through failed-run accounting
+
+### Adaptive graphics implemented
+
+`MobileQualityService.cs`
+
+- Performance / Balanced / Ultra presets
+- automatic first-run recommendation from available system/GPU memory
+- player selection persisted with PlayerPrefs
+- controls frame target, shadow distance/resolution, LOD bias, AA and anisotropic filtering
+
+## 6. Scene generation tooling
+
+No `.unity` production scenes are hand-authored in Git yet. Instead the branch contains deterministic editor builders so the first playable slice is reproducible after a fresh clone.
+
+### Complete slice command
+
+In Unity:
+
+`DEADREACH > Build Complete Vertical Slice 0.1`
+
+This generates:
+
+- `Assets/Deadreach/Scenes/Bunker_Hub.unity`
+- `Assets/Deadreach/Scenes/DeadCity_VerticalSlice.unity`
+
+and configures Build Settings with the Bunker first.
+
+### Bunker generator
+
+`BunkerHubSceneBuilder.cs`
+
+Creates a temporary 3D bunker shell with:
+
+- floor / walls
+- command table
+- workshop/storage/generator blocks
+- multiple colored lights
+- perspective bunker camera
+- functional deploy/settings menu
+
+### Dead City generator
+
+`VerticalSliceSceneBuilder.cs`
+
+Creates a temporary atmospheric gameplay test map with:
+
+- streets / cross street
+- block buildings
+- barricades
+- street lights
+- fog / ambient lighting
+- player
+- perspective follow camera
+- six infected enemies
+- placed Scrap caches
+- enemy Scrap drops
+- extraction zone + beacon
+- HUD
+- run/session systems
+
+The generator also creates reusable development materials under:
+
+`Assets/Deadreach/Art/DevPalette`
+
+### Important visual status
+
+The generated Bunker and Dead City use primitive geometry and a deliberate dev palette. They validate systems, scale, camera, lighting direction and composition only.
+
+**They are not the target production graphics and must not be mistaken for a finished art pass.**
+
+## 7. Test documentation
+
+Canonical first-run checklist:
+
+`docs/VERTICAL_SLICE_01_TEST.md`
+
+It covers:
+
+- Unity version
+- first-open bootstrap
+- URP verification
+- complete scene generation
+- desktop controls
+- touch controls
+- combat
+- enemy death + loot
+- extraction
+- persistence
+- failed-run behavior
+- acceptance checks before merge
+
+## 8. What has NOT been verified yet
+
+This is critical:
+
+- The branch has **not yet been opened/compiled in an actual Unity 6000.3.22f1 editor during this development pass**.
+- The generated scenes have therefore not yet been physically produced and played.
+- Unity package resolution still needs a real editor pass.
+- Any Unity-API differences surfaced by real compilation must be fixed before merging.
+- No iOS build exists yet.
+- No Android build exists yet.
+- No TestFlight build exists yet.
+
+Do not claim Vertical Slice 0.1 is tested until the acceptance runbook has actually passed.
+
+## 9. Remaining major work
+
+### Before foundation merge
+
+1. Open repo in Unity `6000.3.22f1`.
+2. Wait for package import/compilation.
+3. Fix any compiler/API errors.
+4. Run `DEADREACH > Build Complete Vertical Slice 0.1`.
+5. Play from `Bunker_Hub`.
+6. Complete one successful extraction.
+7. Complete one failed/death run.
+8. Verify persisted Scrap/streak after leaving and re-entering Play Mode.
+9. Verify pause + abandon.
+10. Verify graphics preset switching.
+11. Verify Console is free of blocking errors.
+12. Only then merge foundation branch.
+
+### After foundation validation
+
+Priority order:
+
+1. production mobile joystick / aim UI and haptics
+2. real player character + animations
+3. real infected character + animations
+4. weapon model + muzzle flash / tracer / impact VFX
+5. audio pass
+6. environment art kit for Dead City
+7. post-processing / color grading / lighting pass
+8. data-driven weapon definitions and rarity/affix system
+9. real run inventory / equipment
+10. multiple extraction/depth choices to strengthen risk-vs-reward
+11. bunker room upgrade architecture
+12. first boss encounter
+13. Addressables/content organization
+14. backend/accounts/leaderboards/events
+15. IAP catalog / cosmetics / season structure
+16. iOS/Android build pipeline
+17. TestFlight / device performance profiling
+
+## 10. Decisions already made
+
+### Engine
+
+Unity 6.3 LTS + URP remains the production choice.
+
+### Presentation
+
+- true perspective 3D
+- high-angle/isometric-style view
+- not flat 2D
+- not orthographic by default
 
 ### Monetization
 
-- No advertising
-- In-app purchases only
-- Prefer cosmetics, season content and presentation upgrades over hard pay-to-win
-- Candidate purchases include survivor skins, weapon skins, bunker themes and a seasonal pass
+- zero advertising
+- IAP only
+- preference for cosmetics, presentation and season content over hard pay-to-win
+- candidate products: survivor skins, weapon skins, bunker themes, seasonal pass
 
-## 7. Important non-negotiables
+## 11. Non-negotiables
 
-- Do not let the project drift into a cheap-looking mobile prototype.
-- Do not build systems that must later be completely replaced merely to reach target visual quality.
-- Keep mobile performance in mind from the first environment and shader decisions.
+- Do not let DEADREACH become a cheap-looking generic mobile prototype.
+- Temporary primitive geometry must be replaced, not polished into final art.
+- Keep mobile performance in mind from the first production art/shader decisions.
 - Keep gameplay systems modular and data-driven where practical.
+- Do not merge untested Unity code merely because repository structure looks correct.
 - Commit meaningful progress regularly.
 - Update this file after every major pass.
-- Keep store-facing name as **DEADREACH** even though the technical bundle identifier remains `de.kamilunavo.deadzone`.
-- No advertising SDKs or ad-driven gameplay rewards.
+- Keep store name **DEADREACH** even though the technical ID remains `de.kamilunavo.deadzone`.
+- No advertising SDKs or ad-based rewards.
 
-## 8. Immediate next step
+## 12. Immediate next step
 
-Continue Vertical Slice 0.1 on `foundation/unity-6.3`:
+**Real Unity validation pass.**
 
-1. Add gameplay architecture and state model.
-2. Implement perspective high-angle camera rig.
-3. Implement player movement abstraction suitable for both touch and desktop testing.
-4. Add mobile twin-stick control layer.
-5. Add first playable character controller.
-6. Establish initial URP/mobile quality profiles.
-7. Then begin shooting, damage and enemy AI.
+Open `foundation/unity-6.3` in Unity `6000.3.22f1`, resolve compilation/package issues if any, generate the complete Vertical Slice 0.1, and execute `docs/VERTICAL_SLICE_01_TEST.md`.
 
-Before merging the foundation branch, open the project once in Unity 6000.3.22f1 and verify package resolution / compilation.
+After the slice passes, merge the foundation PR and start the first production art/game-feel pass rather than adding more unverified systems.
 
-## 9. Handoff protocol
+## 13. Handoff protocol
 
 When resuming DEADREACH in another chat:
 
-1. Open this file first.
-2. Check the latest commits / open PRs / current working branch.
-3. Continue from **Immediate next step** or the newest recorded milestone.
-4. Update this file before ending a major development pass.
+1. Read this file first.
+2. Inspect the latest commits and open PRs.
+3. Check whether the Unity validation run has happened since this update.
+4. Continue from **Immediate next step**.
+5. Update this file before ending the next major pass.
 
 Do not rely on chat history alone for project continuity.
