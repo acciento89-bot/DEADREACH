@@ -58,6 +58,7 @@ namespace Kamilunavo.Deadreach.UI
 
             if (GUI.Button(new Rect(x, y + 156f, width, 62f), "ABANDON RUN // BUNKER", _buttonStyle))
             {
+                RunSession.Current?.AbandonRun();
                 SetPaused(false);
                 SceneFlowService.LoadBunker();
             }
