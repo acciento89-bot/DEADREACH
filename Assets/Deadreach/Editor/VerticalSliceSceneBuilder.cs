@@ -12,7 +12,6 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.SceneManagement;
 
 namespace Kamilunavo.Deadreach.Editor
 {
@@ -28,7 +27,6 @@ namespace Kamilunavo.Deadreach.Editor
             EnsureFolders();
             var palette = LoadOrCreatePalette();
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            scene.name = "DeadCity_VerticalSlice";
 
             ConfigureAtmosphere();
             CreateSystems();
