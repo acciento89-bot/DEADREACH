@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Kamilunavo.Deadreach.Combat;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Player;
@@ -10,6 +11,8 @@ namespace Kamilunavo.Deadreach.Core
     {
         public static RunSession Current { get; private set; }
 
+        [SerializeField, Min(0f)] private float resultScreenDuration = 2.2f;
+
         public event Action<int> ScrapChanged;
         public event Action ExtractionCompleted;
         public event Action RunFailed;
@@ -20,6 +23,7 @@ namespace Kamilunavo.Deadreach.Core
         public bool IsFailed { get; private set; }
 
         private Damageable _playerHealth;
+        private Coroutine _returnRoutine;
 
         private void Awake()
         {
@@ -80,6 +84,7 @@ namespace Kamilunavo.Deadreach.Core
             CarriedScrap = 0;
             ScrapChanged?.Invoke(CarriedScrap);
             ExtractionCompleted?.Invoke();
+            BeginReturnToBunker();
         }
 
         private void HandlePlayerDeath()
@@ -93,6 +98,19 @@ namespace Kamilunavo.Deadreach.Core
             SaveService.RegisterFailedRun();
             ScrapChanged?.Invoke(CarriedScrap);
             RunFailed?.Invoke();
+            BeginReturnToBunker();
+        }
+
+        private void BeginReturnToBunker()
+        {
+            if (_returnRoutine == null)
+                _returnRoutine = StartCoroutine(ReturnToBunkerAfterDelay());
+        }
+
+        private IEnumerator ReturnToBunkerAfterDelay()
+        {
+            yield return new WaitForSecondsRealtime(resultScreenDuration);
+            SceneFlowService.LoadBunker();
         }
     }
 }
