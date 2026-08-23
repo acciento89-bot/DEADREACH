@@ -1,3 +1,4 @@
+using System;
 using Kamilunavo.Deadreach.Combat;
 using Kamilunavo.Deadreach.Loot;
 using Kamilunavo.Deadreach.Player;
@@ -14,6 +15,8 @@ namespace Kamilunavo.Deadreach.AI
         [SerializeField, Min(0.1f)] private float attacksPerSecond = 0.85f;
         [SerializeField, Min(0f)] private float attackDamage = 12f;
         [SerializeField, Min(0)] private int scrapDrop = 4;
+
+        public event Action Attacked;
 
         private CharacterController _controller;
         private Damageable _damageable;
@@ -72,6 +75,7 @@ namespace Kamilunavo.Deadreach.AI
             else if (Time.time >= _nextAttackTime && _targetHealth != null)
             {
                 _nextAttackTime = Time.time + 1f / attacksPerSecond;
+                Attacked?.Invoke();
                 _targetHealth.TakeDamage(new DamageInfo(attackDamage, CombatFaction.Infected, _target.position, toTarget.normalized));
             }
         }
