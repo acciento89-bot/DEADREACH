@@ -65,7 +65,8 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - operator active-ability gameplay passed on desktop: SAM Field Patch, RAVEN Vector Dash and BRIGGS Shockwave accepted
 - BRIGGS Shockwave dedicated FX remains non-blocking 0.10 visual debt
 - **mobile gate remains RED** after two rejected control implementations
-- current third mobile implementation uses fixed safe-area control centers and requires fresh Unity compile + phone/Device Simulator validation
+- current third implementation uses fixed safe-area controls, touch-begin Ability capture and visible Ability feedback
+- this third implementation is committed but **not yet Unity-validated**
 
 ## 4. Production 0.8 shipped baseline that must remain green
 
@@ -114,7 +115,7 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - simulated mobile touch suppresses mirrored mouse-pointer aim
 - Ability is upper-right with an enlarged independent touch region
 - Ability queues on touch-begin
-- Ability shows `FIRED`, `NO TARGET`, `FULL HP`, `BLOCKED` or `COOLDOWN` feedback so the input result is visible
+- Ability shows `FIRED`, `NO TARGET`, `FULL HP`, `BLOCKED` or `COOLDOWN` feedback so input registration is visible
 - fixed stick visuals and fixed input capture share the exact same centers
 - phone HUD remains scaled up for readability
 
