@@ -181,14 +181,17 @@ namespace Kamilunavo.Deadreach.UI
             _previewRoot.transform.position = Vector3.zero;
             SetLayerRecursive(_previewRoot, PreviewLayer);
 
+            var equippedWeapon = SaveService.GetEquippedPrimaryWeapon();
             var catalog = Resources.Load<ProductionAssetCatalog>("Deadreach/ProductionAssetCatalog");
-            var source = catalog != null ? catalog.PrimaryWeaponPrefab : null;
+            var source = catalog != null
+                ? catalog.GetWeaponPrefab(equippedWeapon != null ? equippedWeapon.family : WeaponFamily.Rifle)
+                : null;
+
             _weaponVisual = source != null
                 ? Instantiate(source, _previewRoot.transform, false)
                 : BuildFallbackWeapon(_previewRoot.transform);
-            _weaponVisual.name = source != null ? "Preview_ProductionWeapon" : "Preview_FallbackWeapon";
+            _weaponVisual.name = source != null ? $"Preview_{(equippedWeapon != null ? equippedWeapon.family : WeaponFamily.Rifle)}" : "Preview_FallbackWeapon";
 
-            var equippedWeapon = SaveService.GetEquippedPrimaryWeapon();
             SetLayerRecursive(_weaponVisual, PreviewLayer);
             NormalizeWeaponForPreview(_weaponVisual);
             WeaponVisualStyle.Apply(_weaponVisual, equippedWeapon);
@@ -196,7 +199,8 @@ namespace Kamilunavo.Deadreach.UI
             if (_finishLabel != null)
             {
                 var finishId = WeaponVisualStyle.ResolveFinishId(equippedWeapon);
-                _finishLabel.text = $"FINISH // {WeaponVisualStyle.GetDisplayName(finishId)}";
+                var family = equippedWeapon != null ? equippedWeapon.family.ToString().ToUpperInvariant() : "RIFLE";
+                _finishLabel.text = $"{family} // FINISH // {WeaponVisualStyle.GetDisplayName(finishId)}";
                 _finishLabel.color = WeaponVisualStyle.ResolveColor(equippedWeapon);
             }
         }
@@ -233,9 +237,6 @@ namespace Kamilunavo.Deadreach.UI
                 bestRotation = candidate;
             }
 
-            // The Quaternius standalone firearm's canonical horizontal candidate is mirrored around
-            // the screen X axis: magazine/grip render above the receiver. Apply the preview-only
-            // 180° X correction after axis normalization. Gameplay weapon/muzzle transforms are untouched.
             visual.transform.localRotation = Quaternion.Euler(180f, 0f, 0f)
                                              * Quaternion.Euler(4f, -11f, 0f)
                                              * bestRotation;
