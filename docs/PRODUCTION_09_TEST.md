@@ -29,9 +29,9 @@ Turn existing statistical enemy/operator variants into real gameplay identities 
 
 1. Pull `production/0.9-combat-depth`.
 2. Let Unity finish compiling.
-3. Require **0 red compiler errors**.
-4. Run `DEADREACH > Build Production Slice 0.9`.
-5. Require no blocking red build/setup error.
+3. Require **0 red compiler errors**. ✅ 2026-08-23
+4. Run `DEADREACH > Build Production Slice 0.9`. ✅ 2026-08-23
+5. Require no blocking red build/setup error. ✅ 2026-08-23
 
 ## Enemy-role runtime gate
 
