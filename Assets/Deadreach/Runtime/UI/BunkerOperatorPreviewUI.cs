@@ -43,7 +43,7 @@ namespace Kamilunavo.Deadreach.UI
             }
 
             if (_previewRoot != null && _previewRoot.activeSelf)
-                _previewRoot.transform.Rotate(Vector3.up, 10f * Time.unscaledDeltaTime, Space.World);
+                _previewRoot.transform.Rotate(Vector3.up, 7f * Time.unscaledDeltaTime, Space.World);
         }
 
         private void BuildCanvas()
@@ -151,13 +151,12 @@ namespace Kamilunavo.Deadreach.UI
             SetLayerRecursive(_previewRoot, PreviewLayer);
 
             var catalog = Resources.Load<ProductionAssetCatalog>("Deadreach/ProductionAssetCatalog");
-            var source = catalog != null ? catalog.SurvivorPrefab : null;
+            var source = catalog != null ? catalog.GetSurvivorPrefab(_lastOperatorId) : null;
             if (source != null)
             {
                 _operatorVisual = Instantiate(source, _previewRoot.transform, false);
                 _operatorVisual.name = $"Preview_{definition.Name}";
                 SetLayerRecursive(_operatorVisual, PreviewLayer);
-                ApplyTint(_operatorVisual, definition.Accent);
                 NormalizeCharacter(_operatorVisual);
             }
             else
@@ -169,6 +168,10 @@ namespace Kamilunavo.Deadreach.UI
 
         private static void NormalizeCharacter(GameObject visual)
         {
+            visual.transform.localPosition = Vector3.zero;
+            visual.transform.localRotation = Quaternion.identity;
+            visual.transform.localScale = Vector3.one;
+
             var renderers = visual.GetComponentsInChildren<Renderer>(true);
             if (renderers.Length == 0)
                 return;
@@ -180,44 +183,16 @@ namespace Kamilunavo.Deadreach.UI
             var height = Mathf.Max(0.01f, bounds.size.y);
             visual.transform.localScale *= 2.35f / height;
 
+            // Quaternius survivors face away from the preview camera at identity in this setup.
+            // Turn the authored model around, then add a slight showroom angle.
+            visual.transform.rotation = Quaternion.Euler(0f, 198f, 0f);
+
             renderers = visual.GetComponentsInChildren<Renderer>(true);
             bounds = renderers[0].bounds;
             for (var i = 1; i < renderers.Length; i++)
                 bounds.Encapsulate(renderers[i].bounds);
 
             visual.transform.position -= new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
-            visual.transform.rotation = Quaternion.Euler(0f, 18f, 0f);
-        }
-
-        private static void ApplyTint(GameObject visual, Color accent)
-        {
-            foreach (var renderer in visual.GetComponentsInChildren<Renderer>(true))
-            {
-                if (renderer == null || IsWeaponRenderer(renderer.transform))
-                    continue;
-
-                var materials = renderer.materials;
-                foreach (var material in materials)
-                {
-                    if (material == null)
-                        continue;
-                    var tint = Color.Lerp(Color.white, accent, 0.25f);
-                    if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", tint);
-                    if (material.HasProperty("_Color")) material.SetColor("_Color", tint);
-                }
-            }
-        }
-
-        private static bool IsWeaponRenderer(Transform transform)
-        {
-            var current = transform;
-            for (var depth = 0; current != null && depth < 5; depth++, current = current.parent)
-            {
-                var value = current.name.ToLowerInvariant();
-                if (value.Contains("weapon") || value.Contains("pistol") || value.Contains("rifle") || value.Contains("gun"))
-                    return true;
-            }
-            return false;
         }
 
         private static GameObject BuildFallbackCharacter(Transform parent, Color accent)
