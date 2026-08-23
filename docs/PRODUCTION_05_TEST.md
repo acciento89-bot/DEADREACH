@@ -12,19 +12,19 @@ Production 0.4 is merged and accepted. Keep:
 - extraction approach traversable
 - Bunker -> Deploy -> combat/loot -> extraction -> Bunker loop
 
-## Preflight
+## Preflight — PASSED 2026-08-23
 
 1. Pull `production/0.5-bunker-progression-boss-ui`.
 2. Let Unity finish compilation/import.
 3. Require **0 red C# compiler errors**.
 4. Run **`DEADREACH > Build Production Slice 0.5` once**.
-   - the build removes obsolete failed Lis/Matt-SingleWeapon 0.5 source files if present
-   - it auto-prepares the firearm-rigged operator sources: Shaun SingleWeapon/SMG and Matt Full/Rifle
-   - it repairs/downloads every non-embedded glTF image/buffer dependency before forcing glTFast reimport
+   - Atomic `Production05OperatorArtSetupV2` prepares Shaun SingleWeapon/SMG and Matt Full/Rifle before the single Unity import pass
    - required 0.4 environment asset gate must pass
    - extraction traversal gate must pass
    - Bunker_Hub must reopen at the end
 5. No blocking Console error may remain.
+
+**Real Unity result:** preflight/build completed with no blocking error after Atomic V2. The previous nested-prefab/glTFast importer blocker is closed. Continue directly with the runtime gate below.
 
 Do not stop for cosmetic warnings; record only blocking/red runtime failures.
 
