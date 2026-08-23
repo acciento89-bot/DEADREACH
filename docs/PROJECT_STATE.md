@@ -76,7 +76,7 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - initial Production 0.11 fresh real-Unity compile passed with **0 red compiler errors**
 - first real runtime pass confirmed mission HUD → objective marker → mission extraction seal → primary completion → BLACK CACHE → reinforcements ✅
 - runtime exposed an extraction-egress world-geometry defect while extraction is sealed
-- fix is committed by extending the base ground/main road beyond the north extraction trigger; **fresh compile + rebuilt 0.11 scene now required**
+- fix is committed by extending the base ground/main road beyond the north extraction trigger and forcing extraction-owned colliders to remain triggers; **fresh compile + rebuilt 0.11 scene now required**
 
 ## 4. Stable Production 0.10 baseline that must remain green
 
@@ -139,8 +139,9 @@ Real runtime exposed a pre-existing geometry edge that became visible because 0.
 Committed fix:
 - `World_Ground` north support extended beyond the north world boundary
 - `Road_Main` north support extended beyond the north world boundary
+- every collider under the extraction-zone hierarchy is forced to `isTrigger = true` at runtime so later presentation/dressing cannot create a physical trap
 - extraction transform, mobile input and mission logic are unchanged
-- fresh `Build Production Slice 0.11` is required so the generated scene receives the fix
+- fresh `Build Production Slice 0.11` is required so the generated scene receives the geometry fix
 
 ### Risk / reward decision
 - after primary completion the player may extract immediately
@@ -172,7 +173,7 @@ Committed fix:
 - test plan: `docs/PRODUCTION_11_TEST.md`
 - initial pre-egress-fix compile: **PASSED — 0 red compiler errors** ✅
 - mission HUD / marker / extraction seal / primary / BLACK CACHE / reinforcements: **PASSED in first runtime pass** ✅
-- extraction egress: **FAILED in first runtime pass; geometry fix committed**
+- extraction egress: **FAILED in first runtime pass; geometry + trigger hardening committed**
 - current required gate: fresh compile → rebuild Production Slice 0.11 → sealed-zone enter/exit retest → remaining mobile/full regression
 
 ## 6. Handoff protocol
