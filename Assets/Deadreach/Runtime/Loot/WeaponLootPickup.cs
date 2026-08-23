@@ -30,7 +30,7 @@ namespace Kamilunavo.Deadreach.Loot
         private void Start()
         {
             var rarity = WeaponLootFactory.RollRarity(normalizedDepth, rollSeed);
-            _weapon = WeaponLootFactory.CreatePrototypeRifle(rarity, rollSeed * 7919 + 17);
+            _weapon = WeaponLootFactory.CreateFieldWeapon(rarity, rollSeed * 7919 + 17);
             ApplyRarityPresentation(rarity);
         }
 

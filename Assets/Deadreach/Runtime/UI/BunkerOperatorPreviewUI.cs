@@ -13,10 +13,13 @@ namespace Kamilunavo.Deadreach.UI
         private RenderTexture _renderTexture;
         private Camera _previewCamera;
         private RawImage _previewImage;
+        private RectTransform _frameRect;
         private GameObject _previewRoot;
         private GameObject _operatorVisual;
         private string _lastOperatorId;
         private float _nextProbe;
+        private Rect _lastSafeArea;
+        private Vector2Int _lastScreenSize;
 
         private void Start()
         {
@@ -31,11 +34,17 @@ namespace Kamilunavo.Deadreach.UI
             if (Time.unscaledTime >= _nextProbe)
             {
                 _nextProbe = Time.unscaledTime + 0.2f;
-                var open = GameObject.Find("OperatorList") != null;
-                SetActive(open);
 
-                if (open)
+                var inspectorObject = GameObject.Find("OperatorInspector");
+                var open = inspectorObject != null && GameObject.Find("OperatorList") != null;
+                var landscape = Screen.width >= Screen.height;
+                SetActive(open && landscape);
+
+                if (open && landscape)
                 {
+                    if (inspectorObject.transform is RectTransform inspectorRect)
+                        ApplyResponsiveFrame(inspectorRect);
+
                     var id = SaveService.Data.selectedCharacterId ?? "ranger";
                     if (id != _lastOperatorId)
                         RefreshOperator();
@@ -61,11 +70,11 @@ namespace Kamilunavo.Deadreach.UI
 
             var frameObject = new GameObject("Operator_Inspector_Frame", typeof(RectTransform), typeof(Image));
             frameObject.transform.SetParent(canvasObject.transform, false);
-            var frame = frameObject.GetComponent<RectTransform>();
-            frame.anchorMin = new Vector2(0.635f, 0.285f);
-            frame.anchorMax = new Vector2(0.955f, 0.735f);
-            frame.offsetMin = Vector2.zero;
-            frame.offsetMax = Vector2.zero;
+            _frameRect = frameObject.GetComponent<RectTransform>();
+            _frameRect.anchorMin = new Vector2(0.635f, 0.285f);
+            _frameRect.anchorMax = new Vector2(0.955f, 0.735f);
+            _frameRect.offsetMin = Vector2.zero;
+            _frameRect.offsetMax = Vector2.zero;
             frameObject.GetComponent<Image>().color = new Color(0.012f, 0.015f, 0.014f, 0.90f);
 
             var stripeObject = new GameObject("OperatorPreview_Stripe", typeof(RectTransform), typeof(Image));
@@ -77,13 +86,18 @@ namespace Kamilunavo.Deadreach.UI
             stripe.offsetMax = Vector2.zero;
             stripeObject.GetComponent<Image>().color = new Color(0.18f, 0.78f, 0.45f, 1f);
 
-            var rawObject = new GameObject("Operator_Render", typeof(RectTransform), typeof(RawImage));
+            var rawObject = new GameObject("Operator_Render", typeof(RectTransform), typeof(RawImage), typeof(AspectRatioFitter));
             rawObject.transform.SetParent(frameObject.transform, false);
             var rawRect = rawObject.GetComponent<RectTransform>();
             rawRect.anchorMin = new Vector2(0.03f, 0.025f);
             rawRect.anchorMax = new Vector2(0.97f, 0.96f);
             rawRect.offsetMin = Vector2.zero;
             rawRect.offsetMax = Vector2.zero;
+
+            var aspectFitter = rawObject.GetComponent<AspectRatioFitter>();
+            aspectFitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            aspectFitter.aspectRatio = 1f;
+
             _previewImage = rawObject.GetComponent<RawImage>();
             _previewImage.color = Color.white;
             _previewImage.raycastTarget = false;
@@ -133,6 +147,49 @@ namespace Kamilunavo.Deadreach.UI
             fill.intensity = 2.7f;
             fill.range = 7f;
             fill.cullingMask = 1 << PreviewLayer;
+        }
+
+        private void ApplyResponsiveFrame(RectTransform inspector)
+        {
+            if (_frameRect == null || Screen.width <= 0 || Screen.height <= 0)
+                return;
+
+            if (_lastSafeArea == Screen.safeArea && _lastScreenSize.x == Screen.width && _lastScreenSize.y == Screen.height)
+            {
+                // The host can still move when a tab is rebuilt, so intentionally continue and re-anchor.
+            }
+
+            _lastSafeArea = Screen.safeArea;
+            _lastScreenSize = new Vector2Int(Screen.width, Screen.height);
+
+            var corners = new Vector3[4];
+            inspector.GetWorldCorners(corners);
+            var bottomLeft = RectTransformUtility.WorldToScreenPoint(null, corners[0]);
+            var topRight = RectTransformUtility.WorldToScreenPoint(null, corners[2]);
+
+            var width = Mathf.Max(1f, topRight.x - bottomLeft.x);
+            var height = Mathf.Max(1f, topRight.y - bottomLeft.y);
+            var screenAspect = Screen.width / Mathf.Max(1f, (float)Screen.height);
+
+            var xInset = screenAspect <= 1.45f ? 0.045f : 0.055f;
+            var yMin = screenAspect <= 1.45f ? 0.34f : screenAspect <= 1.72f ? 0.32f : 0.30f;
+            const float yMax = 0.86f;
+
+            var min = new Vector2(
+                bottomLeft.x + width * xInset,
+                bottomLeft.y + height * yMin);
+            var max = new Vector2(
+                topRight.x - width * xInset,
+                bottomLeft.y + height * yMax);
+
+            _frameRect.anchorMin = new Vector2(
+                Mathf.Clamp01(min.x / Screen.width),
+                Mathf.Clamp01(min.y / Screen.height));
+            _frameRect.anchorMax = new Vector2(
+                Mathf.Clamp01(max.x / Screen.width),
+                Mathf.Clamp01(max.y / Screen.height));
+            _frameRect.offsetMin = Vector2.zero;
+            _frameRect.offsetMax = Vector2.zero;
         }
 
         private void RefreshOperator()

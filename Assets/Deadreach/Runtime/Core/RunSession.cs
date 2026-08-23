@@ -34,6 +34,7 @@ namespace Kamilunavo.Deadreach.Core
         private Damageable _playerHealth;
         private Coroutine _returnRoutine;
         private WeaponInstanceData _pendingBossReward;
+        private WeaponInstanceData _bossRewardGrantedThisRun;
 
         private void Awake()
         {
@@ -78,9 +79,10 @@ namespace Kamilunavo.Deadreach.Core
 
         public void GrantBossReward(WeaponInstanceData reward)
         {
-            if (reward == null || IsCompleted || IsFailed || _pendingBossReward != null)
+            if (reward == null || IsCompleted || IsFailed || _bossRewardGrantedThisRun != null)
                 return;
 
+            _bossRewardGrantedThisRun = reward.Clone();
             _pendingBossReward = reward.Clone();
 
             // Show the reward immediately in the carried weapon count when capacity allows. If the
@@ -140,6 +142,9 @@ namespace Kamilunavo.Deadreach.Core
             }
 
             SaveService.RegisterExtraction(CarriedScrap, extractedWeapons, RunLevel);
+            if (_bossRewardGrantedThisRun != null)
+                SaveService.RecordSecuredBossReward(_bossRewardGrantedThisRun);
+
             RunInventory.Current?.Clear();
 
             CarriedScrap = 0;
@@ -170,6 +175,7 @@ namespace Kamilunavo.Deadreach.Core
             CarriedScrap = 0;
             ExtractionProgress = 0f;
             _pendingBossReward = null;
+            _bossRewardGrantedThisRun = null;
             RunInventory.Current?.Clear();
             SaveService.RegisterFailedRun();
             ScrapChanged?.Invoke(CarriedScrap);

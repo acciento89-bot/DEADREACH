@@ -30,6 +30,11 @@ namespace Kamilunavo.Deadreach.Weapons
             var critChance = 0.05f;
             var critMultiplier = 1.5f;
 
+            if (instance != null)
+            {
+                ApplyFamilyProfile(instance.family, ref damageMultiplier, ref fireRateMultiplier, ref rangeMultiplier, ref critChance, ref critMultiplier);
+            }
+
             if (instance?.affixes != null)
             {
                 foreach (var affix in instance.affixes)
@@ -64,6 +69,45 @@ namespace Kamilunavo.Deadreach.Weapons
                 baseRange * rangeMultiplier,
                 critChance,
                 critMultiplier);
+        }
+
+        private static void ApplyFamilyProfile(
+            WeaponFamily family,
+            ref float damageMultiplier,
+            ref float fireRateMultiplier,
+            ref float rangeMultiplier,
+            ref float critChance,
+            ref float critMultiplier)
+        {
+            switch (family)
+            {
+                case WeaponFamily.Smg:
+                    damageMultiplier *= 0.72f;
+                    fireRateMultiplier *= 1.62f;
+                    rangeMultiplier *= 0.72f;
+                    critChance += 0.015f;
+                    break;
+                case WeaponFamily.Pistol:
+                    damageMultiplier *= 0.86f;
+                    fireRateMultiplier *= 0.82f;
+                    rangeMultiplier *= 0.78f;
+                    critChance += 0.055f;
+                    critMultiplier += 0.2f;
+                    break;
+                case WeaponFamily.Shotgun:
+                    // The current combat layer remains hitscan-single-ray in 0.6; the shotgun profile
+                    // therefore represents a heavy slug until pellet spread is introduced later.
+                    damageMultiplier *= 1.72f;
+                    fireRateMultiplier *= 0.42f;
+                    rangeMultiplier *= 0.46f;
+                    critMultiplier += 0.12f;
+                    break;
+                default:
+                    damageMultiplier *= 1.0f;
+                    fireRateMultiplier *= 1.0f;
+                    rangeMultiplier *= 1.0f;
+                    break;
+            }
         }
     }
 }

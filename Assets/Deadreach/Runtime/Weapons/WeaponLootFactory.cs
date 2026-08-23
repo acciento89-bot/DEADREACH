@@ -17,6 +17,18 @@ namespace Kamilunavo.Deadreach.Weapons
 
         public static WeaponInstanceData CreatePrototypeRifle(WeaponRarity rarity, int seed)
         {
+            return CreateFieldWeapon(rarity, seed, WeaponFamily.Rifle);
+        }
+
+        public static WeaponInstanceData CreateFieldWeapon(WeaponRarity rarity, int seed)
+        {
+            var random = new System.Random(seed ^ 0x41D3);
+            var family = (WeaponFamily)random.Next(0, 4);
+            return CreateFieldWeapon(rarity, seed, family);
+        }
+
+        public static WeaponInstanceData CreateFieldWeapon(WeaponRarity rarity, int seed, WeaponFamily family)
+        {
             var random = new System.Random(seed);
             var affixCount = GetAffixCount(rarity);
             var affixes = RollAffixes(random, rarity, affixCount);
@@ -24,11 +36,12 @@ namespace Kamilunavo.Deadreach.Weapons
             return new WeaponInstanceData
             {
                 instanceId = Guid.NewGuid().ToString("N"),
-                definitionId = "dr7-rifle",
-                displayNameSnapshot = GetDisplayName(rarity),
+                definitionId = GetDefinitionId(family),
+                displayNameSnapshot = GetDisplayName(family, rarity),
                 visualSkinId = WeaponVisualStyle.RollStandardFinishId(seed ^ 0x5A17),
+                family = family,
                 rarity = rarity,
-                itemPower = 100 + (int)rarity * 18 + random.Next(0, 13),
+                itemPower = GetBaseItemPower(family) + (int)rarity * 18 + random.Next(0, 13),
                 affixes = affixes
             };
         }
@@ -39,19 +52,27 @@ namespace Kamilunavo.Deadreach.Weapons
             var rarity = tier >= 3 ? WeaponRarity.Legendary : WeaponRarity.Epic;
             var random = new System.Random(seed ^ (tier * 7919));
             var affixCount = Mathf.Min(4, GetAffixCount(rarity));
+            var family = tier switch
+            {
+                1 => WeaponFamily.Smg,
+                2 => WeaponFamily.Shotgun,
+                3 => WeaponFamily.Rifle,
+                4 => WeaponFamily.Pistol,
+                _ => WeaponFamily.Rifle
+            };
+
             var reward = new WeaponInstanceData
             {
                 instanceId = Guid.NewGuid().ToString("N"),
-                definitionId = "dr7-mutation",
-                displayNameSnapshot = $"MUTATION T{tier} // DR-7 RELIC",
+                definitionId = $"mutation-{family.ToString().ToLowerInvariant()}",
+                displayNameSnapshot = $"MUTATION T{tier} // {GetBossFamilyName(family)} RELIC",
                 visualSkinId = $"mutation-{tier}",
+                family = family,
                 rarity = rarity,
                 itemPower = 170 + tier * 28 + random.Next(0, 18),
                 affixes = RollAffixes(random, rarity, affixCount)
             };
 
-            // Boss rewards always carry a meaningful offensive identity while respecting the
-            // normal rarity affix-count cap.
             if (!reward.affixes.Exists(item => item != null && item.stat == WeaponAffixStat.DamagePercent))
             {
                 var damageAffix = new WeaponAffixRollData
@@ -78,7 +99,7 @@ namespace Kamilunavo.Deadreach.Weapons
             var legendary = 0.01 + depth * 0.045;
             var epic = 0.05 + depth * 0.10;
             var rare = 0.17 + depth * 0.18;
-            var uncommon = 0.34;
+            const double uncommon = 0.34;
 
             if (roll < legendary)
                 return WeaponRarity.Legendary;
@@ -140,16 +161,67 @@ namespace Kamilunavo.Deadreach.Weapons
             };
         }
 
-        private static string GetDisplayName(WeaponRarity rarity)
+        private static string GetDefinitionId(WeaponFamily family)
         {
-            return rarity switch
+            return family switch
             {
-                WeaponRarity.Common => "DR-7 Field Rifle",
-                WeaponRarity.Uncommon => "DR-7 Tuned Rifle",
-                WeaponRarity.Rare => "DR-7 Vanguard Rifle",
-                WeaponRarity.Epic => "DR-7 Blackline Rifle",
-                WeaponRarity.Legendary => "DR-7 DEADREACH Rifle",
-                _ => "DR-7 Rifle"
+                WeaponFamily.Smg => "rv9-smg",
+                WeaponFamily.Pistol => "px4-pistol",
+                WeaponFamily.Shotgun => "sg12-shotgun",
+                _ => "dr7-rifle"
+            };
+        }
+
+        private static int GetBaseItemPower(WeaponFamily family)
+        {
+            return family switch
+            {
+                WeaponFamily.Pistol => 96,
+                WeaponFamily.Smg => 100,
+                WeaponFamily.Shotgun => 104,
+                _ => 102
+            };
+        }
+
+        private static string GetDisplayName(WeaponFamily family, WeaponRarity rarity)
+        {
+            var prefix = family switch
+            {
+                WeaponFamily.Smg => "RV-9",
+                WeaponFamily.Pistol => "PX-4",
+                WeaponFamily.Shotgun => "SG-12",
+                _ => "DR-7"
+            };
+
+            var suffix = rarity switch
+            {
+                WeaponRarity.Common => "Field Issue",
+                WeaponRarity.Uncommon => "Tuned",
+                WeaponRarity.Rare => "Vanguard",
+                WeaponRarity.Epic => "Blackline",
+                WeaponRarity.Legendary => "DEADREACH",
+                _ => "Field Issue"
+            };
+
+            var type = family switch
+            {
+                WeaponFamily.Smg => "SMG",
+                WeaponFamily.Pistol => "Sidearm",
+                WeaponFamily.Shotgun => "Shotgun",
+                _ => "Rifle"
+            };
+
+            return $"{prefix} {suffix} {type}";
+        }
+
+        private static string GetBossFamilyName(WeaponFamily family)
+        {
+            return family switch
+            {
+                WeaponFamily.Smg => "RV-9",
+                WeaponFamily.Pistol => "PX-4",
+                WeaponFamily.Shotgun => "SG-12",
+                _ => "DR-7"
             };
         }
     }
