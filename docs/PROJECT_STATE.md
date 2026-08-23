@@ -55,12 +55,16 @@ Validated:
 
 - active branch: **`production/0.5-bunker-progression-boss-ui`**
 - PR #5 remains **Draft**
-- earlier 0.5 foundation code passed real Unity compile with **0 red C# errors**
-- second Bunker UI polish is accepted as a good **Unity Editor/Desktop** direction
-- Atomic `Production05OperatorArtSetupV2` has now passed the real Unity `Build Production Slice 0.5` step with **no blocking error**
-- the previous `Missing Nested Prefab Asset` + glTFast import blocker is therefore **resolved in real Unity**
-- `docs/PRODUCTION_05_TEST.md` now records the preflight/build as passed
-- full Production 0.5 is **not yet accepted**; the consolidated MEGA Runtime Gate remains outstanding
+- Atomic operator importer V2 passed real Unity `Build Production Slice 0.5` with no blocking error
+- Bunker desktop/editor visual direction is accepted
+- the 0.5 MEGA Runtime Gate was executed in real Unity and **most core systems passed**
+- user screenshots confirm distinct Sam/Raven/Briggs previews and runtime switching, Level 1 gameplay, upgraded tracer/combat presentation, Level 10 mutation boss, boss HUD/extraction gate, successful boss clear and campaign progression through Level 11
+- five finalization issues were found during that gate and are now fixed in branch but **not yet revalidated**:
+  1. successful extraction unlocked the next level but did not automatically select it
+  2. boss still used ordinary Scrap as its configured drop instead of a dedicated reward
+  3. Arsenal weapon preview was horizontal but still upside-down
+  4. stash weapons all looked like the same finish
+  5. player could leave the authored road at the map end, fall into the void and continue running below the level
 
 ## 4. Production 0.5 scope on branch
 
@@ -78,6 +82,8 @@ Save schema v4 persists:
 Campaign cap: **50 levels** across five 10-level sectors.
 Every tenth level is a boss operation.
 
+**Finalization change:** successful extraction now automatically moves `selectedLevel` to `completedLevel + 1` whenever that next level is unlocked. Replaying an older level advances to its next already-unlocked mission; Level 50 remains selected at campaign end.
+
 ### 4.2 Bunker Command Center
 
 Tabs:
@@ -87,23 +93,40 @@ Tabs:
 - CAMPAIGN
 - STORE
 
-Accepted Editor/Desktop direction after second polish:
+Accepted Editor/Desktop direction:
 - DEADREACH header visible
-- Overview no longer overlaps
-- Arsenal list + dedicated 3D inspector column
-- Operator roster + dedicated 3D preview column
-- Campaign shows one sector / ten levels at a time
+- Overview no overlap
+- Arsenal list + dedicated 3D inspector
+- Operator roster + dedicated 3D preview
+- Campaign shows one 10-level sector at a time
 - coherent navigation + deploy framing
 
 This is **not mobile acceptance**.
 
-### 4.3 Arsenal
+### 4.3 Arsenal / weapon finishes
 
-Shows persistent stash, rarity, item power, affix rolls, equipped state and Equip action.
+Arsenal shows persistent stash, rarity, item power, affix rolls, equipped state and Equip action.
 
-`BunkerWeaponPreviewUI` now uses preview-only canonical orientation scoring so imported weapons should appear horizontally instead of standing vertically/on their head. This must never alter gameplay weapon transforms or muzzle binding.
+Finalization adds persistent `visualSkinId` support and `WeaponVisualStyle`:
+- Factory Issue
+- Rustwalker
+- Hazard Stripe
+- Nightwatch
+- Toxic Salvage
+- Bloodline
+- unique Mutation Core finishes for boss tiers 1–5
 
-### 4.4 Distinct operator plan
+Old stash entries without a stored finish derive a deterministic finish from their existing instance ID/item power, so the current save also gains visible variety without reset.
+
+The selected finish is applied:
+- to the rotating Arsenal production-weapon preview
+- to the artist-rigged embedded firearm used by the selected runtime operator
+
+No gameplay hand/muzzle transform is modified by finish styling.
+
+`BunkerWeaponPreviewUI` keeps automatic horizontal axis normalization, then applies the observed Quaternius-specific preview-only **180° X correction** so the grip/magazine should render below the receiver instead of above it. The inspector also displays `FINISH // <name>`.
+
+### 4.4 Distinct operators — REAL UNITY PARTIAL ACCEPTANCE
 
 Profiles:
 - **SAM / Ranger** — balanced
@@ -115,27 +138,33 @@ Production mapping:
 - **RAVEN → Quaternius Shaun SingleWeapon / artist-rigged SMG**
 - **BRIGGS → Quaternius Matt full export / artist-rigged Rifle only**
 
-The Matt wrapper keeps only Rifle visible. No external weapon mount is introduced. `ProductionVisualBinder` prefers the intentionally enabled embedded firearm, and selected operator model is used in both Bunker preview and Dead City gameplay.
+Real Unity screenshots confirm:
+- three visibly distinct operator models
+- selection changes correctly in Bunker
+- selected operator changes in gameplay
+- operator stats display different profiles
 
-### 4.5 Atomic operator glTF import V2 — REAL UNITY BUILD VALIDATED
+Do not reintroduce external weapon hand sockets.
 
-Public entry point: `Assets/Deadreach/Editor/Production05OperatorArtSetup.cs`
+### 4.5 Atomic operator glTF import V2 — REAL UNITY VALIDATED
 
-Implementation: `Assets/Deadreach/Editor/Production05OperatorArtSetupV2.cs`
+`Production05OperatorArtSetupV2` prepares the full filesystem/dependency graph before Unity import, performs one synchronous import pass, fully unpacks generated wrappers and preserves Shaun/SMG + Matt/Rifle.
 
-Atomic V2 prepares the full filesystem/dependency graph before Unity import, performs one synchronous import pass, fully unpacks generated wrappers and preserves Shaun/SMG + Matt/Rifle without any external hand-mounted weapon path.
+Real Unity result: `DEADREACH > Build Production Slice 0.5` completed with no blocking error after Atomic V2.
 
-**Real Unity result on 2026-08-23:** `DEADREACH > Build Production Slice 0.5` completed with no blocking error. The prior nested-prefab/glTFast blocker is accepted as fixed.
-
-### 4.6 Enemies / boss / runtime progression
+### 4.6 Enemies / boss / dedicated boss reward
 
 Runtime infected archetypes: Walker, Runner, Brute, Stalker.
 
 Boss operations: 10 / 20 / 30 / 40 / 50, with tier scaling, mutation phases around 66% and 33% HP, boss HUD and extraction lock until death.
 
-Editor boss shortcut: `DEADREACH > Dev > 0.5 Select Boss Level 10`
+Real Unity screenshots confirm Level 10 mutation boss, boss HP UI and successful progression through Level 10 into Sector 02 / Level 11.
 
-### 4.7 Combat presentation
+**Finalization change:** boss `scrapDrop` is now configured to **0**. On boss death `WeaponLootFactory.CreateBossReward()` grants a guaranteed Epic/Legendary `MUTATION T# // DR-7 RELIC` with tier-specific Mutation Core finish and strong affixes. The reward enters run weapon inventory immediately when capacity is available; otherwise it is reserved by `RunSession` and guaranteed into the extraction snapshot. It remains unsecured until successful extraction, preserving the extraction-risk loop.
+
+A reserved boss reward counts as extraction loot, so a boss run cannot become stuck on the normal `requireLoot` gate after the boss dies.
+
+### 4.7 Combat presentation — REAL UNITY PARTIAL ACCEPTANCE
 
 0.5 combat FX:
 - pooled tracer core + glow
@@ -145,9 +174,19 @@ Editor boss shortcut: `DEADREACH > Dev > 0.5 Select Boss Level 10`
 - stronger critical feedback
 - old large red square/billboard impact marker removed
 
-The artist-rigged embedded firearm remains the muzzle source.
+User runtime screenshots show the upgraded blue tracer path in live combat. Artist-rigged embedded firearm remains the muzzle source.
 
-### 4.8 Store
+### 4.8 Dead City world/fall safety
+
+Finalization adds two layers of protection:
+1. generated `DeadCity_WorldSafety_0_5` with invisible West/East/South/North BoxCollider boundaries just outside the authored pavement plus a deep emergency catch floor
+2. `PlayerFallSafety` runtime backstop on the player, storing the last valid in-bounds position and recovering if physics/spawn ever gets below the map or outside the playable rectangle
+
+Goal: the player cannot simply walk off the road into the void, and even a physics edge case cannot leave the game running below the level.
+
+This requires rebuilding Production Slice 0.5 once so the new scene colliders/component are authored into Dead City.
+
+### 4.9 Store
 
 Store surface includes cosmetics, Bunker themes, weapon finishes and season content. No fake purchases. StoreKit / Google Play verification remains a later integration gate.
 
@@ -157,11 +196,20 @@ Current accepted UI screenshots are **Unity Editor/Desktop preview only**. Befor
 
 Do **not** mark UI/release final until this gate passes.
 
-## 6. Next action — Production 0.5 MEGA Runtime Gate
+## 6. Next action — targeted 0.5 finalization re-test
 
-The import/build blocker is resolved. Run `docs/PRODUCTION_05_TEST.md` as one end-to-end acceptance covering Bunker/menu/persistence, horizontal Arsenal preview, all three operator previews/runtime swaps, Level 1 gameplay/operator stats, combat VFX, infected variety, loot/extraction/Level 2 unlock, abandon regression, Level 10 boss/extraction seal/boss clear/progression and final 0.4 regression sweep.
+Do **not** rerun the entire MEGA gate. The already-passed sections remain accepted.
 
-PR #5 stays Draft until that entire real-Unity gate passes.
+After pulling latest branch:
+1. require 0 compiler errors
+2. run **`DEADREACH > Build Production Slice 0.5`** once to author new world-safety colliders/guard
+3. Arsenal: equip two or three existing stash weapons and verify different `FINISH // ...` colors plus upright weapon preview
+4. clear a standard mission and verify Bunker returns with the next level automatically selected
+5. run Level 10 boss shortcut, kill boss and confirm boss itself drops no Scrap and a `MUTATION T# // DR-7 RELIC` weapon reward is carried/secured after extraction
+6. walk deliberately into all four map edges/end of the road and verify player cannot fall into the void; if an edge case gets below bounds, recovery must occur immediately
+7. final Console: 0 blocking red errors
+
+If these five targeted fixes pass, mark PR #5 Ready and merge to `main`.
 
 ## 7. Handoff protocol
 
@@ -170,7 +218,7 @@ When resuming:
 2. treat 0.1–0.4 as merged/validated
 3. never reintroduce an external hand-mounted Rifle path
 4. active branch is `production/0.5-bunker-progression-boss-ui`
-5. Atomic `Production05OperatorArtSetupV2` import/build blocker is **REAL UNITY VALIDATED FIXED**
-6. `docs/PRODUCTION_05_TEST.md` preflight is recorded as passed
-7. next immediate action is the single MEGA Runtime Gate
-8. keep PR #5 Draft until full 0.5 acceptance
+5. operator import blocker is real-Unity validated fixed
+6. most of the 0.5 MEGA runtime gate is already real-Unity accepted from screenshots
+7. only the five finalization fixes in section 6 require targeted revalidation
+8. keep PR #5 Draft until those targeted checks pass
