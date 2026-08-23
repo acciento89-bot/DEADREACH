@@ -1,10 +1,12 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using Kamilunavo.Deadreach.Presentation;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Editor
@@ -12,8 +14,10 @@ namespace Kamilunavo.Deadreach.Editor
     public static class Production05OperatorArtSetup
     {
         private const string SourceRoot = "Assets/Deadreach/ThirdParty/Quaternius/ZombieApocalypseKit/glTF";
-        private const string PrefabRoot = "Assets/Deadreach/Art/Production/Prefabs";
-        private const string AtlasMaterialPath = "Assets/Deadreach/Art/Production/Materials/Quaternius_ZombieAtlas.mat";
+        private const string ProductionRoot = "Assets/Deadreach/Art/Production";
+        private const string PrefabRoot = ProductionRoot + "/Prefabs";
+        private const string ControllerRoot = ProductionRoot + "/Controllers";
+        private const string AtlasMaterialPath = ProductionRoot + "/Materials/Quaternius_ZombieAtlas.mat";
         private const string SamPrefabPath = PrefabRoot + "/Survivor_Quaternius_Sam.prefab";
         private const string ScoutSourcePath = SourceRoot + "/Survivor_Lis.gltf";
         private const string WardenSourcePath = SourceRoot + "/Survivor_Matt.gltf";
@@ -32,6 +36,8 @@ namespace Kamilunavo.Deadreach.Editor
         public static bool EnsureOperatorAssetsReady()
         {
             Directory.CreateDirectory(Path.Combine(Application.dataPath, "Deadreach/ThirdParty/Quaternius/ZombieApocalypseKit/glTF"));
+            EnsureFolder(ProductionRoot, "Prefabs");
+            EnsureFolder(ProductionRoot, "Controllers");
 
             if (!EnsureSource(ScoutSourcePath, ScoutUrl, 100000))
                 return false;
@@ -50,9 +56,12 @@ namespace Kamilunavo.Deadreach.Editor
                 return false;
             }
 
-            var sharedController = samPrefab.GetComponentInChildren<Animator>(true)?.runtimeAnimatorController;
-            var scoutPrefab = BuildOperatorWrapper(ScoutSourcePath, ScoutPrefabPath, "Survivor_Quaternius_Lis", atlasMaterial, sharedController);
-            var wardenPrefab = BuildOperatorWrapper(WardenSourcePath, WardenPrefabPath, "Survivor_Quaternius_Matt", atlasMaterial, sharedController);
+            var samFallbackController = samPrefab.GetComponentInChildren<Animator>(true)?.runtimeAnimatorController;
+            var scoutController = BuildAnimatorController(ScoutSourcePath, "Survivor_Quaternius_Lis", samFallbackController);
+            var wardenController = BuildAnimatorController(WardenSourcePath, "Survivor_Quaternius_Matt", samFallbackController);
+
+            var scoutPrefab = BuildOperatorWrapper(ScoutSourcePath, ScoutPrefabPath, "Survivor_Quaternius_Lis", atlasMaterial, scoutController);
+            var wardenPrefab = BuildOperatorWrapper(WardenSourcePath, WardenPrefabPath, "Survivor_Quaternius_Matt", atlasMaterial, wardenController);
             if (scoutPrefab == null || wardenPrefab == null)
                 return false;
 
@@ -62,7 +71,7 @@ namespace Kamilunavo.Deadreach.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log("DEADREACH 0.5 operator art READY: SAM=Sam, RAVEN=Lis, BRIGGS=Matt. All use artist-authored SingleWeapon rigs.");
+            Debug.Log("DEADREACH 0.5 operator art READY: SAM=Sam, RAVEN=Lis, BRIGGS=Matt. All use artist-authored SingleWeapon rigs and operator-specific animation controllers when source clips are available.");
             return true;
         }
 
@@ -104,12 +113,92 @@ namespace Kamilunavo.Deadreach.Editor
             }
         }
 
+        private static RuntimeAnimatorController BuildAnimatorController(string sourcePath, string assetName, RuntimeAnimatorController fallback)
+        {
+            var clips = AssetDatabase.LoadAllAssetsAtPath(sourcePath)
+                .OfType<AnimationClip>()
+                .Where(clip => !clip.name.StartsWith("__preview__", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            if (clips.Length == 0)
+            {
+                Debug.LogWarning($"DEADREACH found no animation clips in '{sourcePath}'. Using the validated Sam controller as fallback for {assetName}.");
+                return fallback;
+            }
+
+            var controllerPath = $"{ControllerRoot}/{assetName}.controller";
+            if (AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath) != null)
+                AssetDatabase.DeleteAsset(controllerPath);
+
+            var controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
+            controller.AddParameter("Speed", AnimatorControllerParameterType.Float);
+            controller.AddParameter("IsMoving", AnimatorControllerParameterType.Bool);
+            controller.AddParameter("IsAiming", AnimatorControllerParameterType.Bool);
+            controller.AddParameter("IsDead", AnimatorControllerParameterType.Bool);
+            controller.AddParameter("Hit", AnimatorControllerParameterType.Trigger);
+
+            var stateMachine = controller.layers[0].stateMachine;
+            var idleClip = FindClip(clips, "idle") ?? clips[0];
+            var moveClip = FindClip(clips, "run", "walk", "move") ?? idleClip;
+            var hitClip = FindClip(clips, "hit", "damage", "hurt") ?? idleClip;
+            var deathClip = FindClip(clips, "death", "die", "dead") ?? idleClip;
+
+            var idle = stateMachine.AddState("Idle");
+            idle.motion = idleClip;
+            stateMachine.defaultState = idle;
+
+            var move = stateMachine.AddState("Move");
+            move.motion = moveClip;
+            var toMove = idle.AddTransition(move);
+            toMove.hasExitTime = false;
+            toMove.duration = 0.08f;
+            toMove.AddCondition(AnimatorConditionMode.If, 0f, "IsMoving");
+            var toIdle = move.AddTransition(idle);
+            toIdle.hasExitTime = false;
+            toIdle.duration = 0.08f;
+            toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsMoving");
+
+            var hit = stateMachine.AddState("Hit");
+            hit.motion = hitClip;
+            var hitTransition = stateMachine.AddAnyStateTransition(hit);
+            hitTransition.hasExitTime = false;
+            hitTransition.duration = 0.04f;
+            hitTransition.AddCondition(AnimatorConditionMode.If, 0f, "Hit");
+            var hitReturn = hit.AddTransition(idle);
+            hitReturn.hasExitTime = true;
+            hitReturn.exitTime = 0.88f;
+            hitReturn.duration = 0.06f;
+
+            var death = stateMachine.AddState("Death");
+            death.motion = deathClip;
+            var deathTransition = stateMachine.AddAnyStateTransition(death);
+            deathTransition.hasExitTime = false;
+            deathTransition.duration = 0.08f;
+            deathTransition.AddCondition(AnimatorConditionMode.If, 0f, "IsDead");
+
+            EditorUtility.SetDirty(controller);
+            AssetDatabase.SaveAssets();
+            return controller;
+        }
+
+        private static AnimationClip FindClip(AnimationClip[] clips, params string[] tokens)
+        {
+            foreach (var token in tokens)
+            {
+                var match = clips.FirstOrDefault(clip => clip.name.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0);
+                if (match != null)
+                    return match;
+            }
+
+            return null;
+        }
+
         private static GameObject BuildOperatorWrapper(
             string sourcePath,
             string prefabPath,
             string prefabName,
             Material atlasMaterial,
-            RuntimeAnimatorController sharedController)
+            RuntimeAnimatorController controller)
         {
             var source = AssetDatabase.LoadAssetAtPath<GameObject>(sourcePath);
             if (source == null)
@@ -140,7 +229,7 @@ namespace Kamilunavo.Deadreach.Editor
                 var animator = model.GetComponentInChildren<Animator>(true);
                 if (animator == null)
                     animator = model.AddComponent<Animator>();
-                animator.runtimeAnimatorController = sharedController;
+                animator.runtimeAnimatorController = controller;
                 animator.applyRootMotion = false;
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
@@ -173,6 +262,13 @@ namespace Kamilunavo.Deadreach.Editor
         {
             var relative = assetPath.Replace("Assets/", string.Empty).Replace('/', Path.DirectorySeparatorChar);
             return Path.Combine(Application.dataPath, relative);
+        }
+
+        private static void EnsureFolder(string parent, string child)
+        {
+            var path = $"{parent}/{child}";
+            if (!AssetDatabase.IsValidFolder(path))
+                AssetDatabase.CreateFolder(parent, child);
         }
     }
 }
