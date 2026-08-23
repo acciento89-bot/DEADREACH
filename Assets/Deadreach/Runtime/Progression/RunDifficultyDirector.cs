@@ -2,7 +2,9 @@ using System;
 using System.Linq;
 using Kamilunavo.Deadreach.AI;
 using Kamilunavo.Deadreach.Combat;
+using Kamilunavo.Deadreach.Core;
 using Kamilunavo.Deadreach.Persistence;
+using Kamilunavo.Deadreach.Weapons;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Progression
@@ -128,7 +130,10 @@ namespace Kamilunavo.Deadreach.Progression
             var tier = Mathf.Max(1, Level / 10);
             boss.name = $"BOSS_Mutation_Tier_{tier}";
             boss.transform.localScale = Vector3.one * (1.58f + tier * 0.09f);
-            boss.Configure(2.55f + tier * 0.08f, 650f + tier * 260f, 24f + tier * 5f, 45 + tier * 20);
+
+            // Bosses never pay ordinary Scrap. Their guaranteed mutation weapon reward is granted
+            // in HandleBossDeath and only becomes secured after successful extraction.
+            boss.Configure(2.55f + tier * 0.08f, 650f + tier * 260f, 24f + tier * 5f, 0);
 
             _bossChaser = boss;
             _bossHealth = boss.GetComponent<Damageable>();
@@ -202,8 +207,14 @@ namespace Kamilunavo.Deadreach.Progression
         private void HandleBossDeath()
         {
             BossGateCleared = true;
+
+            var tier = Mathf.Clamp(Mathf.Max(1, Level / 10), 1, 5);
+            var seed = unchecked(Environment.TickCount ^ Level * 48611 ^ SaveService.Data.successfulExtractions * 3571);
+            var reward = WeaponLootFactory.CreateBossReward(Level, seed);
+            RunSession.Current?.GrantBossReward(reward);
+
             BossDefeated?.Invoke();
-            Debug.Log($"DEADREACH BOSS DOWN // LEVEL {Level:00} extraction gate unlocked.");
+            Debug.Log($"DEADREACH BOSS DOWN // LEVEL {Level:00} // MUTATION T{tier} REWARD GRANTED // extraction gate unlocked.");
         }
 
         public static string GetZoneName(int level)
