@@ -5,6 +5,7 @@ using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Player;
 using Kamilunavo.Deadreach.Progression;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Kamilunavo.Deadreach.UI
 {
@@ -18,6 +19,7 @@ namespace Kamilunavo.Deadreach.UI
         private GUIStyle _centerStyle;
         private GUIStyle _smallCenterStyle;
         private float _damageFlashUntil;
+        private int _styleKey;
 
         private void Start()
         {
@@ -44,12 +46,16 @@ namespace Kamilunavo.Deadreach.UI
 
         private void OnGUI()
         {
-            EnsureStyles();
-
             var safe = Screen.safeArea;
-            var left = safe.x + 18f;
-            var top = Screen.height - safe.yMax + 14f;
-            var width = Mathf.Min(420f, safe.width * 0.36f);
+            var mobile = Application.isMobilePlatform || Touchscreen.current != null;
+            var scale = mobile ? Mathf.Clamp(safe.height / 844f, 1f, 1.45f) : 1f;
+            EnsureStyles(mobile, scale);
+
+            var left = safe.x + (mobile ? 24f * scale : 18f);
+            var top = Screen.height - safe.yMax + (mobile ? 20f * scale : 14f);
+            var width = mobile
+                ? Mathf.Min(620f * scale, safe.width * 0.43f)
+                : Mathf.Min(420f, safe.width * 0.36f);
             var session = RunSession.Current;
             var profile = SaveService.Data;
             var inventory = RunInventory.Current;
@@ -57,50 +63,51 @@ namespace Kamilunavo.Deadreach.UI
 
             DrawDamageFlash(safe);
 
-            const float panelHeight = 202f;
+            var panelHeight = mobile ? 252f * scale : 202f;
             GUI.Box(new Rect(left, top, width, panelHeight), GUIContent.none);
-            GUI.Label(new Rect(left + 14f, top + 8f, width - 28f, 25f), "DEADREACH // FIELD OPS", _titleStyle);
-            GUI.Label(new Rect(left + 14f, top + 31f, width - 28f, 19f),
+            GUI.Label(new Rect(left + 14f * scale, top + 8f * scale, width - 28f * scale, 29f * scale), "DEADREACH // FIELD OPS", _titleStyle);
+            GUI.Label(new Rect(left + 14f * scale, top + 38f * scale, width - 28f * scale, 24f * scale),
                 $"LEVEL {session?.RunLevel ?? profile.selectedLevel:00} // {(director != null ? director.ZoneName : RunDifficultyDirector.GetZoneName(profile.selectedLevel))}", _textStyle);
 
             var hp = _playerHealth != null ? Mathf.CeilToInt(_playerHealth.CurrentHealth) : 0;
             var maxHp = _playerHealth != null ? Mathf.CeilToInt(_playerHealth.MaxHealth) : 0;
             var healthNormalized = _playerHealth != null ? _playerHealth.NormalizedHealth : 0f;
 
-            GUI.Label(new Rect(left + 14f, top + 52f, width - 28f, 18f), $"VITALS   {hp}/{maxHp}", _textStyle);
-            DrawBar(new Rect(left + 14f, top + 72f, width - 28f, 10f), healthNormalized, new Color(0.22f, 0.78f, 0.36f), new Color(0.75f, 0.15f, 0.12f));
+            GUI.Label(new Rect(left + 14f * scale, top + 66f * scale, width - 28f * scale, 24f * scale), $"VITALS   {hp}/{maxHp}", _textStyle);
+            DrawBar(new Rect(left + 14f * scale, top + 92f * scale, width - 28f * scale, (mobile ? 18f : 10f) * scale), healthNormalized,
+                new Color(0.22f, 0.78f, 0.36f), new Color(0.75f, 0.15f, 0.12f));
 
-            DrawPrimaryWeapon(left + 14f, top + 89f, width - 28f);
-            GUI.Label(new Rect(left + 14f, top + 116f, width - 28f, 19f),
+            DrawPrimaryWeapon(left + 14f * scale, top + 118f * scale, width - 28f * scale, scale);
+            GUI.Label(new Rect(left + 14f * scale, top + 151f * scale, width - 28f * scale, 24f * scale),
                 $"CARRIED {session?.CarriedScrap ?? 0}   //   WEAPON LOOT {inventory?.Weapons.Count ?? 0}/{inventory?.WeaponCapacity ?? 0}", _textStyle);
-            GUI.Label(new Rect(left + 14f, top + 136f, width - 28f, 19f),
+            GUI.Label(new Rect(left + 14f * scale, top + 178f * scale, width - 28f * scale, 24f * scale),
                 $"SECURED {profile.securedScrap}   //   STREAK {profile.currentExtractionStreak}", _textStyle);
-            GUI.Label(new Rect(left + 14f, top + 158f, width - 28f, 34f),
+            GUI.Label(new Rect(left + 14f * scale, top + 207f * scale, width - 28f * scale, 38f * scale),
                 director != null && director.IsBossLevel && !director.BossGateCleared
                     ? "OBJECTIVE // ELIMINATE MUTATION TARGET"
                     : "OBJECTIVE // REACH EXTRACTION WITH LOOT", _objectiveStyle);
 
-            if (!Application.isMobilePlatform)
+            if (!mobile)
             {
                 GUI.Label(new Rect(left, safe.yMax - 34f, Mathf.Min(620f, safe.width * 0.58f), 24f),
                     "WASD = MOVE   •   MOUSE = AIM + FIRE", _textStyle);
             }
 
             if (director != null && director.IsBossLevel && !director.BossGateCleared)
-                DrawBossBar(safe, director);
+                DrawBossBar(safe, director, mobile, scale);
 
             if (session == null)
                 return;
 
-            DrawExtractionFeedback(safe, session);
-            DrawRunResult(safe, session);
+            DrawExtractionFeedback(safe, session, mobile, scale);
+            DrawRunResult(safe, session, mobile, scale);
         }
 
-        private void DrawPrimaryWeapon(float x, float y, float width)
+        private void DrawPrimaryWeapon(float x, float y, float width, float scale)
         {
             if (_weapon == null)
             {
-                GUI.Label(new Rect(x, y, width, 24f), "PRIMARY // FIELD DR-7", _textStyle);
+                GUI.Label(new Rect(x, y, width, 28f * scale), "PRIMARY // FIELD DR-7", _textStyle);
                 return;
             }
 
@@ -108,70 +115,78 @@ namespace Kamilunavo.Deadreach.UI
             var stats = _weapon.RuntimeStats;
             var name = instance != null ? instance.displayNameSnapshot : "DR-7";
             var power = instance != null ? $"PWR {instance.itemPower}" : "BASE";
-            GUI.Label(new Rect(x, y, width, 24f),
+            GUI.Label(new Rect(x, y, width, 28f * scale),
                 $"PRIMARY // {name} // {power} // DMG {stats.Damage:0.#} // CRIT {stats.CritChance * 100f:0.#}%", _textStyle);
         }
 
-        private void DrawBossBar(Rect safe, RunDifficultyDirector director)
+        private void DrawBossBar(Rect safe, RunDifficultyDirector director, bool mobile, float scale)
         {
-            var width = Mathf.Min(610f, safe.width * 0.48f);
+            var width = mobile
+                ? Mathf.Min(760f * scale, safe.width * 0.56f)
+                : Mathf.Min(610f, safe.width * 0.48f);
             var x = safe.center.x - width * 0.5f;
-            var y = Screen.height - safe.yMax + 12f;
+            var y = Screen.height - safe.yMax + (mobile ? 18f * scale : 12f);
             var tier = Mathf.Clamp(Mathf.Max(1, director.Level / 10), 1, 5);
+            var height = mobile ? 76f * scale : 58f;
 
-            GUI.Box(new Rect(x, y, width, 58f), GUIContent.none);
-            GUI.Label(new Rect(x + 16f, y + 5f, width - 32f, 23f),
+            GUI.Box(new Rect(x, y, width, height), GUIContent.none);
+            GUI.Label(new Rect(x + 16f * scale, y + 5f * scale, width - 32f * scale, 30f * scale),
                 $"MUTATION // TIER {tier} // {GetBossName(tier)}", _centerStyle);
-            DrawBar(new Rect(x + 24f, y + 34f, width - 48f, 12f), director.BossHealthNormalized,
-                new Color(0.92f, 0.2f, 0.08f), new Color(0.35f, 0.02f, 0.01f));
+            DrawBar(new Rect(x + 24f * scale, y + 42f * scale, width - 48f * scale, (mobile ? 18f : 12f) * scale),
+                director.BossHealthNormalized, new Color(0.92f, 0.2f, 0.08f), new Color(0.35f, 0.02f, 0.01f));
         }
 
-        private void DrawExtractionFeedback(Rect safe, RunSession session)
+        private void DrawExtractionFeedback(Rect safe, RunSession session, bool mobile, float scale)
         {
             if (!session.IsInExtractionZone || session.IsCompleted || session.IsFailed)
                 return;
 
-            var width = Mathf.Min(440f, safe.width - 40f);
+            var width = mobile
+                ? Mathf.Min(620f * scale, safe.width - 48f * scale)
+                : Mathf.Min(440f, safe.width - 40f);
             var x = safe.center.x - width * 0.5f;
-            var y = Screen.height - safe.yMax + 82f;
+            var y = Screen.height - safe.yMax + (mobile ? 104f * scale : 82f);
+            var height = mobile ? 96f * scale : 76f;
 
-            GUI.Box(new Rect(x, y, width, 76f), GUIContent.none);
+            GUI.Box(new Rect(x, y, width, height), GUIContent.none);
 
             if (session.ExtractionBlockedByBoss)
             {
-                GUI.Label(new Rect(x + 16f, y + 8f, width - 32f, 28f), "EXTRACTION SEALED", _centerStyle);
-                GUI.Label(new Rect(x + 16f, y + 40f, width - 32f, 22f), "Mutation target still active.", _smallCenterStyle);
+                GUI.Label(new Rect(x + 16f * scale, y + 10f * scale, width - 32f * scale, 32f * scale), "EXTRACTION SEALED", _centerStyle);
+                GUI.Label(new Rect(x + 16f * scale, y + 48f * scale, width - 32f * scale, 26f * scale), "Mutation target still active.", _smallCenterStyle);
                 return;
             }
 
             if (session.ExtractionBlockedByNoLoot)
             {
-                GUI.Label(new Rect(x + 16f, y + 8f, width - 32f, 28f), "EXTRACTION LOCKED", _centerStyle);
-                GUI.Label(new Rect(x + 16f, y + 40f, width - 32f, 22f), "Collect Scrap or weapon loot first.", _smallCenterStyle);
+                GUI.Label(new Rect(x + 16f * scale, y + 10f * scale, width - 32f * scale, 32f * scale), "EXTRACTION LOCKED", _centerStyle);
+                GUI.Label(new Rect(x + 16f * scale, y + 48f * scale, width - 32f * scale, 26f * scale), "Collect Scrap or weapon loot first.", _smallCenterStyle);
                 return;
             }
 
-            GUI.Label(new Rect(x + 16f, y + 5f, width - 32f, 25f), "EXTRACTING // HOLD POSITION", _centerStyle);
-            DrawBar(new Rect(x + 24f, y + 44f, width - 48f, 15f), session.ExtractionProgress,
-                new Color(0.12f, 0.92f, 0.48f), new Color(0.12f, 0.92f, 0.48f));
+            GUI.Label(new Rect(x + 16f * scale, y + 8f * scale, width - 32f * scale, 30f * scale), "EXTRACTING // HOLD POSITION", _centerStyle);
+            DrawBar(new Rect(x + 24f * scale, y + 56f * scale, width - 48f * scale, (mobile ? 20f : 15f) * scale),
+                session.ExtractionProgress, new Color(0.12f, 0.92f, 0.48f), new Color(0.12f, 0.92f, 0.48f));
         }
 
-        private void DrawRunResult(Rect safe, RunSession session)
+        private void DrawRunResult(Rect safe, RunSession session, bool mobile, float scale)
         {
             if (!session.IsCompleted && !session.IsFailed)
                 return;
 
-            GUI.Box(new Rect(safe.center.x - 220f, safe.center.y - 66f, 440f, 132f), GUIContent.none);
+            var width = mobile ? Mathf.Min(620f * scale, safe.width - 60f * scale) : 440f;
+            var height = mobile ? 166f * scale : 132f;
+            GUI.Box(new Rect(safe.center.x - width * 0.5f, safe.center.y - height * 0.5f, width, height), GUIContent.none);
 
             if (session.IsCompleted)
             {
-                GUI.Label(new Rect(safe.center.x - 200f, safe.center.y - 40f, 400f, 36f), "EXTRACTION SECURED", _centerStyle);
-                GUI.Label(new Rect(safe.center.x - 200f, safe.center.y + 2f, 400f, 26f), "Loot banked. Returning to bunker...", _smallCenterStyle);
+                GUI.Label(new Rect(safe.center.x - width * 0.45f, safe.center.y - 50f * scale, width * 0.9f, 42f * scale), "EXTRACTION SECURED", _centerStyle);
+                GUI.Label(new Rect(safe.center.x - width * 0.45f, safe.center.y + 4f * scale, width * 0.9f, 32f * scale), "Loot banked. Returning to bunker...", _smallCenterStyle);
             }
             else
             {
-                GUI.Label(new Rect(safe.center.x - 200f, safe.center.y - 40f, 400f, 36f), "RUN LOST", _centerStyle);
-                GUI.Label(new Rect(safe.center.x - 200f, safe.center.y + 2f, 400f, 26f), "Unsecured loot lost. Returning to bunker...", _smallCenterStyle);
+                GUI.Label(new Rect(safe.center.x - width * 0.45f, safe.center.y - 50f * scale, width * 0.9f, 42f * scale), "RUN LOST", _centerStyle);
+                GUI.Label(new Rect(safe.center.x - width * 0.45f, safe.center.y + 4f * scale, width * 0.9f, 32f * scale), "Unsecured loot lost. Returning to bunker...", _smallCenterStyle);
             }
         }
 
@@ -190,7 +205,7 @@ namespace Kamilunavo.Deadreach.UI
         {
             normalized = Mathf.Clamp01(normalized);
             var previous = GUI.color;
-            GUI.color = new Color(0f, 0f, 0f, 0.6f);
+            GUI.color = new Color(0f, 0f, 0f, 0.68f);
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = Color.Lerp(criticalColor, healthyColor, normalized);
             GUI.DrawTexture(new Rect(rect.x + 2f, rect.y + 2f, Mathf.Max(0f, (rect.width - 4f) * normalized), Mathf.Max(0f, rect.height - 4f)), Texture2D.whiteTexture);
@@ -209,22 +224,30 @@ namespace Kamilunavo.Deadreach.UI
             };
         }
 
-        private void EnsureStyles()
+        private void EnsureStyles(bool mobile, float scale)
         {
-            if (_textStyle != null)
+            var key = mobile ? Mathf.RoundToInt(scale * 100f) : 0;
+            if (_textStyle != null && _styleKey == key)
                 return;
 
-            _titleStyle = new GUIStyle(GUI.skin.label) { fontSize = 17, fontStyle = FontStyle.Bold };
-            _textStyle = new GUIStyle(GUI.skin.label) { fontSize = 12 };
+            _styleKey = key;
+            var titleSize = mobile ? Mathf.RoundToInt(22f * scale) : 17;
+            var textSize = mobile ? Mathf.RoundToInt(16f * scale) : 12;
+            var objectiveSize = mobile ? Mathf.RoundToInt(15f * scale) : 11;
+            var centerSize = mobile ? Mathf.RoundToInt(21f * scale) : 17;
+            var smallCenterSize = mobile ? Mathf.RoundToInt(16f * scale) : 13;
+
+            _titleStyle = new GUIStyle(GUI.skin.label) { fontSize = titleSize, fontStyle = FontStyle.Bold };
+            _textStyle = new GUIStyle(GUI.skin.label) { fontSize = textSize };
             _objectiveStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 11,
+                fontSize = objectiveSize,
                 fontStyle = FontStyle.Bold,
                 normal = { textColor = new Color(0.72f, 0.82f, 0.76f, 1f) },
                 wordWrap = true
             };
-            _centerStyle = new GUIStyle(GUI.skin.label) { fontSize = 17, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
-            _smallCenterStyle = new GUIStyle(GUI.skin.label) { fontSize = 13, alignment = TextAnchor.MiddleCenter };
+            _centerStyle = new GUIStyle(GUI.skin.label) { fontSize = centerSize, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
+            _smallCenterStyle = new GUIStyle(GUI.skin.label) { fontSize = smallCenterSize, alignment = TextAnchor.MiddleCenter };
         }
     }
 }
