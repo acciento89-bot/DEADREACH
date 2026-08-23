@@ -18,14 +18,19 @@ namespace Kamilunavo.Deadreach.Input
 
         public bool HasMoveTouch => _moveTouchId >= 0;
         public bool HasAimTouch => _aimTouchId >= 0;
+        public bool HasAbilityTouch => _abilityTouchId >= 0;
         public Vector2 MoveTouchOrigin => _moveOrigin;
         public Vector2 MoveTouchPosition => _movePosition;
         public float VirtualStickRadius => virtualStickRadius;
 
         private int _moveTouchId = -1;
         private int _aimTouchId = -1;
+        private int _abilityTouchId = -1;
         private Vector2 _moveOrigin;
         private Vector2 _movePosition;
+        private Rect _abilityTouchRegion;
+        private bool _abilityTouchRegionValid;
+        private bool _abilityQueued;
 
         private void Awake()
         {
@@ -50,6 +55,21 @@ namespace Kamilunavo.Deadreach.Input
             ReadTouches();
         }
 
+        public void SetAbilityTouchRegion(Rect screenSpaceRegion)
+        {
+            _abilityTouchRegion = screenSpaceRegion;
+            _abilityTouchRegionValid = screenSpaceRegion.width > 1f && screenSpaceRegion.height > 1f;
+        }
+
+        public bool ConsumeAbilityPress()
+        {
+            if (!_abilityQueued)
+                return false;
+
+            _abilityQueued = false;
+            return true;
+        }
+
         private void ReadDesktopAndGamepad()
         {
             var move = Vector2.zero;
@@ -58,10 +78,18 @@ namespace Kamilunavo.Deadreach.Input
             {
                 move.x = (Keyboard.current.dKey.isPressed ? 1f : 0f) - (Keyboard.current.aKey.isPressed ? 1f : 0f);
                 move.y = (Keyboard.current.wKey.isPressed ? 1f : 0f) - (Keyboard.current.sKey.isPressed ? 1f : 0f);
+
+                if (Keyboard.current.spaceKey.wasPressedThisFrame)
+                    _abilityQueued = true;
             }
 
-            if (Gamepad.current != null && Gamepad.current.leftStick.ReadValue().sqrMagnitude > move.sqrMagnitude)
-                move = Gamepad.current.leftStick.ReadValue();
+            if (Gamepad.current != null)
+            {
+                if (Gamepad.current.leftStick.ReadValue().sqrMagnitude > move.sqrMagnitude)
+                    move = Gamepad.current.leftStick.ReadValue();
+                if (Gamepad.current.rightShoulder.wasPressedThisFrame)
+                    _abilityQueued = true;
+            }
 
             Move = Vector2.ClampMagnitude(move, 1f);
 
@@ -84,6 +112,7 @@ namespace Kamilunavo.Deadreach.Input
             {
                 _moveTouchId = -1;
                 _aimTouchId = -1;
+                _abilityTouchId = -1;
                 return;
             }
 
@@ -92,8 +121,25 @@ namespace Kamilunavo.Deadreach.Input
                 var id = touch.touchId;
                 var position = touch.screenPosition;
 
+                if (id == _abilityTouchId)
+                {
+                    if (touch.phase is UnityEngine.InputSystem.TouchPhase.Ended or UnityEngine.InputSystem.TouchPhase.Canceled)
+                    {
+                        if (touch.phase == UnityEngine.InputSystem.TouchPhase.Ended)
+                            _abilityQueued = true;
+                        _abilityTouchId = -1;
+                    }
+                    continue;
+                }
+
                 if (touch.phase == UnityEngine.InputSystem.TouchPhase.Began)
                 {
+                    if (_abilityTouchRegionValid && _abilityTouchRegion.Contains(position) && _abilityTouchId < 0)
+                    {
+                        _abilityTouchId = id;
+                        continue;
+                    }
+
                     if (position.x < Screen.width * 0.5f && _moveTouchId < 0)
                     {
                         _moveTouchId = id;
