@@ -11,7 +11,7 @@ Turn the expedition from a simple loot → extraction run into a mission-driven 
 1. Pull `production/0.11-expedition-director`.
 2. Let Unity finish compiling.
 3. Initial 0.11 compile reached **0 red compiler errors** ✅ 2026-08-23.
-4. After the extraction-support geometry fix, run a fresh compile again.
+4. After the extraction-egress fix, run a fresh compile again.
 5. Run `DEADREACH > Build Production Slice 0.11` again because the generated Dead City base geometry changed.
 6. Require no blocking red build/setup error.
 
@@ -66,6 +66,7 @@ Fix committed:
 - keep the accepted extraction location at `z=20`
 - extend `World_Ground` beyond the north world boundary
 - extend `Road_Main` beyond the north world boundary
+- force every collider owned by the extraction zone hierarchy to remain a trigger, so later dressing cannot create a physical trap
 - no mobile-input or mission-logic changes
 
 Fresh required check after rebuilding 0.11:
