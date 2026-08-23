@@ -55,13 +55,11 @@ Validated:
 
 - active branch: **`production/0.5-bunker-progression-boss-ui`**
 - PR #5 remains **Draft**
-- earlier 0.5 code passed a real-Unity compile with **0 red C# errors**
+- earlier 0.5 foundation code passed real Unity compile with **0 red C# errors**
 - second Bunker UI polish is accepted as a good **Unity Editor/Desktop** direction
-- later operator/weapon-preview code changed after that compile and therefore needs a fresh compile/build validation
-- first operator bootstrap failed glTFast import for locally generated Lis/Matt sources
-- second real-Unity attempt exposed an additional cleanup bug: deleting those source assets through `AssetDatabase.DeleteAsset` while their wrappers still referenced them as nested prefabs produced `Missing Nested Prefab Asset` errors; Shaun/Matt then still failed glTFast import
-- the failed incremental importer path is now **disabled** and replaced by atomic `Production05OperatorArtSetupV2`
-- Atomic V2 is implemented on branch but **not yet real-Unity validated**
+- Atomic `Production05OperatorArtSetupV2` has now passed the real Unity `Build Production Slice 0.5` step with **no blocking error**
+- the previous `Missing Nested Prefab Asset` + glTFast import blocker is therefore **resolved in real Unity**
+- full Production 0.5 is **not yet accepted**; the consolidated MEGA Runtime Gate remains outstanding
 
 ## 4. Production 0.5 scope on branch
 
@@ -128,21 +126,21 @@ The Matt full export contains Axe, Guitar, Knife, Pistol, Rifle, Shotgun, SMG, S
 
 Selected operator model is used both in Bunker preview and actual Dead City gameplay. Stats still modify health / mobility / damage.
 
-### 4.5 Atomic operator glTF import V2
+### 4.5 Atomic operator glTF import V2 — REAL UNITY BUILD VALIDATED
 
 Public entry point:
 `Assets/Deadreach/Editor/Production05OperatorArtSetup.cs`
 
-New implementation:
+Implementation:
 `Assets/Deadreach/Editor/Production05OperatorArtSetupV2.cs`
 
-Real-Unity failures that forced this redesign:
+Real-Unity failures that forced the redesign:
 - first auto-downloaded Lis/Matt sources failed glTFast import
 - first repair corrected the source mapping to Shaun/Matt but cleanup used `AssetDatabase.DeleteAsset` on obsolete sources while legacy wrapper prefabs still referenced their source GUIDs
 - Unity therefore imported a half-deleted graph and reported `Missing Nested Prefab Asset` for old Lis/Matt wrappers
 - Shaun/Matt were also refreshed/imported source-by-source while dependency/importer state was still being mutated, causing continued glTFast failures and duplicate import attempts
 
-Atomic V2 now:
+Atomic V2:
 - leaves `Production05OperatorArtSetup` as a thin stable API/menu wrapper so existing builder calls do not change
 - removes generated/legacy wrapper prefabs + controllers and obsolete Lis/Matt sources through filesystem operations **before any AssetDatabase refresh**
 - removes `.meta` for Shaun/Matt only when the previous glTFast import produced no GameObject, clearing stale failed ScriptedImporter state
@@ -157,7 +155,7 @@ Atomic V2 now:
 - dedicated animator controllers are built from each imported operator's own clips where available, with validated Sam controller only as fallback
 - no external hand-mounted weapon path is introduced
 
-Atomic V2 is **implemented but not yet real-Unity validated**. Do not mark the blocker resolved until the user runs the build successfully.
+**Real Unity result on 2026-08-23:** `DEADREACH > Build Production Slice 0.5` completed with no blocking error after pulling Atomic V2. The prior nested-prefab/glTFast blocker is accepted as fixed. Runtime/visual behavior of the full 0.5 scope still requires the MEGA Runtime Gate below.
 
 ### 4.6 Enemies / boss / runtime progression
 
@@ -211,19 +209,11 @@ Before release, landscape mobile validation must cover:
 
 Do **not** mark UI/release final until this gate passes.
 
-## 6. Next action
+## 6. Next action — Production 0.5 MEGA Runtime Gate
 
-This is currently a blocker-repair step, not another mini feature approval.
+The import/build blocker is resolved. Do not spend another turn on importer repair unless a new reproducible import error appears.
 
-User workflow after latest branch pull:
-1. `git pull`
-2. let Unity finish compiling/importing
-3. run **`DEADREACH > Build Production Slice 0.5`** once
-4. no manual deletion/reimport is required; Atomic V2 must clean obsolete/generated files, reset failed importer metadata only where needed, prepare Shaun + Matt Full dependencies, perform one import pass, build fully unpacked wrappers and reopen Bunker
-5. if this build succeeds without blocking red errors, continue immediately into the single consolidated `docs/PRODUCTION_05_TEST.md` MEGA Runtime Gate
-6. if it still fails, capture the **first glTFast detail/error above the final DEADREACH atomic-import error**; do not rerun multiple manual imports
-
-Mega Gate covers in one end-to-end acceptance:
+Run the consolidated `docs/PRODUCTION_05_TEST.md` acceptance in one end-to-end pass:
 - Bunker/menu/persistence
 - horizontal Arsenal preview
 - distinct Sam/Pistol, Raven/Shaun/SMG, Briggs/Matt/Rifle previews and runtime swaps
@@ -244,8 +234,7 @@ When resuming:
 2. treat 0.1–0.4 as merged/validated
 3. never reintroduce an external hand-mounted Rifle path
 4. active branch is `production/0.5-bunker-progression-boss-ui`
-5. latest unvalidated blocker repair is Atomic `Production05OperatorArtSetupV2`
-6. next immediate action is pull + `Build Production Slice 0.5`
-7. do not claim glTF import fixed until real Unity confirms the build
-8. after build success, run one MEGA Runtime Gate, not many tiny approvals
-9. keep PR #5 Draft until acceptance
+5. Atomic `Production05OperatorArtSetupV2` import/build blocker is **REAL UNITY VALIDATED FIXED**
+6. next immediate action is the single `docs/PRODUCTION_05_TEST.md` MEGA Runtime Gate
+7. do not repeat importer mini-tests unless a new import error appears
+8. keep PR #5 Draft until full 0.5 acceptance
