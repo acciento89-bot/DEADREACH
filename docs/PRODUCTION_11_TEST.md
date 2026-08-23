@@ -10,7 +10,7 @@ Turn the expedition from a simple loot → extraction run into a mission-driven 
 
 1. Pull `production/0.11-expedition-director`.
 2. Let Unity finish compiling.
-3. Require **0 red compiler errors**.
+3. Require **0 red compiler errors**. ✅ PASSED 2026-08-23
 4. Run `DEADREACH > Build Production Slice 0.11`.
 5. Require no blocking red build/setup error.
 
