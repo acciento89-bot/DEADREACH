@@ -84,12 +84,13 @@ Physical-device touch/haptics and iOS/Android builds are still separate validati
 - Production 0.3 real Unity compile + generator gate **PASSED**
 - Production 0.3 empty-catalog fallback runtime gate **PASSED**
 - Quaternius Zombie Apocalypse Kit selected as first production-art source
-- six selected Quaternius glTF model files + license evidence are now committed on the 0.3 branch
-- first real-art Play Mode test proves Survivor/Infected visual replacement works
-- first real-art test exposed two content-prep defects: gray/untextured materials and multiple embedded Survivor weapon meshes
-- fixes are implemented in tooling but require one local asset refresh + Unity revalidation
+- six selected Quaternius glTF model files + license evidence are committed on the 0.3 branch
+- real Survivor/Infected/Rifle assets load and replace prototypes in Play Mode
+- duplicate built-in Survivor weapon rack was reduced, but current mounted Rifle still uses an incorrect fallback socket and appears at head height
+- Survivor, Infected and Rifle prefabs still render white/gray, proving the problem exists at prefab/material setup level rather than only in the generated gameplay scene
+- explicit URP atlas-material assignment + robust right-hand/grip pivot correction are implemented on branch and require local Unity revalidation
 
-Do not claim 0.3 production-art complete until the corrected textured Survivor/Infected/Rifle presentation is visually/runtime validated.
+Do not claim 0.3 production-art complete until corrected colored materials and weapon mounting are visually/runtime validated.
 
 ## 6. Production Art / Presentation 0.3 — current implementation
 
@@ -140,20 +141,31 @@ Main generator:
 
 `CombatFeedbackPresenter` uses a preallocated tracer pool (default 24) instead of per-shot GameObject creation/destruction.
 
-### Quaternius cleanup added after first real-art test
+### Quaternius asset cleanup / material hardening
 
-The first imported models rendered and replaced the prototype visuals, but the screenshot/runtime test exposed:
+First real-art tests established:
 
-1. models were gray because the selected flattened glTF subset did not include a locally resolvable shared `Zombie_Atlas.png`
-2. full Survivor Sam export contained multiple built-in weapon presentation meshes while DEADREACH also mounted its own equipped Rifle
+1. actual glTF models load and replace prototype visuals correctly
+2. all imported production prefabs still render white/gray, including the standalone Rifle prefab
+3. current generated Survivor prefab shows `WeaponSocket` as a root sibling of `Model`, proving automatic right-hand lookup fell back instead of attaching to the hand bone
+4. current Rifle can therefore appear around head/upper-body height even though the equipment binder itself is working
 
-Implemented correction:
+Implemented correction now on branch:
 
-- installer now downloads `Zombie_Atlas.png`
-- every selected glTF `Zombie_Atlas.png` URI is normalized to the atlas beside the flattened DEADREACH glTF subset
-- Survivor source switched to Quaternius `Characters_Sam_SingleWeapon.gltf`
-- wrapper setup additionally disables separately named embedded weapon renderers
-- DEADREACH remains the sole owner of equipped-weapon presentation
+- installer keeps `Zombie_Atlas.png` beside flattened glTF subset and normalizes atlas URIs
+- setup now additionally creates `Assets/Deadreach/Art/Production/Materials/Quaternius_ZombieAtlas.mat`
+- material uses URP/Lit (Standard fallback), explicit atlas BaseMap/MainTex, white base color, low smoothness and zero metallic
+- setup explicitly assigns that material to every active Survivor/Infected/Rifle renderer instead of trusting glTF material resolution
+- Survivor source remains Quaternius `Characters_Sam_SingleWeapon.gltf`
+- separately named embedded weapon renderers remain suppressed
+- right-hand resolution now tries Humanoid `HumanBodyBones.RightHand`, normalized transform/bone-name scoring, then a geometry-derived bone fallback
+- old root/head weapon fallback is replaced with hand-height geometry fallback if no bone is resolved
+- Rifle wrapper now rotates long-X geometry onto DEADREACH +Z forward, relocates wrapper origin to a calculated grip/trigger point and places `MuzzleSocket` at the barrel-forward bound
+- DEADREACH remains sole owner of equipped-weapon presentation
+
+Latest implementation commit for these fixes:
+
+`8852cf428847249c86e8da0908286554b62ed20d`
 
 ## 7. Production 0.3 real Unity validation
 
@@ -177,17 +189,20 @@ Confirmed by the user:
 - validator runs without exception/red error
 - only expected yellow missing-asset warnings occur
 
-### First real-art visual gate — PARTIAL PASS / CLEANUP REQUIRED
+### Real-art visual gate — PARTIAL PASS / MATERIAL + SOCKET REVALIDATION REQUIRED
 
-Confirmed by user screenshots in Play Mode:
+Confirmed by user screenshots in Play Mode and prefab view:
 
 - real Survivor model appears instead of Capsule
 - real Infected models appear instead of prototype enemies
+- real Rifle prefab loads
 - production visual binder therefore works with actual imported glTF assets
-- models currently render gray/untextured
-- Survivor currently shows excessive/duplicate weapon visuals
+- standalone Survivor, Infected and Rifle prefabs are still white/gray
+- current Survivor `WeaponSocket` is at wrapper root instead of right-hand bone
+- mounted Rifle appears at head/upper-body height
+- duplicate/multi-weapon problem is substantially reduced compared with first import
 
-The gray/duplicate-weapon issues are now addressed in branch tooling but are **not yet revalidated in Unity**.
+Explicit material and socket/grip fixes are implemented but **not yet revalidated in Unity**.
 
 ## 8. Selected first production-art source
 
@@ -224,21 +239,21 @@ Git LFS tracks `.gltf`, `.glb` and image/binary art assets.
 On local `production/0.3-art-presentation`:
 
 1. `git pull`
-2. rerun `tools/install-quaternius-zombie-kit.ps1 -CommitAndPush`
-3. confirm `Zombie_Atlas.png` is downloaded and updated art is pushed
-4. wait for Unity/glTFast reimport
-5. run `DEADREACH > Production > Setup Quaternius Starter Art` again to overwrite wrappers/controllers
-6. run `DEADREACH > Production > Validate Asset Catalog`
-7. regenerate with `DEADREACH > Build Production Slice 0.3`
-8. Play → Deploy
-9. require textured/colored Survivor + Infected
-10. require only one DEADREACH-equipped Rifle presentation on Survivor
-11. validate scale/orientation/animations/weapon mount/muzzle origin
-12. require movement/combat/loot/extraction regression-free and no blocking Console errors
+2. wait for Unity compile
+3. require **0 red compile errors**
+4. run `DEADREACH > Production > Setup Quaternius Starter Art` again to rebuild wrappers/material/controllers
+5. inspect `Survivor_Quaternius_Sam.prefab`: `WeaponSocket` should ideally be nested under a hand/bone hierarchy; root fallback is acceptable only if positioned at actual hand height
+6. inspect Survivor/Rifle prefab color: atlas texture should now be visible rather than plain white/gray
+7. run `DEADREACH > Production > Validate Asset Catalog`
+8. regenerate with `DEADREACH > Build Production Slice 0.3`
+9. Play → Deploy
+10. require colored Survivor + Infected + Rifle
+11. require exactly one DEADREACH-equipped Rifle at/near the right hand rather than the head
+12. validate muzzle/tracer origin, movement/combat/loot/extraction and no blocking Console errors
 
 ## 10. After corrected real starter-art validation
 
-1. tune weapon socket/orientation if needed
+1. final weapon socket/orientation polish if visually required
 2. proper muzzle flash / impact production VFX
 3. first real combat audio-content pass
 4. extend Quaternius kit into Dead City environment props
@@ -254,8 +269,9 @@ When resuming:
 1. read this file first
 2. inspect active branch / PR #3
 3. note compile/generator + empty-catalog fallback gates passed
-4. note first real-art rendering works but first pass was gray and had duplicate Survivor weapons
-5. note atlas + SingleWeapon/suppression fixes are implemented but require revalidation
-6. update this file after the corrected art test
+4. note real model binding works
+5. note latest screenshots proved white/gray prefab materials and root-level weapon socket/head placement
+6. note explicit URP atlas assignment + right-hand/grip wrapper fixes are implemented in commit `8852cf428847249c86e8da0908286554b62ed20d` but need Unity revalidation
+7. update this file after corrected art test
 
 Do not rely on chat history alone.
