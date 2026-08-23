@@ -37,7 +37,7 @@ Turn existing statistical enemy/operator variants into real gameplay identities 
 - movement was not reliably usable in all directions
 - mobile Ability did not provide trustworthy visible confirmation
 
-0.9 must not be promoted on either rejected implementation.
+Neither rejected implementation is part of the accepted mobile baseline.
 
 ## Fixed-zone mobile implementation — PASSED 2026-08-23
 
@@ -54,20 +54,20 @@ Real landscape phone/Device Simulator validation accepted:
 - Ability feedback makes registration visible ✅
 - mobile FIELD OPS / Vitals / HP / loot / scrap / objective readability accepted ✅
 
-## Final regression — REMAINING
+## Final regression — PASSED 2026-08-23
 
-Run one complete accepted-baseline loop:
-1. Bunker → Workshop: Workshop present and progression values intact.
-2. Arsenal: weapon orientation/framing still accepted.
-3. Deploy.
-4. Combat and collect loot/scrap.
-5. Extract successfully.
-6. Return to Bunker.
-7. Workshop remains present after scene reload.
-8. Calibration / Salvage / Bunker upgrade persistence remains intact.
-9. Enemy role behavior remains accepted.
-10. SAM / RAVEN / BRIGGS ability gameplay remains accepted.
-11. Sector FX / reward / boss presentation remain accepted where encountered.
-12. Unity Console ends with **0 red runtime errors**.
+Complete accepted-baseline loop passed:
+1. Bunker → Workshop: Workshop present and progression values intact ✅
+2. Arsenal: weapon orientation/framing remains accepted ✅
+3. Deploy ✅
+4. Combat and loot/scrap collection ✅
+5. Successful extraction ✅
+6. Return to Bunker ✅
+7. Workshop remains present after scene reload ✅
+8. Calibration / Salvage / Bunker upgrade persistence remains intact ✅
+9. Enemy role behavior remains accepted ✅
+10. SAM / RAVEN / BRIGGS ability gameplay remains accepted ✅
+11. Accepted presentation stack remains intact ✅
+12. Unity Console ends with **0 red runtime errors** ✅
 
-When this regression passes, Production 0.9 is ready to leave Draft and merge to `main`.
+Production 0.9 is fully real-Unity validated and ready to merge to `main`.
