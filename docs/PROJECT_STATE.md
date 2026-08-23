@@ -60,8 +60,10 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - stable production level: **0.8**
 - stable merge: `876127fb9997951afcca738cd7251acd2f662014`
 - active branch: **`production/0.9-combat-depth`**
-- Production 0.9 Phase A combat-depth implementation is in progress on that branch
-- current required gate after the first implementation block: Unity compile → Build Production Slice 0.9 → role/ability runtime acceptance
+- PR #9: Draft, targets `main`
+- Production 0.9 first real Unity compile gate passed with **0 red compiler errors** on 2026-08-23
+- `DEADREACH > Build Production Slice 0.9` completed successfully on 2026-08-23
+- current required gate: enemy-role runtime test → operator abilities → mobile ability touch → final 0.8 regression
 
 ## 4. Production 0.8 shipped baseline that must remain green
 
@@ -100,26 +102,28 @@ Turn existing statistical variants into real gameplay identities.
 - **SAM / FIELD PATCH** — restore 32% max HP, 18s cooldown, no cooldown waste at full health
 - **RAVEN / VECTOR DASH** — collision-aware 4.6m dash, 7.5s cooldown
 - **BRIGGS / SHOCKWAVE** — damage all infected within 4.6m, 12s cooldown, no cooldown waste with no valid target
-- Operator definitions now expose ability name / description / cooldown
+- Operator definitions expose ability name / description / cooldown
 - desktop input: `SPACE`
 - gamepad input: right shoulder
-- mobile input: reserved Ability touch region that is excluded from move/aim touch ownership
+- mobile input: reserved Ability touch region excluded from move/aim touch ownership
 - in-expedition ability HUD shows ability name and READY/cooldown state
 
 ### Build / bootstrap
 - `Production09CombatDepthBootstrap` binds role brains and operator ability controller at runtime after validated systems finish `Start`
-- new menu gate: `DEADREACH > Build Production Slice 0.9`
+- menu gate: `DEADREACH > Build Production Slice 0.9`
 - test plan: `docs/PRODUCTION_09_TEST.md`
 
 ## 6. Current 0.9 gate
 
-1. switch/pull `production/0.9-combat-depth`
-2. Unity compile → require **0 red compiler errors**
-3. run `DEADREACH > Build Production Slice 0.9`
-4. validate Runner / Brute / Stalker special behaviors and telegraphs
-5. validate SAM / RAVEN / BRIGGS abilities and cooldown behavior
-6. validate mobile Ability touch does not also become aim/fire
-7. run full 0.8 regression and require **0 red runtime errors**
+Completed:
+1. Unity compile → **0 red compiler errors** ✅
+2. `DEADREACH > Build Production Slice 0.9` → completed successfully ✅
+
+Next:
+3. validate Runner / Brute / Stalker special behaviors and telegraphs
+4. validate SAM / RAVEN / BRIGGS abilities and cooldown behavior
+5. validate mobile Ability touch does not also become aim/fire
+6. run full 0.8 regression and require **0 red runtime errors**
 
 ## 7. Handoff protocol
 
@@ -127,7 +131,9 @@ When resuming:
 1. read this file first
 2. stable baseline is Production 0.8 on `main`
 3. active work is Production 0.9 on `production/0.9-combat-depth`
-4. preserve schema-v6 Workshop progression and accepted 0.7 presentation
-5. never reintroduce external gameplay hand-mounted Rifle transforms
-6. keep mobile landscape-only
-7. run `docs/PRODUCTION_09_TEST.md` before promoting 0.9
+4. compile + Build Production Slice 0.9 gates are green
+5. next gate is enemy roles, then operator abilities, mobile ability touch and full regression
+6. preserve schema-v6 Workshop progression and accepted 0.7 presentation
+7. never reintroduce external gameplay hand-mounted Rifle transforms
+8. keep mobile landscape-only
+9. run `docs/PRODUCTION_09_TEST.md` before promoting 0.9
