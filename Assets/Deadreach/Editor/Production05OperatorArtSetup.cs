@@ -20,17 +20,33 @@ namespace Kamilunavo.Deadreach.Editor
         private const string ControllerRoot = ProductionRoot + "/Controllers";
         private const string AtlasMaterialPath = ProductionRoot + "/Materials/Quaternius_ZombieAtlas.mat";
         private const string SamPrefabPath = PrefabRoot + "/Survivor_Quaternius_Sam.prefab";
-        private const string ScoutSourcePath = SourceRoot + "/Survivor_Lis.gltf";
-        private const string WardenSourcePath = SourceRoot + "/Survivor_Matt.gltf";
-        private const string ScoutPrefabPath = PrefabRoot + "/Survivor_Quaternius_Lis.prefab";
+
+        // 0.5 operator sources are deliberately chosen by their artist-authored hand weapon:
+        // SAM    -> validated Sam SingleWeapon / pistol
+        // RAVEN  -> Shaun SingleWeapon / SMG
+        // BRIGGS -> Matt full export, filtered to its already-rigged Rifle only
+        private const string ScoutSourcePath = SourceRoot + "/Survivor_Shaun.gltf";
+        private const string WardenSourcePath = SourceRoot + "/Survivor_Matt_Full.gltf";
+        private const string ScoutPrefabPath = PrefabRoot + "/Survivor_Quaternius_Shaun.prefab";
         private const string WardenPrefabPath = PrefabRoot + "/Survivor_Quaternius_Matt.prefab";
 
-        private const string ScoutUrl = "https://raw.githubusercontent.com/agentkaerf/FreeModels/main/Zombie%20Apocalypse%20Kit%20-%20March%202024/Characters/glTF/Characters_Lis_SingleWeapon.gltf";
-        private const string WardenUrl = "https://raw.githubusercontent.com/agentkaerf/FreeModels/main/Zombie%20Apocalypse%20Kit%20-%20March%202024/Characters/glTF/Characters_Matt_SingleWeapon.gltf";
+        // These were created by the first 0.5 operator bootstrap and can remain in a failed glTFast
+        // import state. They are no longer valid production sources and are removed automatically.
+        private const string LegacyLisSourcePath = SourceRoot + "/Survivor_Lis.gltf";
+        private const string LegacyMattSingleSourcePath = SourceRoot + "/Survivor_Matt.gltf";
+
+        private const string ScoutUrl = "https://raw.githubusercontent.com/agentkaerf/FreeModels/main/Zombie%20Apocalypse%20Kit%20-%20March%202024/Characters/glTF/Characters_Shaun_SingleWeapon.gltf";
+        private const string WardenUrl = "https://raw.githubusercontent.com/agentkaerf/FreeModels/main/Zombie%20Apocalypse%20Kit%20-%20March%202024/Characters/glTF/Characters_Matt.gltf";
 
         private static readonly Regex ExternalUriRegex = new(
             "\\\"uri\\\"\\s*:\\s*\\\"(?<uri>(?:\\\\.|[^\\\"])*)\\\"",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly string[] WeaponTokens =
+        {
+            "axe", "guitar", "knife", "pistol", "rifle", "shotgun", "smg", "submachine",
+            "spear", "woodenbat", "baseballbat", "gun", "firearm"
+        };
 
         [MenuItem("DEADREACH/Production/Repair 0.5 Operator Art", priority = 24)]
         public static void RepairMenu()
@@ -43,6 +59,8 @@ namespace Kamilunavo.Deadreach.Editor
             Directory.CreateDirectory(Path.Combine(Application.dataPath, "Deadreach/ThirdParty/Quaternius/ZombieApocalypseKit/glTF"));
             EnsureFolder(ProductionRoot, "Prefabs");
             EnsureFolder(ProductionRoot, "Controllers");
+
+            CleanupLegacyFailedSources();
 
             if (!EnsureSource(ScoutSourcePath, ScoutUrl, 100000))
                 return false;
@@ -62,11 +80,25 @@ namespace Kamilunavo.Deadreach.Editor
             }
 
             var samFallbackController = samPrefab.GetComponentInChildren<Animator>(true)?.runtimeAnimatorController;
-            var scoutController = BuildAnimatorController(ScoutSourcePath, "Survivor_Quaternius_Lis", samFallbackController);
+            var scoutController = BuildAnimatorController(ScoutSourcePath, "Survivor_Quaternius_Shaun", samFallbackController);
             var wardenController = BuildAnimatorController(WardenSourcePath, "Survivor_Quaternius_Matt", samFallbackController);
 
-            var scoutPrefab = BuildOperatorWrapper(ScoutSourcePath, ScoutPrefabPath, "Survivor_Quaternius_Lis", atlasMaterial, scoutController);
-            var wardenPrefab = BuildOperatorWrapper(WardenSourcePath, WardenPrefabPath, "Survivor_Quaternius_Matt", atlasMaterial, wardenController);
+            var scoutPrefab = BuildOperatorWrapper(
+                ScoutSourcePath,
+                ScoutPrefabPath,
+                "Survivor_Quaternius_Shaun",
+                atlasMaterial,
+                scoutController,
+                "smg");
+
+            var wardenPrefab = BuildOperatorWrapper(
+                WardenSourcePath,
+                WardenPrefabPath,
+                "Survivor_Quaternius_Matt",
+                atlasMaterial,
+                wardenController,
+                "rifle");
+
             if (scoutPrefab == null || wardenPrefab == null)
                 return false;
 
@@ -76,8 +108,35 @@ namespace Kamilunavo.Deadreach.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log("DEADREACH 0.5 operator art READY: SAM=Sam, RAVEN=Lis, BRIGGS=Matt. All use artist-authored SingleWeapon rigs and operator-specific animation controllers when source clips are available.");
+            Debug.Log(
+                "DEADREACH 0.5 operator art READY: SAM=Sam/Pistol, RAVEN=Shaun/SMG, " +
+                "BRIGGS=Matt/Rifle. All visible weapons remain on their artist-authored hand rigs.");
             return true;
+        }
+
+        private static void CleanupLegacyFailedSources()
+        {
+            DeleteAssetAndMetaIfPresent(LegacyLisSourcePath);
+            DeleteAssetAndMetaIfPresent(LegacyMattSingleSourcePath);
+        }
+
+        private static void DeleteAssetAndMetaIfPresent(string assetPath)
+        {
+            var absolute = AssetPathToAbsolute(assetPath);
+            if (!File.Exists(absolute) && !File.Exists(absolute + ".meta"))
+                return;
+
+            // AssetDatabase deletion is preferred because it clears importer state. A filesystem
+            // fallback handles files whose failed ScriptedImporter never produced a healthy asset.
+            if (!AssetDatabase.DeleteAsset(assetPath))
+            {
+                if (File.Exists(absolute))
+                    File.Delete(absolute);
+                if (File.Exists(absolute + ".meta"))
+                    File.Delete(absolute + ".meta");
+            }
+
+            Debug.Log($"DEADREACH removed obsolete failed 0.5 operator source: {Path.GetFileName(assetPath)}");
         }
 
         private static bool EnsureSource(string assetPath, string sourceUrl, long minimumBytes)
@@ -97,9 +156,7 @@ namespace Kamilunavo.Deadreach.Editor
                 if (!sourceFile.Exists || sourceFile.Length < minimumBytes)
                     throw new IOException($"Operator glTF is unexpectedly small ({(sourceFile.Exists ? sourceFile.Length : 0)} bytes).");
 
-                // IMPORTANT: repair is deliberately run for BOTH newly downloaded and already existing
-                // files. A previous failed glTFast import may have left Lis/Matt on disk with unresolved
-                // relative image/buffer URIs; simply seeing a large file is therefore not a valid gate.
+                // Always repair, including files left behind by a previous failed glTFast import.
                 RepairExternalDependencies(absolutePath, sourceUrl);
 
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
@@ -108,8 +165,6 @@ namespace Kamilunavo.Deadreach.Editor
                 var imported = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
                 if (imported == null)
                 {
-                    // One explicit second pass after dependencies have entered the AssetDatabase makes
-                    // glTFast deterministic when a dependency was created during the same Editor call.
                     AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
                     AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
                     imported = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
@@ -155,8 +210,7 @@ namespace Kamilunavo.Deadreach.Editor
                     ? absoluteDependency
                     : new Uri(baseUri, dependencyUri);
 
-                var remotePath = Uri.UnescapeDataString(remoteUri.AbsolutePath);
-                var fileName = Path.GetFileName(remotePath);
+                var fileName = Path.GetFileName(Uri.UnescapeDataString(remoteUri.AbsolutePath));
                 if (string.IsNullOrWhiteSpace(fileName))
                     throw new InvalidDataException($"glTF dependency URI has no file name: '{dependencyUri}'.");
 
@@ -203,7 +257,7 @@ namespace Kamilunavo.Deadreach.Editor
             }
             else
             {
-                Debug.Log($"DEADREACH {Path.GetFileName(absoluteGltfPath)} uses only embedded glTF payloads; no external dependency download was required.");
+                Debug.Log($"DEADREACH {Path.GetFileName(absoluteGltfPath)} uses embedded payloads only; no external dependency download was required.");
             }
         }
 
@@ -237,8 +291,6 @@ namespace Kamilunavo.Deadreach.Editor
 
         private static string DecodeJsonUri(string value)
         {
-            // glTF URIs produced by Blender are ordinary JSON strings. We only need the escapes that
-            // are legal/useful in paths here; data: URIs are filtered before this method is called.
             return value
                 .Replace("\\/", "/")
                 .Replace("\\\\", "\\")
@@ -335,7 +387,8 @@ namespace Kamilunavo.Deadreach.Editor
             string prefabPath,
             string prefabName,
             Material atlasMaterial,
-            RuntimeAnimatorController controller)
+            RuntimeAnimatorController controller,
+            string preferredWeaponToken)
         {
             var source = AssetDatabase.LoadAssetAtPath<GameObject>(sourcePath);
             if (source == null)
@@ -363,6 +416,8 @@ namespace Kamilunavo.Deadreach.Editor
                     renderer.sharedMaterials = materials;
                 }
 
+                KeepOnlyPreferredEmbeddedWeapon(model, preferredWeaponToken);
+
                 var animator = model.GetComponentInChildren<Animator>(true);
                 if (animator == null)
                     animator = model.AddComponent<Animator>();
@@ -378,6 +433,71 @@ namespace Kamilunavo.Deadreach.Editor
             {
                 UnityEngine.Object.DestroyImmediate(root);
             }
+        }
+
+        private static void KeepOnlyPreferredEmbeddedWeapon(GameObject model, string preferredWeaponToken)
+        {
+            var preferred = NormalizeName(preferredWeaponToken);
+            var kept = 0;
+            var hidden = 0;
+
+            foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!TryGetWeaponIdentity(renderer.transform, model.transform, out var identity))
+                    continue;
+
+                var keep = !string.IsNullOrEmpty(preferred) && identity.Contains(preferred);
+                renderer.enabled = keep;
+                if (keep) kept++;
+                else hidden++;
+            }
+
+            if (kept == 0)
+            {
+                Debug.LogError(
+                    $"DEADREACH operator '{model.name}' did not contain the expected embedded weapon '{preferredWeaponToken}'. " +
+                    "Wrapper creation cannot safely continue without an artist-rigged firearm.");
+                throw new InvalidOperationException($"Missing embedded weapon '{preferredWeaponToken}'.");
+            }
+
+            Debug.Log(
+                $"DEADREACH operator '{model.name}' kept {kept} '{preferredWeaponToken}' renderer(s) and hid {hidden} other embedded weapon renderer(s).");
+        }
+
+        private static bool TryGetWeaponIdentity(Transform rendererTransform, Transform modelRoot, out string identity)
+        {
+            var current = rendererTransform;
+            while (current != null)
+            {
+                var normalized = NormalizeName(current.name);
+                foreach (var token in WeaponTokens)
+                {
+                    var normalizedToken = NormalizeName(token);
+                    if (normalized.Contains(normalizedToken))
+                    {
+                        identity = normalized;
+                        return true;
+                    }
+                }
+
+                if (current == modelRoot)
+                    break;
+                current = current.parent;
+            }
+
+            identity = string.Empty;
+            return false;
+        }
+
+        private static string NormalizeName(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return new string(value
+                .Where(char.IsLetterOrDigit)
+                .Select(char.ToLowerInvariant)
+                .ToArray());
         }
 
         private static string AssetPathToAbsolute(string assetPath)
