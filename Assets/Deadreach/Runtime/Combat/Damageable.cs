@@ -1,4 +1,5 @@
 using System;
+using Kamilunavo.Deadreach.Feedback;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Combat
@@ -66,6 +67,9 @@ namespace Kamilunavo.Deadreach.Combat
             CurrentHealth = Mathf.Max(0f, CurrentHealth - info.Amount);
             Damaged?.Invoke(info);
 
+            if (faction == CombatFaction.Survivor)
+                CombatFeedback.RaisePlayerDamaged(maxHealth <= 0f ? 0f : info.Amount / maxHealth);
+
             if (CurrentHealth <= 0f)
                 Die();
 
@@ -86,6 +90,10 @@ namespace Kamilunavo.Deadreach.Combat
                 return;
 
             IsDead = true;
+
+            if (faction == CombatFaction.Survivor)
+                CombatFeedback.RaisePlayerDied();
+
             Died?.Invoke();
 
             if (destroyOnDeath)
