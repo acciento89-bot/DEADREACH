@@ -1,131 +1,206 @@
-# DEADREACH — Production 0.5 Acceptance
+# DEADREACH — Production 0.5 MEGA Runtime Acceptance
 
-Production 0.5 is the large Bunker / progression / boss / combat-presentation pass.
+Production 0.5 is intentionally validated as **one large end-to-end runtime gate**, not a chain of tiny approval steps.
 
-## Baseline locks
+## Stable baseline that must not regress
 
-Production 0.4 is merged and accepted. Do not regress:
-- colored Quaternius Survivor/Infected
-- accepted artist-rigged embedded left-hand Survivor weapon
-- muzzle/tracer originates from the embedded weapon
+Production 0.4 is merged and accepted. Keep:
+- colored Quaternius Survivor/Infected art
+- artist-rigged SingleWeapon firearm path; never mount a second external rifle
+- muzzle/tracer derived from the embedded firearm
 - Dead City streets, vehicles, containers and props
-- extraction approach remains traversable
-- Bunker -> Deploy -> loot -> extraction -> Bunker flow
+- extraction approach traversable
+- Bunker -> Deploy -> combat/loot -> extraction -> Bunker loop
 
-## Gate A — Compile
+## Preflight
 
-1. Switch/pull `production/0.5-bunker-progression-boss-ui`.
-2. Let Unity finish script/package import.
+1. Pull `production/0.5-bunker-progression-boss-ui`.
+2. Let Unity finish compilation/import.
 3. Require **0 red C# compiler errors**.
+4. Run **`DEADREACH > Build Production Slice 0.5` once**.
+   - this build also auto-prepares missing Quaternius Lis/Matt SingleWeapon operator art
+   - required 0.4 environment asset gate must pass
+   - extraction traversal gate must pass
+   - Bunker_Hub must reopen at the end
+5. No blocking Console error may remain.
 
-Do not run the generator until Gate A passes.
+Do not stop for cosmetic warnings; record only blocking/red runtime failures.
 
-## Gate B — Generator
+# ONE MEGA RUNTIME GATE
 
-Run:
+Start Play once in Bunker and perform the following sequence as one acceptance run.
 
-`DEADREACH > Build Production Slice 0.5`
+## 1. Bunker / menu / persistence
 
-Require:
-- required 0.4 art gate passes
-- extraction traversal gate passes
-- Bunker_Hub is reopened after generation
-- no blocking Console error
+Confirm Play starts in **Bunker_Hub**, not Dead City.
 
-## Gate C — Bunker Command Center
+Check all Command Center tabs:
+- Overview
+- Arsenal
+- Operators
+- Campaign
+- Store
 
-Press Play. It must start in Bunker, not Dead City.
+Desktop/editor visual direction must remain coherent after the accepted UI polish:
+- DEADREACH header visible
+- no overlapping Overview text
+- Arsenal list and 3D inspector remain in separate columns
+- Operator roster and 3D preview remain separate
+- Campaign displays one 10-level sector at a time
+- deploy bar stays accessible
 
-Validate the new post-apocalyptic Bunker Command Center:
-- Overview tab opens
-- Arsenal tab opens
-- Operators tab opens
-- Campaign tab opens
-- Store tab opens
-- Deploy button works
-- blast-door / industrial bunker dressing is visible behind the command UI
+This is still editor/desktop acceptance only. Mobile safe-area/responsive acceptance is a later mandatory release gate.
 
 ### Arsenal
-- secured stash weapons are listed
-- rarity is visible
-- item power is visible
-- all affix rolls are readable
-- Equip changes the equipped primary and persists after returning to Bunker
 
-### Operators
-Validate all three base operators can be selected:
-- SAM / Ranger
-- RAVEN / Scout
-- BRIGGS / Warden
+Require:
+- secured weapons listed
+- rarity visible
+- item power visible
+- all affix rolls readable
+- Equip works and persists
+- **3D weapon preview is horizontal/canonical, not standing on its head / vertical**
+- preview rotates cleanly without changing gameplay weapon transforms
 
-Selection must persist. In run, the operator profile must affect health/mobility/damage and use the selected visual tint profile without disturbing the artist-rigged weapon.
+### Operators — distinct visual gate
 
-### Campaign
-- 50 levels are represented in five sectors
-- only unlocked levels are selectable
-- every tenth level is visibly marked BOSS
+Select each operator and observe the 3D preview:
+- **SAM / Ranger = Quaternius Sam**
+- **RAVEN / Scout = Quaternius Lis**
+- **BRIGGS / Warden = Quaternius Matt**
+
+Require:
+- the three operators are visibly different character models, not three recolored Sams
+- preview faces the camera rather than permanently showing only the back
+- selection persists when switching tabs
+
+Leave one non-Sam operator selected for the first deployment.
+
+### Campaign / Store
+
+Campaign:
+- 50 levels represented through five 10-level sectors
+- locked levels cannot be selected
+- every tenth level is marked as boss
 - selected level persists
 
-### Store
-- cosmetic / Bunker theme / weapon finish / season cards are visible
-- buttons are non-purchasing placeholders in 0.5
-- no purchase may be claimed completed; StoreKit / Google Play verification is a later integration gate
+Store:
+- cosmetic/operator/Bunker/weapon/season surfaces visible
+- no fake purchase succeeds
+- StoreKit / Google Play remains a later verified integration
 
-## Gate D — Standard level progression
+## 2. Standard Level 1 full run
 
-Select Level 1 and Deploy.
+Select Level 1 and Deploy with the currently selected non-Sam operator.
 
-Validate:
+Require:
+- **the in-game character model matches the selected operator model**
+- operator profile changes real health/mobility/damage as designed
+- artist-authored SingleWeapon remains stable on the selected character
+- muzzle follows the embedded firearm; no external rifle/socket hack returns
 - HUD shows Level 01 / Dead City
-- Walker / Runner / Brute / Stalker stat profiles create noticeable enemy variety
-- movement / aim / fire / damage / loot work
-- extraction works after carrying loot
-- successful extraction returns to Bunker
+- movement works
+- aim/fire works
+- damage works
+- loot works
+
+### Combat presentation
+
+During repeated shots at infected and environment confirm:
+- no old red square hit marker
+- tracer is not a plain white prototype line
+- bright tracer core + glow trail visible
+- muzzle flash originates at the embedded firearm
+- environment impacts create directional sparks
+- infected impacts create directed gore/spark streaks rather than red billboard squares
+- critical hit FX are stronger
+- no obvious runaway VFX allocation/frame collapse
+
+### Enemy variety
+
+During the run, confirm the configured archetypes are meaningfully different in behavior/size/stats:
+- Walker
+- Runner
+- Brute
+- Stalker
+
+They may share the validated Quaternius infected visual family, but their combat profiles must not feel identical.
+
+### Extraction / progression
+
+Carry loot into extraction:
+- extraction corridor remains physically reachable
+- extraction succeeds
+- returns to Bunker
+- secured Scrap/weapon loot persists
 - Level 2 becomes unlocked
+- selected operator remains selected
+- equipped primary remains persisted
 
-## Gate E — Boss Level 10
+## 3. Cross-operator runtime swap
 
-Use the Editor shortcut so this test does not require nine manual clears:
+Back in Bunker:
+1. switch to a different operator than the one used in Level 1
+2. Deploy again briefly
+3. confirm the newly selected **different model appears in gameplay**, with its own stats
+4. confirm embedded weapon/muzzle still works
+5. abandon/pause-return to Bunker
+
+Abandonment must still lose unsecured run loot and return cleanly to Bunker.
+
+## 4. Level 10 mutation boss
+
+Stop Play.
+
+Use:
 
 `DEADREACH > Dev > 0.5 Select Boss Level 10`
 
 Then Play -> Deploy.
 
 Require:
-- HUD shows Level 10 and mutation-class boss bar
-- one infected is promoted to a large high-health boss
-- boss becomes more aggressive around 66% and 33% HP
-- entering extraction before boss death shows `EXTRACTION SEALED`
-- extraction cannot complete while boss is alive
-- after boss death the extraction gate unlocks
-- successful extraction records the boss clear and can unlock Level 11
+- HUD shows Level 10
+- mutation boss HP bar visible
+- one infected promoted to a clearly larger/high-health boss
+- boss is meaningfully challenging relative to normal infected
+- aggression/scaling changes around ~66% and ~33% HP
+- attempting extraction before boss death shows **EXTRACTION SEALED**
+- extraction cannot complete while boss lives
+- boss death unlocks extraction
+- extraction after boss death succeeds
+- boss clear persists
+- Level 11 can unlock after successful Level 10 extraction
 
-## Gate F — Combat VFX
+## 5. Final regression sweep
 
-Validate repeated firing at enemies and environment:
-- no old red square hit marker remains
-- tracer is no longer a plain white line
-- shot has bright core + colored glow trail
-- muzzle flash appears at the accepted weapon muzzle
-- world impacts produce directional sparks
-- infected hits produce small gore/spark FX
-- critical hits are visually stronger
-- no runaway VFX object creation / obvious frame collapse
-
-## Gate G — Regression
-
-Final run must still pass:
-- Bunker starts first
-- Deploy
-- player moves
-- player aims/fires
-- accepted embedded weapon remains stable
-- muzzle alignment remains correct
-- loot pickups work
-- vehicle/container collision works
-- extraction corridor remains reachable
-- successful extraction returns to Bunker
-- failed/abandoned run returns to Bunker and loses unsecured run loot
+Before declaring 0.5 accepted, confirm the complete session contained no regression in:
+- Bunker-first start flow
+- menu interaction
+- operator persistence
+- distinct operator model selection
+- Arsenal equip persistence
+- horizontal weapon preview
+- player movement
+- aiming/firing
+- embedded weapon stability
+- muzzle alignment
+- loot pickup
+- vehicle/container collision
+- extraction traversal
+- successful extraction return
+- failed/abandoned run behavior
+- campaign unlock persistence
+- boss extraction lock/unlock
 - 0 red blocking Console errors
 
-Production 0.5 stays Draft until these real-Unity gates pass.
+## Acceptance result
+
+Production 0.5 remains Draft until this entire Mega Runtime Gate passes in real Unity.
+
+After the gate:
+- if everything passes: record one real-Unity acceptance and prepare PR #5 for merge
+- if something fails: report the **first actual blocker plus screenshot/Console error**, fix it in branch, then rerun only the affected portion plus final regression sweep
+
+## Separate mandatory mobile release gate
+
+Do **not** treat this Mega Runtime Gate as mobile UI acceptance. Before App Store / Play release, the dedicated safe-area/responsive/touch/device gate in `docs/PROJECT_STATE.md` must still pass on real iPhone + Android landscape hardware.
