@@ -73,8 +73,9 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - stable production level: **0.10**
 - stable merge: `f48368cd46799afa230c8bc52f475300d8f68761`
 - active branch: **`production/0.11-expedition-director`**
-- Production 0.11 is implemented in code but **not yet real-Unity validated**
-- next gate: fresh Unity compile → `Build Production Slice 0.11` → mission/runtime/mobile regression
+- Production 0.11 fresh real-Unity compile passed with **0 red compiler errors**
+- build/runtime/mobile validation is still pending
+- next gate: `DEADREACH > Build Production Slice 0.11`
 
 ## 4. Stable Production 0.10 baseline that must remain green
 
@@ -101,7 +102,7 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - responsive mobile-readable FIELD OPS HUD
 - accepted Arsenal / Bunker / boss / reward / sector presentation
 
-## 5. Production 0.11 — Expedition Director — CODE IMPLEMENTED / NOT YET UNITY VALIDATED
+## 5. Production 0.11 — Expedition Director — COMPILE PASSED / RUNTIME NOT YET VALIDATED
 
 ### Mission system
 - runtime `ExpeditionDirector` attaches only in expedition scenes with a real `RunSession` + player
@@ -150,7 +151,8 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 ### Build / validation
 - menu: `DEADREACH > Build Production Slice 0.11`
 - test plan: `docs/PRODUCTION_11_TEST.md`
-- **no real Unity compile/build/runtime claim yet**
+- compile: **PASSED 2026-08-23 — 0 red compiler errors** ✅
+- build/runtime/mobile gates remain pending
 
 ## 6. Handoff protocol
 
@@ -158,8 +160,8 @@ When resuming:
 1. read this file first
 2. stable baseline remains Production 0.10 on `main`
 3. active work is Production 0.11 on `production/0.11-expedition-director`
-4. first gate is local Unity compile with **0 red compiler errors**
-5. then run `DEADREACH > Build Production Slice 0.11`
+4. local Unity compile is green with **0 red compiler errors**
+5. next run `DEADREACH > Build Production Slice 0.11`
 6. then validate mission variety / extraction gate / optional cache / reinforcements / mobile controls
 7. preserve schema-v6 Workshop progression
 8. preserve fixed-zone mobile controls
