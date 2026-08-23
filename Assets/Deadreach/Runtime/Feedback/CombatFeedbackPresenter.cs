@@ -261,7 +261,7 @@ namespace Kamilunavo.Deadreach.Feedback
         {
             _muzzleParticles = CreateParticleSystem("VFX_MuzzleFlash", _sparkMaterial, ParticleSystemRenderMode.Stretch, 220, 2.4f);
             _sparkParticles = CreateParticleSystem("VFX_ImpactSparks", _sparkMaterial, ParticleSystemRenderMode.Stretch, 380, 3.2f);
-            _goreParticles = CreateParticleSystem("VFX_ImpactGore", _goreMaterial, ParticleSystemRenderMode.Billboard, 320, 1f);
+            _goreParticles = CreateParticleSystem("VFX_ImpactGore", _goreMaterial, ParticleSystemRenderMode.Stretch, 320, 0.65f);
         }
 
         private ParticleSystem CreateParticleSystem(string name, Material material, ParticleSystemRenderMode renderMode, int maxParticles, float lengthScale)
