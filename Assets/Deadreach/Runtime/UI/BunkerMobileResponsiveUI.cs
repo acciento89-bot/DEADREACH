@@ -40,7 +40,13 @@ namespace Kamilunavo.Deadreach.UI
             if (scaler != null)
             {
                 scaler.referenceResolution = new Vector2(1600f, 900f);
-                scaler.matchWidthOrHeight = aspect >= 2.05f ? 0.68f : aspect <= 1.72f ? 0.40f : 0.53f;
+                scaler.matchWidthOrHeight = aspect >= 2.05f
+                    ? 0.68f
+                    : aspect <= 1.45f
+                        ? 0.34f
+                        : aspect <= 1.72f
+                            ? 0.40f
+                            : 0.53f;
             }
 
             var backdrop = FindNamedRect("Backdrop");
@@ -66,13 +72,23 @@ namespace Kamilunavo.Deadreach.UI
                 SetAnchors(content, 0.187f, 0.115f, 0.988f, 0.850f);
                 SetAnchors(deploy, 0.012f, 0.018f, 0.988f, 0.085f);
             }
+            else if (aspect <= 1.45f)
+            {
+                // 4:3-ish compact landscape: reclaim horizontal room from the navigation rail.
+                // The Operators/Arsenal split panels need width more than the nav needs it.
+                SetAnchors(header, 0.014f, 0.858f, 0.986f, 0.985f);
+                SetAnchors(navigation, 0.014f, 0.132f, 0.195f, 0.832f);
+                SetAnchors(content, 0.208f, 0.132f, 0.986f, 0.832f);
+                SetAnchors(deploy, 0.014f, 0.020f, 0.986f, 0.106f);
+            }
             else if (aspect <= 1.72f)
             {
-                // Compact landscape / tablet: more vertical breathing room and a wider navigation rail.
-                SetAnchors(header, 0.016f, 0.860f, 0.984f, 0.985f);
-                SetAnchors(navigation, 0.016f, 0.135f, 0.225f, 0.830f);
-                SetAnchors(content, 0.240f, 0.135f, 0.984f, 0.830f);
-                SetAnchors(deploy, 0.016f, 0.020f, 0.984f, 0.105f);
+                // 16:10 / compact landscape: keep comfortable touch nav but give content more room
+                // than the first 0.7 pass did.
+                SetAnchors(header, 0.015f, 0.860f, 0.985f, 0.985f);
+                SetAnchors(navigation, 0.015f, 0.135f, 0.205f, 0.830f);
+                SetAnchors(content, 0.218f, 0.135f, 0.985f, 0.830f);
+                SetAnchors(deploy, 0.015f, 0.020f, 0.985f, 0.105f);
             }
             else
             {
