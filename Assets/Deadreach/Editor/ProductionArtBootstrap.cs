@@ -9,6 +9,11 @@ namespace Kamilunavo.Deadreach.Editor
         public const string CatalogPath = "Assets/Deadreach/Resources/Deadreach/ProductionAssetCatalog.asset";
 
         [MenuItem("DEADREACH/Production/Create or Select Asset Catalog")]
+        private static void CreateOrSelectCatalog()
+        {
+            EnsureCatalog();
+        }
+
         public static ProductionAssetCatalog EnsureCatalog()
         {
             EnsureFolder("Assets/Deadreach", "Resources");
