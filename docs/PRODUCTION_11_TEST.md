@@ -10,11 +10,14 @@ Turn the expedition from a simple loot → extraction run into a mission-driven 
 
 1. Pull `production/0.11-expedition-director`.
 2. Let Unity finish compiling.
-3. Require **0 red compiler errors**. ✅ PASSED 2026-08-23
-4. Run `DEADREACH > Build Production Slice 0.11`.
-5. Require no blocking red build/setup error.
+3. Initial 0.11 compile reached **0 red compiler errors** ✅ 2026-08-23.
+4. After the extraction-support geometry fix, run a fresh compile again.
+5. Run `DEADREACH > Build Production Slice 0.11` again because the generated Dead City base geometry changed.
+6. Require no blocking red build/setup error.
 
 ## Expedition Director gate
+
+The first real runtime pass confirmed the new mission flow is active: mission HUD, objective marker, mission-gated extraction, primary completion, BLACK CACHE and reinforcement behavior all functioned in the tested run ✅.
 
 The mission rotates by level/run state; boss levels force BLACKSITE.
 
@@ -50,10 +53,26 @@ The mission rotates by level/run state; boss levels force BLACKSITE.
 
 ## Extraction gate
 
-- entering extraction before the primary objective is complete shows `EXTRACTION SEALED` and the current primary objective.
-- no extraction progress occurs while mission-gated.
-- after primary completion, mission gate opens immediately.
+- entering extraction before the primary objective is complete shows `EXTRACTION SEALED` and the current primary objective ✅ observed in real runtime.
+- no extraction progress occurs while mission-gated ✅.
+- after primary completion, mission gate opens immediately ✅.
 - existing boss gate and no-loot gate remain intact.
+
+### Extraction egress defect found during real runtime
+
+The new sealed-extraction state exposed an older world-geometry edge case: `ExtractionZone_Alpha` is centered at `z=20`, while the original base ground and main road ended around `z=19`. When the player remained in the sealed zone instead of immediately completing extraction, the unsupported north street lip could prevent a clean walk back out.
+
+Fix committed:
+- keep the accepted extraction location at `z=20`
+- extend `World_Ground` beyond the north world boundary
+- extend `Road_Main` beyond the north world boundary
+- no mobile-input or mission-logic changes
+
+Fresh required check after rebuilding 0.11:
+- enter the sealed extraction zone before primary completion
+- walk back south out of the green zone normally
+- re-enter from multiple angles
+- confirm `OnTriggerExit` clears the extraction overlay/state
 
 ## Risk / reward gate
 
@@ -100,4 +119,4 @@ Use the accepted landscape phone / Device Simulator setup:
 11. Sector atmosphere / reward / boss / 0.10 combat-impact presentation remain intact.
 12. Unity Console ends with **0 red runtime errors**.
 
-Production 0.11 remains unmerged until the full gate passes.
+Production 0.11 remains unmerged until the extraction-egress retest and full gate pass.
