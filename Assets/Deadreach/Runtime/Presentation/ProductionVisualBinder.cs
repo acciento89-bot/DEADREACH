@@ -101,10 +101,7 @@ namespace Kamilunavo.Deadreach.Presentation
                     _weaponInstance = Instantiate(catalog.PrimaryWeaponPrefab, weaponSocket, false);
                     _weaponInstance.name = "ProductionPrimaryWeapon";
 
-                    ApplyQuaterniusRifleMountFix(_weaponInstance);
-
-                    muzzle = FindNamedTransform(_weaponInstance.transform, "MuzzleSocket")
-                             ?? FindNamedTransform(_weaponInstance.transform, "Muzzle");
+                    muzzle = ApplyQuaterniusRifleMountFix(_weaponInstance);
                 }
 
                 muzzle ??= FindNamedTransform(_instance.transform, "MuzzleSocket")
@@ -119,35 +116,65 @@ namespace Kamilunavo.Deadreach.Presentation
             }
         }
 
-        private static void ApplyQuaterniusRifleMountFix(GameObject weaponInstance)
+        private static Transform ApplyQuaterniusRifleMountFix(GameObject weaponInstance)
         {
-            // IMPORTANT: The successful Unity Inspector correction was made on the generated
-            // rifle MODEL child, not on the weapon root attached to the hand. The wrapper already
-            // calculated the correct grip offset on Model (about Y -0.02084 / Z -0.00481).
-            // Preserve that position exactly and apply only the validated 180° local Z roll.
-            // Do not add a LateUpdate/world rotation here; that was the source of the previous
-            // regressions and made Inspector edits appear to have no effect.
+            // The generated weapon root belongs to the hand socket and must stay untouched.
             weaponInstance.transform.localPosition = Vector3.zero;
             weaponInstance.transform.localRotation = Quaternion.identity;
             weaponInstance.transform.localScale = Vector3.one;
 
-            var model = FindNamedTransform(weaponInstance.transform, "Model");
-            if (model != null)
+            // The Unity Inspector screenshot that produced the correct visual orientation was
+            // the actual MeshFilter object (Cube.010), not the wrapper root / Model container.
+            // Set exactly that transform to X=0, Y=0, Z=180 while preserving its generated grip offset.
+            MeshFilter meshFilter = null;
+            var meshFilters = weaponInstance.GetComponentsInChildren<MeshFilter>(true);
+            foreach (var candidate in meshFilters)
             {
-                var preservedPosition = model.localPosition;
-                model.localRotation = Quaternion.Euler(0f, 0f, 180f);
-                model.localPosition = preservedPosition;
+                if (candidate != null && candidate.sharedMesh != null)
+                {
+                    meshFilter = candidate;
+                    break;
+                }
             }
 
-            // MuzzleSocket was generated before the visual 180° roll. Mirror its grip-plane X/Y
-            // offset around the weapon root so it follows the same roll while retaining barrel Z.
+            if (meshFilter == null)
+            {
+                Debug.LogError("DEADREACH could not find the Quaternius Rifle MeshFilter at runtime; weapon mount was not modified.");
+                return FindNamedTransform(weaponInstance.transform, "MuzzleSocket")
+                       ?? FindNamedTransform(weaponInstance.transform, "Muzzle");
+            }
+
+            var meshTransform = meshFilter.transform;
+            var preservedLocalPosition = meshTransform.localPosition;
+            var preservedLocalScale = meshTransform.localScale;
+
+            meshTransform.localRotation = Quaternion.Euler(0f, 0f, 180f);
+            meshTransform.localPosition = preservedLocalPosition;
+            meshTransform.localScale = preservedLocalScale;
+
+            // Tie the muzzle directly to the same mesh transform. Quaternius Rifle geometry is
+            // authored along local +Z (glTF mesh bounds: Z is the long/barrel axis), so max.z is
+            // the barrel tip. This removes the old root-space muzzle mismatch completely.
             var muzzle = FindNamedTransform(weaponInstance.transform, "MuzzleSocket")
                          ?? FindNamedTransform(weaponInstance.transform, "Muzzle");
-            if (muzzle != null && muzzle.parent == weaponInstance.transform)
+
+            if (muzzle == null)
             {
-                var p = muzzle.localPosition;
-                muzzle.localPosition = new Vector3(-p.x, -p.y, p.z);
+                muzzle = new GameObject("MuzzleSocket").transform;
             }
+
+            muzzle.SetParent(meshTransform, false);
+            var bounds = meshFilter.sharedMesh.bounds;
+            muzzle.localPosition = new Vector3(bounds.center.x, bounds.center.y, bounds.max.z);
+            muzzle.localRotation = Quaternion.identity;
+            muzzle.localScale = Vector3.one;
+
+            Debug.Log(
+                $"DEADREACH Rifle mount fixed on MeshFilter '{meshTransform.name}': " +
+                $"localPos={meshTransform.localPosition}, localRot={meshTransform.localEulerAngles}; " +
+                $"muzzleLocal={muzzle.localPosition}.");
+
+            return muzzle;
         }
 
         private static Transform FindNamedTransform(Transform root, string targetName)
