@@ -43,18 +43,21 @@ PR #4 squash merge `e86c067720f8f6badc6c8a29e41bcd856c29ffe6`.
 ### Production 0.5 — MERGED / REAL UNITY VALIDATED
 PR #5 squash merge **`a066386f05c6593f1840ef6902f62c808cbdf319`**.
 
-Production 0.5 remains the current `main` baseline until PR #6 is merged.
+### Production 0.6 + 0.7 — MERGED / REAL UNITY VALIDATED
+- PR #7 merged Production 0.7 presentation polish into the 0.6 integration branch at **`9633aabd903251a09c8475b5b8672a03988a92bc`**
+- PR #6 promoted the full 0.6 + 0.7 stack to `main` at **`b69f5270a6e3e26780ccaa0445e4e6764808f753`**
+- this is now the canonical stable `main` baseline
 
 ## 3. Current Git state
 
-- integration branch: **`production/0.6-content-rewards-mobile`**
-- PR #6 targets `main`
-- Production 0.7 PR #7 has been merged into the 0.6 integration branch
-- PR #7 merge commit: **`9633aabd903251a09c8475b5b8672a03988a92bc`**
+- stable branch: **`main`**
+- stable production level: **0.7**
+- PR #7: merged
+- PR #6: merged
 - all Production 0.6 + 0.7 real Unity acceptance gates passed on 2026-08-23
-- PR #6 is ready for final promotion to `main`
+- next work should branch from current `main`
 
-## 4. Production 0.6 functional scope
+## 4. Production 0.6 functional scope now on main
 
 - visible boss reward acquisition
 - persistent post-extraction Bunker reward debrief
@@ -69,7 +72,7 @@ Production 0.5 remains the current `main` baseline until PR #6 is merged.
 - safe-area-aware Bunker implementation
 - `DEADREACH > Build Production Slice 0.6`
 
-## 5. Production 0.7 presentation polish merged into integration
+## 5. Production 0.7 presentation polish now on main
 
 ### Bunker / responsive layout
 - separate header / navigation / content / deploy anchor zones
@@ -113,24 +116,25 @@ Production 0.5 remains the current `main` baseline until PR #6 is merged.
 
 Passed on 2026-08-23:
 1. **0 red compiler errors**
-2. `DEADREACH > Build Production Slice 0.7`
-3. Arsenal Rifle / SMG / Pistol / Shotgun orientation and framing
-4. Bunker layout at 4:3 / 16:10 / 16:9 / ~19:9 landscape
-5. Level 10 gameplay HUD / boss bar / phase presentation
-6. boss kill → compact Relic toast
-7. extraction → Bunker relic debrief → transfer to Arsenal
-8. Levels 11 / 21 / 31 / 41 sector FX presentation
-9. final Bunker → expedition → combat → loot → return regression
-10. **0 red runtime Console errors** after final regression
+2. Production 0.6 build gate
+3. `DEADREACH > Build Production Slice 0.7`
+4. Arsenal Rifle / SMG / Pistol / Shotgun orientation and framing
+5. Bunker layout at 4:3 / 16:10 / 16:9 / ~19:9 landscape
+6. Level 10 gameplay HUD / boss bar / phase presentation
+7. boss kill → compact Relic toast
+8. extraction → Bunker relic debrief → transfer to Arsenal
+9. Levels 11 / 21 / 31 / 41 sector FX presentation
+10. final Bunker → expedition → combat → loot → return regression
+11. **0 red runtime Console errors** after final regression
 
-No remaining blocker was reported in real Unity.
+No remaining blocker was reported in real Unity before promotion to `main`.
 
 ## 7. Handoff protocol
 
 When resuming:
 1. read this file first
-2. treat 0.1–0.5 as already merged / real-Unity validated
-3. treat the full 0.6 + 0.7 stack as real-Unity validated and ready for `main`
+2. treat Production 0.7 on `main` as the stable real-Unity-validated baseline
+3. branch all new production work from current `main`
 4. never reintroduce external gameplay hand-mounted Rifle transforms
 5. keep mobile landscape-only
-6. after PR #6 merge, advance `main` as the canonical stable baseline before starting the next production pass
+6. preserve the accepted Arsenal orientation, Bunker responsive layout, compact combat HUD, reward flow and sector FX as regression gates for the next production pass
