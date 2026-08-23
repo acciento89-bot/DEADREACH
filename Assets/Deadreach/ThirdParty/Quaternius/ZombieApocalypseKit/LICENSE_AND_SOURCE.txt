@@ -1,0 +1,19 @@
+﻿Quaternius â€” Zombie Apocalypse Kit
+Official source: https://quaternius.com/packs/zombieapocalypsekit.html
+Original creator download: https://drive.google.com/drive/folders/1mWP6sCHun7OUMHQeDNZLrXTteXlzWg_t?usp=sharing
+Public mirror used for automated selected-file retrieval: https://github.com/agentkaerf/FreeModels/tree/main/Zombie%20Apocalypse%20Kit%20-%20March%202024
+License: Creative Commons CC0 1.0 / public domain dedication.
+Commercial use and modification are permitted by the original creator.
+
+Reason for mirror fallback:
+The original Google Drive folder currently rejects automated gdown access for at least one public file. The selected files are therefore retrieved from the public mirror above while the official Quaternius page remains the license/source authority.
+
+Selected DEADREACH subset:
+- Survivor Sam
+- Zombie Basic
+- Zombie Chubby
+- Zombie Arm
+- Zombie Ribcage
+- Rifle
+
+Unity import format: glTF via Unity glTFast.
