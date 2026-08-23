@@ -58,17 +58,24 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - mobile HUD readability validated
 - final full regression passed with **0 red runtime errors**
 
+### Production 0.10 — MERGED / REAL UNITY VALIDATED
+- PR #10 squash merged to `main` at `f48368cd46799afa230c8bc52f475300d8f68761`
+- compile and `Build Production Slice 0.10` gates passed
+- operator and infected special VFX accepted
+- hit / critical / camera-impact presentation accepted
+- fixed-zone mobile controls revalidated
+- full Bunker → Workshop → Deploy → combat/loot → extraction → Bunker regression passed
+- final Unity Console: **0 red runtime errors**
+
 ## 3. Current Git state
 
-- stable branch before promotion: `main`
-- stable production level before promotion: **0.9**
-- stable merge before promotion: `2f15df3b5ca7b15eeacea39928b63118700e2432`
-- active branch: **`production/0.10-combat-impact`**
-- PR #10 targets `main`
-- Production 0.10 compile, build, combat presentation, mobile and final regression gates are all green
-- Production 0.10 is fully real-Unity validated and ready for promotion
+- stable branch: `main`
+- stable production level: **0.10**
+- stable merge: `f48368cd46799afa230c8bc52f475300d8f68761`
+- no active production branch is authoritative after the 0.10 merge
+- next production work must branch from current `main`
 
-## 4. Stable Production 0.9 baseline preserved in 0.10
+## 4. Stable Production 0.10 baseline
 
 ### Progression
 - save schema v6
@@ -83,7 +90,7 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - STALKER flank
 - SAM Field Patch
 - RAVEN Vector Dash
-- BRIGGS Shockwave gameplay
+- BRIGGS Shockwave
 
 ### Mobile
 - fixed lower-left MOVE
@@ -93,68 +100,42 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - direction-based aiming only
 - phone HUD readable
 
-### Presentation
+### Combat impact / presentation
+- SAM heal rings / motes
+- RAVEN dash trails / endpoint pulse
+- BRIGGS expanding Shockwave ground pulse / radial impact
+- Runner burst trail
+- Brute slam rings / particles
+- Stalker flank trail / pulses
+- world hit marker on successful damage hits
+- distinct critical marker + critical pulse
+- subtle camera-lens impact for damage / heavy abilities / specials
+- existing tracer / muzzle / sparks / gore pipeline preserved
+- runtime URP-safe presentation with no external art dependency
+
+### Presentation baseline preserved
 - accepted Arsenal orientation/framing
 - responsive Bunker layouts
 - boss/reward presentation
 - sector atmosphere FX
+- landscape-only mobile orientation
 
-## 5. Production 0.10 — Combat Impact / Presentation — FULLY REAL-UNITY VALIDATED
+## 5. Next development entry point
 
-### Ability impact presentation
-- **SAM / Field Patch**: dual green/cyan expanding rings + healing motes + light lens impulse ✅
-- **RAVEN / Vector Dash**: blue/white directional dash trails + endpoint pulse + trail particles + lens impulse ✅
-- **BRIGGS / Shockwave**: large orange/hot expanding ground rings + radial debris/energy particles + strong lens impulse ✅
-- explicit 0.9 Shockwave visual debt closed ✅
-
-### Infected special impact presentation
-- **Runner Burst**: cyan movement streak + endpoint pulse ✅
-- **Brute Slam**: red/orange expanding slam rings + radial particles + stronger lens impulse ✅
-- **Stalker Flank**: violet start/end pulses + flank trail ✅
-- mutation-boss authority remains unchanged
-
-### Gunfight feedback
-- existing tracer / muzzle / sparks / gore presenter preserved ✅
-- successful-hit world marker accepted ✅
-- critical hit marker + critical pulse accepted ✅
-- player damage / death / heavy-ability lens impacts accepted ✅
-
-### Runtime architecture
-- `CombatFeedback` exposes typed operator-ability and infected-special impact events
-- `OperatorAbilityController` emits presentation events only after successful ability activation
-- `InfectedCombatRoleBrain` emits presentation events after accepted special movement/damage actions
-- `CombatImpactPresentation` is a persistent runtime presenter
-- `RuntimeImpactRing` and `RuntimeImpactLine` are short-lived runtime renderers
-- runtime URP-safe materials; no new external art dependency
-
-### Validation
-- Unity compile: **PASSED — 0 red compiler errors** ✅
-- `DEADREACH > Build Production Slice 0.10`: **PASSED** ✅
-- operator / infected / hit / crit / camera impact runtime: **PASSED** ✅
-- fixed-zone mobile MOVE / AIM-FIRE / ABILITY regression: **PASSED** ✅
-- VFX do not obstruct mobile controls or HUD: **PASSED** ✅
-- Bunker → Workshop → Deploy → combat/loot → extraction → Bunker: **PASSED** ✅
-- Workshop/progression/Arsenal/accepted presentation remain intact ✅
-- final Unity Console: **0 red runtime errors** ✅
-
-## 6. Promotion status
-
-Production 0.10 is fully validated and ready to merge to `main`.
-
-After merge:
-1. update this file on `main` with the actual PR #10 merge commit
-2. mark Production 0.10 as the stable baseline
+1. `git switch main`
+2. `git pull`
 3. branch the next production pass from current `main`
-4. preserve the accepted 0.10 combat-impact layer and 0.9 mobile-control baseline
+4. preserve schema-v6 Workshop progression
+5. preserve fixed-zone mobile controls
+6. preserve the accepted Production 0.10 combat-impact layer
+7. never reintroduce external gameplay hand-mounted Rifle transforms
+8. keep mobile landscape-only
 
-## 7. Handoff protocol
+## 6. Handoff protocol
 
-When resuming after merge:
+When resuming:
 1. read this file first
-2. Production 0.10 is the intended stable baseline
-3. preserve schema-v6 Workshop progression
-4. preserve fixed-zone mobile controls
-5. preserve the accepted combat-impact presentation layer
-6. never reintroduce external gameplay hand-mounted Rifle transforms
-7. keep mobile landscape-only
-8. start the next production pass from current `main`
+2. stable baseline is Production 0.10 on `main`
+3. stable merge is `f48368cd46799afa230c8bc52f475300d8f68761`
+4. next production work starts from current `main`
+5. preserve all validated 0.10 progression, controls and combat presentation
