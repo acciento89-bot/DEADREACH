@@ -2,7 +2,7 @@
 
 _Last updated: 2026-08-23_
 
-This is the canonical handoff file for DEADREACH. Update it after every major development, validation, build, architecture, backend, monetization, store, or release step.
+Canonical handoff for DEADREACH. Update after every major implementation/validation/merge.
 
 ## 1. Product identity
 
@@ -14,172 +14,270 @@ This is the canonical handoff file for DEADREACH. Update it after every major de
 - **Render pipeline:** URP 17.3
 - **iOS Bundle ID:** `de.kamilunavo.deadzone`
 - **App Store SKU:** `deadzone-001`
-- **Monetization:** IAP only
-- **Advertising:** none
-
-## 2. Locked direction
-
-Premium-feeling mobile 3D survival/extraction roguelite with persistent progression.
+- **Monetization:** IAP only, no ads
 
 Core loop:
 
 **Bunker → Deploy → Expedition → Combat → Loot → Risk decision → Extract / Die / Abandon → Bunker → Equip / Upgrade → Deploy stronger**
 
-No cheap generic mobile finish. Primitive geometry is temporary scaffolding. No advertising SDKs.
-
-## 3. Validated / merged baselines
+## 2. Validated / merged baselines
 
 ### Vertical Slice 0.1 — MERGED / VALIDATED
-Merge: `e4d5dbe2c52d3e9aeed52f421fdd99f7c6b01877`
-
-Validated: Bunker/Dead City generation, movement, aim/fire, infected combat/death, Scrap/extraction/persistence, Pause/Resume/Abandon, quality presets.
+Merge `e4d5dbe2c52d3e9aeed52f421fdd99f7c6b01877`.
 
 ### Production 0.2 — MERGED / VALIDATED
-Merge: `fd0dca0ece7d18ca005f2f4b52d65039904fad27`
-
-Validated: combat feedback, weapon loot/run inventory, extraction stash, rarity/item power/affixes, equipped primary persistence, affix-driven next-run combat stats, no regression to foundation flows.
+Merge `fd0dca0ece7d18ca005f2f4b52d65039904fad27`.
 
 ### Production 0.3 — MERGED / REAL UNITY VALIDATED
-PR #3 merge: `924e8ff4ae250da13fd0d198b121802cf80131b0`
+PR #3 merge `924e8ff4ae250da13fd0d198b121802cf80131b0`.
 
-Validated in Unity `6000.3.22f1`:
-- 0 compiler errors
-- Production Slice 0.3 generator passes
-- real Quaternius Survivor/Infected replace prototypes
-- atlas colors/materials render correctly
-- embedded artist-rigged Survivor weapon is stable
-- current embedded weapon is on the **left hand**; this is accepted and locked
-- weapon remains aligned while moving / aiming / firing
-- muzzle/tracer originate from embedded weapon
-- movement/combat/loot/extraction/Bunker return remain functional
-- no blocking Console errors reported
+Locked presentation decision:
+- Quaternius `Characters_Sam_SingleWeapon.gltf` is the visible Survivor source
+- artist-authored embedded weapon is accepted on the **left hand**
+- muzzle/tracer is derived from that embedded weapon
+- never reintroduce the failed external Rifle hand-socket transform approach
 
-## 4. Locked 0.3 presentation decision
+### Production 0.4 — MERGED / REAL UNITY VALIDATED
+PR #4 squash merge:
 
-Do **not** reintroduce the old external Rifle hand-socket transform approach.
+`e86c067720f8f6badc6c8a29e41bcd856c29ffe6`
 
-Current accepted Sam strategy:
-1. `Characters_Sam_SingleWeapon.gltf` is the visible Survivor source
-2. use its artist-authored embedded weapon
-3. do not instantiate a second external Rifle on Sam
-4. do not rotate/reposition the embedded weapon to move it from the left hand
-5. derive gameplay muzzle from the embedded weapon mesh
-6. keep external Rifle asset for progression/future authored rifle-hold work
+Validated in real Unity:
+- 0 compiler errors after URP Core/import hardening
+- required Quaternius Dead City imports healthy
+- real street surfaces
+- green/red containers
+- pickup / sports / truck vehicle wrecks
+- barriers / barrels / pipes / trash / road props
+- lighting / fog / post-processing / extraction beacon
+- DEADREACH-owned collision bounds on imported environment art
+- Play Mode starts from Bunker
+- extraction approach traversal safety gate
+- movement / aim / firing / loot / extraction / Bunker return regression passed
 
-## 5. Current Git state
+0.4 is the current stable visual/gameplay baseline on `main`.
 
-- `main` contains validated 0.1 + 0.2 + 0.3
-- active branch: **`production/0.4-environment-atmosphere`**
-- PR #4 remains **Draft**
-- Production 0.4 compile gate: **PASSED in real Unity**
-- Production 0.4 environment visual gate: **PASSED in real Unity**
-- final gameplay/start-flow regression gate is still pending before merge
+## 3. Current Git state
 
-## 6. Production 0.4 — implemented on branch
+- `main`: validated 0.1 + 0.2 + 0.3 + 0.4
+- active branch: **`production/0.5-bunker-progression-boss-ui`**
+- Production 0.5 is a large systems/presentation pass
+- Production 0.5 is **IMPLEMENTED IN CODE, NOT YET REAL-UNITY COMPILE/RUNTIME VALIDATED**
+- 0.5 must remain Draft until `docs/PRODUCTION_05_TEST.md` passes
 
-Goal: make Dead City read as a real environment while preserving the validated 0.3 character/combat baseline.
+## 4. Production 0.5 — Big Update implemented on branch
 
-### Quaternius Dead City asset installer
+### 4.1 Persistent progression — Save schema v4
 
-`tools/install-quaternius-deadcity-set.ps1`
+`Assets/Deadreach/Runtime/Persistence/SaveService.cs`
 
-Curated CC0 subset from the same Quaternius Zombie Apocalypse Kit visual family:
-- modular street / cracked street / intersection pieces
-- traffic + plastic barriers
-- real streetlight + traffic-light geometry
-- containers
-- barrel / broken pallet / pipes / trash / wheel stack
-- blood ground props
-- WaterTower landmark
-- pickup / sports car / truck
-- shared `Zombie_Atlas.png`
+Added persistent:
+- highest unlocked campaign level
+- selected campaign level
+- highest completed level
+- boss kill count
+- selected operator
+- unlocked operator IDs
+- owned-content entitlement IDs
+- migration from schema v3 without dropping existing stash/equipped weapon data
 
-### Dead City Environment Pass
+Campaign cap: **50 levels**.
 
-`Assets/Deadreach/Editor/DeadCityEnvironmentPass.cs`
+Successful extraction records the completed level and unlocks the next level. Every tenth completed level counts as a boss clear.
 
-Current implementation:
-- deterministic environment root `Production_DeadCity_Environment_0_4`
-- modular real street surfaces over retained prototype collision underlay
-- containers / barriers / landmark / wrecked vehicles / street clutter
-- DEADREACH-owned `CollisionBounds` child colliders on major blockers/vehicles
-- explicit Quaternius environment atlas material
-- cold moon / warm street-light contrast
-- gameplay-targeted exponential fog
-- global URP post-processing profile
-  - ACES tonemapping
-  - modest Bloom
-  - contrast/saturation/color filter
-  - modest vignette
-- stronger extraction beacon column + green local light
+### 4.2 Post-apocalyptic Bunker Command Center UI
 
-### Import / collider hardening
+New:
 
-First real-Unity 0.4 validation exposed:
-- missing `Unity.RenderPipelines.Core.Runtime` reference in `Deadreach.Editor.asmdef`
-- glTF reimport state not retrying after the compile fix
-- imported glTF prefab roots rejecting/invalidating direct `BoxCollider` authoring
+`Assets/Deadreach/Runtime/UI/BunkerCommandCenterUI.cs`
 
-Fixes now on branch:
-- Core Runtime assembly reference added
-- required environment gate + forced synchronous glTF reimport added
-- Production Slice 0.4 refuses to build if required streets/containers/vehicles are unavailable
-- Play Mode start locked to `Bunker_Hub`
-- bounds colliders moved onto plain DEADREACH-owned `CollisionBounds` child objects
+The old Bunker prototype IMGUI panel is replaced in the 0.5 generator by a runtime uGUI command center with:
+- **OVERVIEW**
+- **ARSENAL**
+- **OPERATORS**
+- **CAMPAIGN**
+- **STORE**
 
-## 7. Real Unity 0.4 validation status
+Visual direction: dark industrial bunker, rust/hazard accents, green readiness status, command-center framing.
 
-### Compile gate — PASSED
-User confirmed **0 C# compiler errors** after Core Runtime/import-repair fixes.
+Overview shows next deployment, current operator/weapon, progress and Bunker intel.
 
-### Generator / visual environment gate — PASSED
-After the required-asset and collider fixes, the real Unity screenshot/user acceptance confirmed:
-- Production Slice 0.4 generates and runs
-- real street surfaces are visible
-- green/red containers are visible
-- multiple vehicles/wrecks are visible, including colored car/truck silhouettes
-- traffic barriers / road furniture / barrels / street props are visible
-- extraction beacon is visible
-- environment scale and overall dressing are acceptable for this pass
-- user response: **“sehr gut”**
+### 4.3 Arsenal / affix inspection
 
-This is a real visual acceptance, not an inferred pass.
+Arsenal uses the existing real persistent weapon stash and shows:
+- rarity
+- display name
+- item power
+- all rolled affixes and values
+- equipped state
+- Equip action persisted through `SaveService`
 
-### Final merge gate — PENDING
-Before merging PR #4, confirm in one short regression run:
-1. pressing Play starts at **Bunker_Hub / main menu**
-2. Deploy loads Dead City
-3. movement / aim / firing work
-4. embedded left-hand weapon remains stable and tracer/muzzle remain aligned
-5. loot pickup works
-6. extraction returns to Bunker
-7. no blocking Console errors
+New optional bunker display component:
 
-If all seven pass, mark PR #4 ready and squash-merge to `main` immediately.
+`Assets/Deadreach/Runtime/UI/BunkerWeaponDisplay.cs`
 
-## 8. After 0.4 merge
+It can render/rotate the current production weapon prefab on a bunker turntable with a primitive fallback.
 
-Next priorities:
-1. production muzzle flash + impact VFX
-2. first real combat audio-content pass
-3. replace prototype IMGUI with production HUD/loadout UI
-4. production NavMesh navigation
-5. Addressables/content organization
-6. physical-device mobile validation + iOS/Android profiling
-7. proper authored rifle-hold character/animation path later
-8. backend/accounts/leaderboards/events
-9. IAP cosmetics / season structure
+### 4.4 Operator menu / character profiles
 
-## 9. Handoff protocol
+New:
+
+`Assets/Deadreach/Runtime/Progression/OperatorCatalog.cs`
+
+Three unlocked base profiles:
+- **SAM / Ranger** — balanced
+- **RAVEN / Scout** — faster, less durable
+- **BRIGGS / Warden** — slower, tougher, slightly harder hitting
+
+Selection persists. `OperatorRuntimeApplier` changes real health/mobility/damage values and applies mild body tint variation to the current validated production character while deliberately leaving the embedded weapon hierarchy alone.
+
+Current limitation: 0.5 uses the validated Sam production mesh as the base visual for all three profiles with tint/stat variation. Separate authored character meshes can replace these profiles later without changing the persistence/UI architecture.
+
+### 4.5 50-level campaign
+
+New:
+
+`Assets/Deadreach/Runtime/Progression/RunDifficultyDirector.cs`
+
+Five 10-level sectors:
+1. Dead City
+2. Flooded Industrial
+3. Ash District
+4. Blackout Sector
+5. Ground Zero
+
+Current 0.5 uses the validated Dead City geometry as the common map foundation while each sector changes runtime atmosphere/fog/key-light color and difficulty. Distinct authored sector maps are future environment content, not falsely claimed as complete here.
+
+### 4.6 Infected variety
+
+Existing validated Quaternius infected visuals are retained. Runtime archetypes now create materially different combat profiles:
+- Walker
+- Runner
+- Brute
+- Stalker
+
+Profiles vary speed, health, damage and scale and continue using the existing production infected visual variants.
+
+### 4.7 Boss every 10 levels
+
+Levels **10 / 20 / 30 / 40 / 50** are boss runs.
+
+The final infected is promoted to a large mutation-class boss with tier scaling and two mutation phases:
+- around 66% HP
+- around 33% HP
+
+Boss phases increase speed/damage/attack rate and visual scale.
+
+Extraction on boss levels is sealed until the boss is dead. `RunSession`, `ExtractionZone` and the field HUD expose the boss lock state.
+
+Editor validation shortcuts:
+- `DEADREACH > Dev > 0.5 Unlock Through Boss Level 10`
+- `DEADREACH > Dev > 0.5 Select Boss Level 10`
+- `DEADREACH > Dev > 0.5 Unlock Full Campaign 50`
+
+### 4.8 Bunker environment redesign
+
+`Assets/Deadreach/Editor/BunkerHubSceneBuilder.cs`
+
+Main generator is now:
+
+**`DEADREACH > Build Production Slice 0.5`**
+
+Bunker shell now includes:
+- heavier industrial dark-metal palette
+- sealed blast door + frame + hazard strip
+- ceiling beams
+- exposed pipes
+- supply crate stacks
+- warning floor strips
+- cold command light
+- warm workshop light
+- generator green light
+- blast-door red emergency light
+
+The 0.5 generator preserves all required 0.4 environment/import/traversal gates and attaches the 0.5 campaign/operator runtime systems to Dead City.
+
+### 4.9 Combat presentation upgrade
+
+`Assets/Deadreach/Runtime/Feedback/CombatFeedbackPresenter.cs`
+
+Old prototype presentation removed/replaced:
+- no single plain white tracer presentation
+- no old large red billboard/square impact marker path
+
+New pooled combat VFX:
+- bright tracer core
+- wider transparent glow trail
+- damage/crit color response
+- muzzle flash particles
+- directional world impact sparks
+- small infected gore particles
+- stronger critical feedback
+
+The accepted 0.3/0.4 embedded-weapon muzzle origin remains the source of shot feedback.
+
+### 4.10 Field HUD
+
+`Assets/Deadreach/Runtime/UI/PrototypeHud.cs`
+
+Field HUD now shows:
+- campaign level
+- sector name
+- boss objective messaging
+- mutation boss HP bar
+- explicit `EXTRACTION SEALED` state while boss is alive
+- level-clear result messaging
+
+This field HUD is still IMGUI and is not yet the final production mobile HUD. The Bunker Command Center is the main UI replacement in 0.5.
+
+### 4.11 Store surface
+
+The Bunker STORE tab includes production-facing cards for:
+- operator cosmetics
+- Bunker themes
+- weapon finishes
+- season content
+
+**No fake purchase is implemented.** Store buttons are non-purchasing placeholders in 0.5. `ownedContentIds` / `GrantContent` are entitlement hooks for a later verified StoreKit / Google Play integration.
+
+## 5. Immediate validation gate
+
+Run `docs/PRODUCTION_05_TEST.md`.
+
+First local step after switching/pulling branch:
+1. let Unity compile
+2. require **0 red compiler errors**
+3. run **`DEADREACH > Build Production Slice 0.5`**
+4. inspect Bunker Command Center tabs
+5. run Level 1 progression gate
+6. use the Level 10 Editor shortcut to validate boss + extraction seal
+7. validate new muzzle/tracer/impact FX
+8. re-run 0.4 regression locks
+
+Do not claim 0.5 works until the real Unity gate passes.
+
+## 6. Likely follow-up after 0.5 validation
+
+- fix any actual Unity compile/API/layout issues found locally
+- visual polish from real screenshots
+- separate authored operator meshes/animations
+- distinct authored sector maps and encounters beyond shared Dead City foundation
+- real StoreKit / Google Play products and receipt verification
+- production mobile field HUD
+- production NavMesh / more advanced infected behaviors
+- combat audio-content pass
+- physical-device profiling
+
+## 7. Handoff protocol
 
 When resuming:
 1. read this file first
-2. treat 0.1 / 0.2 / 0.3 as validated merged baselines
-3. never reintroduce external Rifle transform/socket hacks onto Sam
-4. current left-hand embedded weapon is accepted
-5. active work is `production/0.4-environment-atmosphere`
-6. 0.4 compile + environment visual gates have passed in real Unity
-7. only the short gameplay/start-flow regression gate remains before PR #4 can be marked ready and merged
-8. update this file after final validation/merge
+2. treat 0.1–0.4 as merged/validated baselines
+3. never reintroduce the external Rifle hand-socket transform path
+4. left-hand artist-rigged embedded weapon remains accepted
+5. active work is `production/0.5-bunker-progression-boss-ui`
+6. 0.5 is implemented but not yet real-Unity validated
+7. next action is compile gate, then `Build Production Slice 0.5`
+8. keep PR draft until real-Unity acceptance passes
 
 Do not rely on chat history alone.
