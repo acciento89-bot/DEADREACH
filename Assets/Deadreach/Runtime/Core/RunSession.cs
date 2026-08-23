@@ -19,9 +19,11 @@ namespace Kamilunavo.Deadreach.Core
         public event Action RunFailed;
 
         public int CarriedScrap { get; private set; }
+        public int RunLevel { get; private set; }
         public float ExtractionProgress { get; private set; }
         public bool IsInExtractionZone { get; private set; }
         public bool ExtractionBlockedByNoLoot { get; private set; }
+        public bool ExtractionBlockedByBoss { get; private set; }
         public bool IsCompleted { get; private set; }
         public bool IsFailed { get; private set; }
 
@@ -37,6 +39,7 @@ namespace Kamilunavo.Deadreach.Core
             }
 
             Current = this;
+            RunLevel = Mathf.Clamp(SaveService.Data.selectedLevel, 1, SaveService.MaxCampaignLevel);
         }
 
         private void Start()
@@ -78,11 +81,17 @@ namespace Kamilunavo.Deadreach.Core
 
         public void SetExtractionPresence(bool inside, bool blockedByNoLoot)
         {
+            SetExtractionPresence(inside, blockedByNoLoot, false);
+        }
+
+        public void SetExtractionPresence(bool inside, bool blockedByNoLoot, bool blockedByBoss)
+        {
             if (IsCompleted || IsFailed)
                 return;
 
             IsInExtractionZone = inside;
             ExtractionBlockedByNoLoot = inside && blockedByNoLoot;
+            ExtractionBlockedByBoss = inside && blockedByBoss;
 
             if (!inside)
                 ExtractionProgress = 0f;
@@ -96,10 +105,11 @@ namespace Kamilunavo.Deadreach.Core
             IsCompleted = true;
             IsInExtractionZone = false;
             ExtractionBlockedByNoLoot = false;
+            ExtractionBlockedByBoss = false;
             ExtractionProgress = 1f;
 
             var extractedWeapons = RunInventory.Current?.CreateExtractionSnapshot();
-            SaveService.RegisterExtraction(CarriedScrap, extractedWeapons);
+            SaveService.RegisterExtraction(CarriedScrap, extractedWeapons, RunLevel);
             RunInventory.Current?.Clear();
 
             CarriedScrap = 0;
@@ -126,6 +136,7 @@ namespace Kamilunavo.Deadreach.Core
             IsFailed = true;
             IsInExtractionZone = false;
             ExtractionBlockedByNoLoot = false;
+            ExtractionBlockedByBoss = false;
             CarriedScrap = 0;
             ExtractionProgress = 0f;
             RunInventory.Current?.Clear();
