@@ -49,70 +49,85 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 
 ### Production 0.8 — MERGED / REAL UNITY VALIDATED
 - PR #8 squash merged to `main` at `876127fb9997951afcca738cd7251acd2f662014`
-- compile gates passed with **0 red compiler errors**
-- `DEADREACH > Build Production Slice 0.8` completed successfully
-- Workshop layout / Calibration / Item Power / Scrap spending validated
-- two-step Salvage and active-loadout protection validated
-- Workbench / Medbay / Cargo Rig / Scavenger purchases and persistence validated
-- expedition → extraction → Bunker return validated after lifecycle fix; WORKSHOP remains present
-- final runtime/regression check passed
+- compile/build/runtime gates passed
+- Workshop / Calibration / Salvage / permanent Bunker upgrades validated
+- expedition → extraction → Bunker lifecycle validated
+- Production 0.8 is the stable branch baseline for 0.9
 
 ## 3. Current Git state
 
 - stable branch: `main`
 - stable production level: **0.8**
 - stable merge: `876127fb9997951afcca738cd7251acd2f662014`
-- no active production branch is authoritative after the 0.8 merge
-- next production work must branch from current `main`
+- active branch: **`production/0.9-combat-depth`**
+- Production 0.9 Phase A combat-depth implementation is in progress on that branch
+- current required gate after the first implementation block: Unity compile → Build Production Slice 0.9 → role/ability runtime acceptance
 
-## 4. Production 0.8 shipped baseline
+## 4. Production 0.8 shipped baseline that must remain green
 
-Production 0.8 closes the missing **Equip / Upgrade** half of the core loop with real persistent progression.
+### Workshop / progression
+- save schema v6 and existing profiles preserved
+- real Item Power combat scaling
+- weapon Calibration and two-step Salvage
+- Workbench / Medbay / Cargo Rig / Scavenger Network progression
+- Workshop remains available after every expedition → Bunker return
 
-### Progression engine
-- save schema **v6** with non-destructive migration from v5
-- per-weapon persistent `upgradeLevel`
-- Item Power contributes to real combat damage
-- calibration adds Item Power plus small range/crit handling gains
-- secured Scrap is the Workshop currency
-- weapon calibration spends Scrap, raises calibration and adds +8 Item Power
-- non-equipped weapons can be salvaged for secured Scrap
-- equipped weapon cannot be salvaged
-
-### Permanent Bunker systems
-- **Workbench** — raises weapon calibration ceiling
-- **Medbay** — +6% operator max HP per rank
-- **Cargo Rig** — +1 expedition weapon capacity per rank
-- **Scavenger Network** — +8% Scrap banked on extraction per rank
-- each track has five ranks with escalating Scrap costs
-
-### Workshop UI
-- dedicated **WORKSHOP** navigation entry in the Bunker
-- live rank / effect / cost / affordability cards
-- weapon cards show family / rarity / Item Power / calibration / affixes / real Item-Power damage contribution
-- Calibration and Salvage refresh immediately
-- Salvage uses two-step confirmation
-- active weapon shows `ACTIVE LOADOUT`
-- Scrap profile summary refreshes after transactions
-- `Production08WorkshopBootstrap` reinstalls Workshop after each scene load so expedition → Bunker return remains correct
-
-## 5. Production 0.7 presentation baseline that remains accepted
-
+### Presentation / content baseline
 - Arsenal Rifle / SMG / Pistol / Shotgun orientation and framing
-- Bunker layout at 4:3 / 16:10 / 16:9 / ~19:9 landscape
+- Bunker layouts at 4:3 / 16:10 / 16:9 / ~19:9 landscape
 - landscape-only mobile orientation
 - compact Field Ops HUD
 - slim boss health/identity strip and mutation-state chip
 - lower-right Relic reward toast
 - Bunker reward debrief → Arsenal transfer
 - Flooded Industrial rain / Ash District ash / Blackout dust / Ground Zero contamination FX
-- Bunker → expedition → combat → loot → return flow with no red runtime errors
+- final Bunker → expedition → combat → loot → return flow with no red runtime errors
 
-## 6. Next development entry point
+## 5. Production 0.9 goal — Combat Depth
 
-1. `git switch main`
-2. `git pull`
-3. branch the next production pass from current `main`
-4. preserve schema-v6 Workshop progression and the accepted 0.7 presentation baseline
+Turn existing statistical variants into real gameplay identities.
+
+### Infected combat roles implemented
+- **WALKER** remains the readable baseline chaser
+- **RUNNER** gains a timed medium-range forward burst and possible burst contact damage
+- **BRUTE** gains a separate high-damage close-range slam cooldown
+- **STALKER** gains periodic lateral flank/reposition movement instead of only direct pursuit
+- Runner / Brute / Stalker special moves have short role-colored point-light telegraphs
+- normal role abilities are not applied to mutation bosses; existing boss phase logic remains authoritative
+- role binding happens after `RunDifficultyDirector` has named/configured the encounter, preserving the validated scene-generation path
+
+### Operator active abilities implemented
+- **SAM / FIELD PATCH** — restore 32% max HP, 18s cooldown, no cooldown waste at full health
+- **RAVEN / VECTOR DASH** — collision-aware 4.6m dash, 7.5s cooldown
+- **BRIGGS / SHOCKWAVE** — damage all infected within 4.6m, 12s cooldown, no cooldown waste with no valid target
+- Operator definitions now expose ability name / description / cooldown
+- desktop input: `SPACE`
+- gamepad input: right shoulder
+- mobile input: reserved Ability touch region that is excluded from move/aim touch ownership
+- in-expedition ability HUD shows ability name and READY/cooldown state
+
+### Build / bootstrap
+- `Production09CombatDepthBootstrap` binds role brains and operator ability controller at runtime after validated systems finish `Start`
+- new menu gate: `DEADREACH > Build Production Slice 0.9`
+- test plan: `docs/PRODUCTION_09_TEST.md`
+
+## 6. Current 0.9 gate
+
+1. switch/pull `production/0.9-combat-depth`
+2. Unity compile → require **0 red compiler errors**
+3. run `DEADREACH > Build Production Slice 0.9`
+4. validate Runner / Brute / Stalker special behaviors and telegraphs
+5. validate SAM / RAVEN / BRIGGS abilities and cooldown behavior
+6. validate mobile Ability touch does not also become aim/fire
+7. run full 0.8 regression and require **0 red runtime errors**
+
+## 7. Handoff protocol
+
+When resuming:
+1. read this file first
+2. stable baseline is Production 0.8 on `main`
+3. active work is Production 0.9 on `production/0.9-combat-depth`
+4. preserve schema-v6 Workshop progression and accepted 0.7 presentation
 5. never reintroduce external gameplay hand-mounted Rifle transforms
 6. keep mobile landscape-only
+7. run `docs/PRODUCTION_09_TEST.md` before promoting 0.9
