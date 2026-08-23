@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -26,6 +27,10 @@ namespace Kamilunavo.Deadreach.Editor
 
         private const string ScoutUrl = "https://raw.githubusercontent.com/agentkaerf/FreeModels/main/Zombie%20Apocalypse%20Kit%20-%20March%202024/Characters/glTF/Characters_Lis_SingleWeapon.gltf";
         private const string WardenUrl = "https://raw.githubusercontent.com/agentkaerf/FreeModels/main/Zombie%20Apocalypse%20Kit%20-%20March%202024/Characters/glTF/Characters_Matt_SingleWeapon.gltf";
+
+        private static readonly Regex ExternalUriRegex = new(
+            "\\\"uri\\\"\\s*:\\s*\\\"(?<uri>(?:\\\\.|[^\\\"])*)\\\"",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         [MenuItem("DEADREACH/Production/Repair 0.5 Operator Art", priority = 24)]
         public static void RepairMenu()
@@ -75,34 +80,43 @@ namespace Kamilunavo.Deadreach.Editor
             return true;
         }
 
-        private static bool EnsureSource(string assetPath, string url, long minimumBytes)
+        private static bool EnsureSource(string assetPath, string sourceUrl, long minimumBytes)
         {
             var absolutePath = AssetPathToAbsolute(assetPath);
-            if (File.Exists(absolutePath) && new FileInfo(absolutePath).Length >= minimumBytes)
-            {
-                if (AssetDatabase.LoadAssetAtPath<GameObject>(assetPath) == null)
-                    AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
-                return AssetDatabase.LoadAssetAtPath<GameObject>(assetPath) != null;
-            }
 
             try
             {
-                Debug.Log($"DEADREACH downloading missing Quaternius operator art: {Path.GetFileName(assetPath)}");
-                using (var client = new WebClient())
+                var needsDownload = !File.Exists(absolutePath) || new FileInfo(absolutePath).Length < minimumBytes;
+                if (needsDownload)
                 {
-                    client.Headers[HttpRequestHeader.UserAgent] = "DEADREACH-Unity-Operator-Art-Bootstrap";
-                    client.DownloadFile(url, absolutePath);
+                    Debug.Log($"DEADREACH downloading missing Quaternius operator art: {Path.GetFileName(assetPath)}");
+                    DownloadFile(sourceUrl, absolutePath);
                 }
 
-                var file = new FileInfo(absolutePath);
-                if (!file.Exists || file.Length < minimumBytes)
-                    throw new IOException($"Downloaded operator glTF is unexpectedly small ({(file.Exists ? file.Length : 0)} bytes).");
+                var sourceFile = new FileInfo(absolutePath);
+                if (!sourceFile.Exists || sourceFile.Length < minimumBytes)
+                    throw new IOException($"Operator glTF is unexpectedly small ({(sourceFile.Exists ? sourceFile.Length : 0)} bytes).");
 
-                NormalizeAtlasReference(absolutePath);
+                // IMPORTANT: repair is deliberately run for BOTH newly downloaded and already existing
+                // files. A previous failed glTFast import may have left Lis/Matt on disk with unresolved
+                // relative image/buffer URIs; simply seeing a large file is therefore not a valid gate.
+                RepairExternalDependencies(absolutePath, sourceUrl);
+
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
                 AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
 
-                if (AssetDatabase.LoadAssetAtPath<GameObject>(assetPath) == null)
-                    throw new InvalidOperationException("Unity imported the file but no GameObject asset is available yet.");
+                var imported = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                if (imported == null)
+                {
+                    // One explicit second pass after dependencies have entered the AssetDatabase makes
+                    // glTFast deterministic when a dependency was created during the same Editor call.
+                    AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+                    AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+                    imported = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                }
+
+                if (imported == null)
+                    throw new InvalidOperationException("glTFast still exposes no GameObject after dependency repair and forced reimport.");
 
                 return true;
             }
@@ -111,6 +125,129 @@ namespace Kamilunavo.Deadreach.Editor
                 Debug.LogError($"DEADREACH could not prepare operator asset '{assetPath}': {exception.Message}");
                 return false;
             }
+        }
+
+        private static void RepairExternalDependencies(string absoluteGltfPath, string sourceUrl)
+        {
+            var json = File.ReadAllText(absoluteGltfPath);
+            if (string.IsNullOrWhiteSpace(json) || json.TrimStart()[0] != '{')
+                throw new InvalidDataException("Downloaded operator file is not valid glTF JSON.");
+
+            var baseUri = new Uri(sourceUrl, UriKind.Absolute);
+            var localDirectory = Path.GetDirectoryName(absoluteGltfPath)
+                ?? throw new InvalidOperationException("Could not resolve local glTF directory.");
+
+            var replacements = new Dictionary<string, string>(StringComparer.Ordinal);
+            var localSources = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var dependencyNames = new List<string>();
+
+            foreach (Match match in ExternalUriRegex.Matches(json))
+            {
+                var encodedUri = match.Groups["uri"].Value;
+                if (string.IsNullOrWhiteSpace(encodedUri) || encodedUri.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var dependencyUri = DecodeJsonUri(encodedUri);
+                if (string.IsNullOrWhiteSpace(dependencyUri) || dependencyUri.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var remoteUri = Uri.TryCreate(dependencyUri, UriKind.Absolute, out var absoluteDependency)
+                    ? absoluteDependency
+                    : new Uri(baseUri, dependencyUri);
+
+                var remotePath = Uri.UnescapeDataString(remoteUri.AbsolutePath);
+                var fileName = Path.GetFileName(remotePath);
+                if (string.IsNullOrWhiteSpace(fileName))
+                    throw new InvalidDataException($"glTF dependency URI has no file name: '{dependencyUri}'.");
+
+                if (localSources.TryGetValue(fileName, out var existingRemote) &&
+                    !string.Equals(existingRemote, remoteUri.AbsoluteUri, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidDataException(
+                        $"Two glTF dependencies collapse to the same local file '{fileName}'. " +
+                        $"Sources: '{existingRemote}' and '{remoteUri.AbsoluteUri}'.");
+                }
+
+                localSources[fileName] = remoteUri.AbsoluteUri;
+                var localDependency = Path.Combine(localDirectory, fileName);
+                if (!File.Exists(localDependency) || new FileInfo(localDependency).Length <= 16)
+                {
+                    Debug.Log($"DEADREACH downloading glTF dependency '{fileName}' for {Path.GetFileName(absoluteGltfPath)}");
+                    DownloadFile(remoteUri.AbsoluteUri, localDependency);
+                }
+
+                if (!File.Exists(localDependency) || new FileInfo(localDependency).Length <= 16)
+                    throw new IOException($"glTF dependency '{fileName}' is missing or empty after download.");
+
+                replacements[encodedUri] = fileName;
+                if (!dependencyNames.Contains(fileName))
+                    dependencyNames.Add(fileName);
+            }
+
+            var repaired = ExternalUriRegex.Replace(json, match =>
+            {
+                var original = match.Groups["uri"].Value;
+                return replacements.TryGetValue(original, out var localName)
+                    ? $"\"uri\" : \"{EscapeJson(localName)}\""
+                    : match.Value;
+            });
+
+            if (!string.Equals(repaired, json, StringComparison.Ordinal))
+                File.WriteAllText(absoluteGltfPath, repaired, new UTF8Encoding(false));
+
+            if (dependencyNames.Count > 0)
+            {
+                Debug.Log(
+                    $"DEADREACH repaired {Path.GetFileName(absoluteGltfPath)} dependency URIs -> " +
+                    string.Join(", ", dependencyNames));
+            }
+            else
+            {
+                Debug.Log($"DEADREACH {Path.GetFileName(absoluteGltfPath)} uses only embedded glTF payloads; no external dependency download was required.");
+            }
+        }
+
+        private static void DownloadFile(string url, string destination)
+        {
+            var directory = Path.GetDirectoryName(destination);
+            if (!string.IsNullOrWhiteSpace(directory))
+                Directory.CreateDirectory(directory);
+
+            var temporary = destination + ".deadreach-download";
+            if (File.Exists(temporary))
+                File.Delete(temporary);
+
+            try
+            {
+                using var client = new WebClient();
+                client.Headers[HttpRequestHeader.UserAgent] = "DEADREACH-Unity-Operator-Art-Bootstrap";
+                client.DownloadFile(url, temporary);
+
+                if (!File.Exists(temporary) || new FileInfo(temporary).Length == 0)
+                    throw new IOException($"Download returned an empty file from '{url}'.");
+
+                File.Copy(temporary, destination, true);
+            }
+            finally
+            {
+                if (File.Exists(temporary))
+                    File.Delete(temporary);
+            }
+        }
+
+        private static string DecodeJsonUri(string value)
+        {
+            // glTF URIs produced by Blender are ordinary JSON strings. We only need the escapes that
+            // are legal/useful in paths here; data: URIs are filtered before this method is called.
+            return value
+                .Replace("\\/", "/")
+                .Replace("\\\\", "\\")
+                .Replace("\\u0020", " ");
+        }
+
+        private static string EscapeJson(string value)
+        {
+            return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
 
         private static RuntimeAnimatorController BuildAnimatorController(string sourcePath, string assetName, RuntimeAnimatorController fallback)
@@ -241,21 +378,6 @@ namespace Kamilunavo.Deadreach.Editor
             {
                 UnityEngine.Object.DestroyImmediate(root);
             }
-        }
-
-        private static void NormalizeAtlasReference(string absolutePath)
-        {
-            var text = File.ReadAllText(absolutePath);
-            var updated = Regex.Replace(
-                text,
-                "(\\\"uri\\\"\\s*:\\s*\\\")[^\\\"]*Zombie_Atlas\\.png(\\\")",
-                "$1Zombie_Atlas.png$2",
-                RegexOptions.IgnoreCase);
-
-            if (updated == text)
-                return;
-
-            File.WriteAllText(absolutePath, updated, new UTF8Encoding(false));
         }
 
         private static string AssetPathToAbsolute(string assetPath)
