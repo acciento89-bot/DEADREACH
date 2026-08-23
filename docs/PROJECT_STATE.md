@@ -80,9 +80,11 @@ Physical-device touch/haptics and iOS/Android builds are still separate validati
 
 - `main` — contains validated 0.1 + validated 0.2
 - active branch: **`production/0.3-art-presentation`**
-- Production Art / Presentation 0.3 is implemented in part but **NOT YET Unity-compiled on this branch**
+- PR #3 — `production: art asset binding and presentation pipeline 0.3` — Draft
+- Production 0.3 **real Unity compile + generator gate PASSED** on 2026-08-23
+- actual production 3D assets are not yet integrated
 
-Do not claim 0.3 is stable until the next real Unity compile/runtime gate passes.
+Do not claim 0.3 production-art complete until real Survivor/Infected/Weapon assets are assigned and validated.
 
 ## 6. Production Art / Presentation 0.3 — CURRENT IMPLEMENTATION
 
@@ -143,14 +145,14 @@ Missing production assets do not intentionally break gameplay; fallback visuals 
 
 ### Generated-scene integration
 
-`ProductionSliceEnhancer` now automatically attaches production visual binders to:
+`ProductionSliceEnhancer` automatically attaches production visual binders to:
 
 - Player survivor gameplay root
 - all generated infected gameplay roots
 
 The production asset catalog is automatically ensured during slice generation.
 
-Main generator is now:
+Main generator:
 
 **`DEADREACH > Build Production Slice 0.3`**
 
@@ -158,13 +160,11 @@ Main generator is now:
 
 Tracer presentation no longer creates/destroys a GameObject every shot.
 
-`CombatFeedbackPresenter` now uses a preallocated tracer pool (default 24) and recycles LineRenderers based on unscaled lifetime.
-
-This removes a known automatic-fire allocation/GC source before final muzzle/tracer assets are integrated.
+`CombatFeedbackPresenter` uses a preallocated tracer pool (default 24) and recycles LineRenderers based on unscaled lifetime.
 
 ### Weapon integration hook
 
-`HitscanWeapon` now exposes and accepts a runtime muzzle transform so production weapon prefabs can drive the true tracer origin.
+`HitscanWeapon` exposes and accepts a runtime muzzle transform so production weapon prefabs can drive the true tracer origin.
 
 ## 7. Production 0.3 art contract
 
@@ -196,39 +196,53 @@ Detailed art integration document:
 
 `docs/PRODUCTION_03_ART_PIPELINE.md`
 
-## 8. Production 0.3 validation gate — NEXT
+## 8. Production 0.3 real Unity validation
 
-1. switch local repo to `production/0.3-art-presentation`
-2. pull latest
-3. require 0 red compiler errors
-4. ideally 0 yellow compiler warnings
-5. run `DEADREACH > Build Production Slice 0.3`
-6. verify fallback slice still works with an empty production catalog
+### Compile / generator gate — PASSED
+
+Confirmed by the user in real Unity `6000.3.22f1` on 2026-08-23:
+
+- **0 compiler errors after pulling 0.3**
+- `DEADREACH > Build Production Slice 0.3` completes with **0 errors**
+
+### Fallback runtime gate — NEXT
+
+Before integrating real art, verify the empty-catalog fallback remains safe:
+
+1. press Play from generated Bunker
+2. Deploy to Dead City
+3. confirm prototype survivor/infected remain visible
+4. confirm movement / aiming / shooting still work
+5. confirm combat, weapon loot, extraction and Bunker return still work
+6. run `DEADREACH > Production > Create or Select Asset Catalog`
 7. run `DEADREACH > Production > Validate Asset Catalog`
-8. verify no gameplay regression in movement/combat/loot/extraction/stash/equipment
-9. after real production prefabs are supplied, assign them to the catalog and validate real visual replacement, Animator rebinding, weapon mounting and muzzle origin
+8. with no real assets assigned, validator warnings about missing production assets are expected; exceptions/red errors are not
+
+After this fallback check, the next step is actual production-asset integration.
 
 ## 9. Next priorities inside 0.3
 
-1. integrate actual licensed/owned survivor 3D asset + production Animator controller
-2. integrate actual infected 3D assets + animations
-3. integrate actual weapon models
-4. proper muzzle flash / impact production VFX
-5. first real combat audio-content pass
-6. Dead City production environment-art replacement framework
-7. URP post-processing / color grading / atmosphere
-8. replace prototype IMGUI with production HUD/loadout UI
-9. production NavMesh navigation
-10. physical-device mobile validation + iOS/Android build profiling
+1. obtain/integrate actual licensed/owned Survivor 3D asset + production Animator controller
+2. integrate actual Infected 3D assets + animations
+3. integrate actual weapon model(s)
+4. validate real visual replacement / Animator rebinding / weapon mounting / muzzle origin
+5. proper muzzle flash / impact production VFX
+6. first real combat audio-content pass
+7. Dead City production environment-art replacement framework
+8. URP post-processing / color grading / atmosphere
+9. replace prototype IMGUI with production HUD/loadout UI
+10. production NavMesh navigation
+11. physical-device mobile validation + iOS/Android build profiling
 
 ## 10. Handoff protocol
 
 When resuming:
 
 1. read this file first
-2. inspect active branch / open PR
-3. distinguish implemented vs Unity-validated vs device-validated vs actual production-art-complete
-4. continue from the 0.3 validation gate and then actual asset integration
-5. update this file after the next major pass
+2. inspect active branch / PR #3
+3. note that 0.3 compile + generator gate has passed
+4. distinguish fallback-runtime validation from actual production-art integration
+5. continue with fallback test if still pending, then real asset integration
+6. update this file after the next major pass
 
 Do not rely on chat history alone.
