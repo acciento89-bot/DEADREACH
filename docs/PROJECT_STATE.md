@@ -83,26 +83,26 @@ Physical-device touch/haptics and iOS/Android builds are still separate validati
 - PR #3 — `production: art asset binding and presentation pipeline 0.3` — Draft
 - Production 0.3 **real Unity compile + generator gate PASSED** on 2026-08-23
 - Production 0.3 **empty-catalog fallback runtime gate PASSED** on 2026-08-23
-- Quaternius Zombie Apocalypse Kit selected as first production-art source; binaries not yet integrated
+- Quaternius Zombie Apocalypse Kit selected as first production-art source
+- Google Drive automated retrieval failed because at least one public file currently rejects gdown access
+- installer now uses a public mirror of the same pack for the selected glTF files
+- Unity glTFast `6.17.0` added for Editor import of those `.gltf` assets
+- actual production binaries still need the next local installer/import validation
 
-Do not claim 0.3 production-art complete until real Survivor/Infected/Weapon assets are assigned and validated.
+Do not claim 0.3 production-art complete until real Survivor/Infected/Weapon assets are imported, assigned and validated.
 
-## 6. Production Art / Presentation 0.3 — CURRENT IMPLEMENTATION
+## 6. Production Art / Presentation 0.3 — current implementation
 
 ### Production Asset Catalog
 
-New runtime asset:
-
-`ProductionAssetCatalog`
-
-Catalog slots:
+`ProductionAssetCatalog` slots:
 
 - Survivor prefab
 - one or more Infected prefabs
 - Primary Weapon prefab
 - local transform offsets/scales for survivor/infected production visuals
 
-Expected asset path created by editor tooling:
+Expected asset path:
 
 `Assets/Deadreach/Resources/Deadreach/ProductionAssetCatalog.asset`
 
@@ -114,44 +114,23 @@ Editor menu:
 
 `ProductionVisualBinder` separates gameplay roots from production art.
 
-Behavior:
-
-- if a production prefab is assigned, prototype renderers are hidden
-- CharacterController / Damageable / AI / weapon gameplay stay on the validated root
-- Survivor production prefab is instantiated as visual child
-- Infected production prefabs are selected by variant index
+- production prefab assigned → prototype renderer hidden
+- CharacterController / Damageable / AI / weapon gameplay stay on validated root
 - Animator is rebound into existing animation drivers
-- Survivor `WeaponSocket` / `RightHandWeaponSocket` is detected
-- Primary Weapon prefab is mounted on that socket
-- weapon `MuzzleSocket` / `Muzzle` is forwarded into `HitscanWeapon`
-- if no production prefab is assigned, prototype visual remains as safe fallback
+- Survivor `WeaponSocket` / `RightHandWeaponSocket` detected
+- Primary Weapon mounted on Survivor socket
+- weapon `MuzzleSocket` / `Muzzle` forwarded into `HitscanWeapon`
+- missing production assets safely fall back to prototype visuals
 
-### Production asset validation
-
-Editor menu:
+### Production asset validator
 
 `DEADREACH > Production > Validate Asset Catalog`
 
-Validator checks:
-
-- Survivor prefab assigned
-- Survivor Animator
-- Survivor weapon socket
-- Infected variants assigned
-- Infected Animators
-- Primary Weapon prefab assigned
-- Weapon muzzle socket
-
-Missing production assets do not intentionally break gameplay; fallback visuals remain available.
+Checks Survivor/Infected/Weapon assignment, Animators, weapon socket and muzzle socket.
 
 ### Generated-scene integration
 
-`ProductionSliceEnhancer` automatically attaches production visual binders to:
-
-- Player survivor gameplay root
-- all generated infected gameplay roots
-
-The production asset catalog is automatically ensured during slice generation.
+`ProductionSliceEnhancer` attaches visual binders to Survivor + generated Infected roots.
 
 Main generator:
 
@@ -159,45 +138,9 @@ Main generator:
 
 ### Combat VFX mobile hardening
 
-Tracer presentation no longer creates/destroys a GameObject every shot.
+`CombatFeedbackPresenter` uses a preallocated tracer pool (default 24) instead of per-shot GameObject creation/destruction.
 
-`CombatFeedbackPresenter` uses a preallocated tracer pool (default 24) and recycles LineRenderers based on unscaled lifetime.
-
-### Weapon integration hook
-
-`HitscanWeapon` exposes and accepts a runtime muzzle transform so production weapon prefabs can drive the true tracer origin.
-
-## 7. Production 0.3 art contract
-
-Survivor prefab should contain:
-
-- Animator
-- `WeaponSocket` or `RightHandWeaponSocket`
-
-Existing animation parameters:
-
-- `Speed` float
-- `IsMoving` bool
-- `IsAiming` bool
-- `IsDead` bool
-- `Hit` trigger
-
-Infected prefab should contain Animator with:
-
-- `Speed` float
-- `Attack` trigger
-- `Hit` trigger
-- `IsDead` bool
-
-Primary weapon prefab should contain:
-
-- `MuzzleSocket` or `Muzzle`
-
-Detailed art integration document:
-
-`docs/PRODUCTION_03_ART_PIPELINE.md`
-
-## 8. Production 0.3 real Unity validation
+## 7. Production 0.3 real Unity validation
 
 ### Compile / generator gate — PASSED
 
@@ -208,36 +151,32 @@ Confirmed by the user in real Unity `6000.3.22f1` on 2026-08-23:
 
 ### Empty-catalog fallback runtime gate — PASSED
 
-Confirmed by the user on 2026-08-23:
+Confirmed by the user:
 
-- Play from generated Bunker works
+- Play from Bunker works
 - Deploy to Dead City works
-- prototype Survivor/Infected remain visible when production catalog is empty
+- prototype Survivor/Infected remain visible when catalog empty
 - movement / aiming / shooting remain functional
 - combat / weapon loot / extraction / Bunker return remain functional
-- `Create or Select Asset Catalog` runs
-- `Validate Asset Catalog` runs without exception/red error
-- only expected yellow warnings are produced for missing production Survivor/Infected/Weapon assets
+- catalog create/select runs
+- validator runs without exception/red error
+- only expected yellow missing-asset warnings occur
 
-This proves the art-binding pipeline can safely fall back without destabilizing the validated gameplay loop.
-
-## 9. Selected first production-art source
+## 8. Selected first production-art source
 
 **Quaternius — Zombie Apocalypse Kit**
 
-Reason:
+Official creator page states:
 
-- coherent single-source visual style
-- 4 playable characters with supplied animations
+- 4 playable characters with animations
 - 4 infected/enemy characters
-- guns + melee weapons
-- matching city/street/survival props
+- weapons + matching apocalypse props
 - FBX / OBJ / glTF / Blend formats
-- original creator states CC0 and commercial use
+- CC0 / commercial use
 
 Initial DEADREACH subset:
 
-- one survivor character
+- Survivor Sam
 - Zombie Basic
 - Zombie Chubby
 - Zombie Arm
@@ -248,22 +187,47 @@ License tracking:
 
 `docs/THIRD_PARTY_ASSETS.md`
 
-The pack is selected, but the actual binary model assets have not yet been copied into DEADREACH or tested through the production catalog.
+### Current import strategy
 
-## 10. Next priorities inside 0.3
+Original creator Google Drive remains documented as the original distribution, but automated `gdown` failed with a public-link/permission response for file id `1iBNVZtY_mYqHMe81_cGaF85rkGjhkouk`.
 
-1. import the selected Quaternius Survivor/Infected/Rifle subset
-2. create DEADREACH wrapper prefabs + Animator controllers
-3. create/fix Survivor weapon socket + Rifle muzzle socket
-4. assign all wrappers to ProductionAssetCatalog
-5. validate real visual replacement / Animator rebinding / weapon mounting / muzzle origin
-6. proper muzzle flash / impact production VFX
-7. first real combat audio-content pass
-8. extend the same kit into Dead City environment props
-9. URP post-processing / color grading / atmosphere
-10. replace prototype IMGUI with production HUD/loadout UI
-11. production NavMesh navigation
-12. physical-device mobile validation + iOS/Android build profiling
+The installer now retrieves only the selected `.gltf` subset from:
+
+`agentkaerf/FreeModels/Zombie Apocalypse Kit - March 2024`
+
+The mirror contains a CC0 1.0 license marker; the official Quaternius page remains the license/source authority.
+
+Unity package added:
+
+`com.unity.cloud.gltfast` `6.17.0`
+
+Git LFS now tracks `.gltf` and `.glb` as well.
+
+## 9. Immediate next gate
+
+On the local `production/0.3-art-presentation` branch:
+
+1. `git pull`
+2. let Unity resolve/install glTFast if the Editor is open
+3. rerun `tools/install-quaternius-zombie-kit.ps1 -CommitAndPush`
+4. confirm all six selected `.gltf` files download and push successfully
+5. wait for Unity glTF import
+6. run `DEADREACH > Production > Setup Quaternius Starter Art`
+7. run `DEADREACH > Production > Validate Asset Catalog`
+8. regenerate with `DEADREACH > Build Production Slice 0.3`
+9. validate Survivor/Infected/Rifle visual replacement, scale/orientation, Animator hookup, weapon mount and muzzle origin
+10. require no blocking Console errors
+
+## 10. After real starter-art validation
+
+1. fix scale/orientation/socket offsets as required
+2. proper muzzle flash / impact production VFX
+3. first real combat audio-content pass
+4. extend Quaternius kit into Dead City environment props
+5. URP post-processing / color grading / atmosphere
+6. replace prototype IMGUI with production HUD/loadout UI
+7. production NavMesh navigation
+8. physical-device mobile validation + iOS/Android build profiling
 
 ## 11. Handoff protocol
 
@@ -271,9 +235,9 @@ When resuming:
 
 1. read this file first
 2. inspect active branch / PR #3
-3. note that 0.3 compile/generator and empty-catalog fallback runtime gates have passed
-4. note that Quaternius Zombie Apocalypse Kit is the selected CC0 first-art source, but binaries are not yet integrated
-5. continue with actual Survivor/Infected/Rifle import and wrapper-prefab integration
+3. note compile/generator + empty-catalog fallback gates passed
+4. note Google Drive retrieval failed and mirror/glTFast fallback is now implemented
+5. continue with actual six-file glTF download/import and wrapper validation
 6. update this file after the next major pass
 
 Do not rely on chat history alone.
