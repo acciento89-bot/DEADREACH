@@ -17,6 +17,12 @@ namespace Kamilunavo.Deadreach.Editor
             BuildInternal("0.7", "0.6 functional content + responsive layout polish + corrected Arsenal orientation + sector FX material pass");
         }
 
+        [MenuItem("DEADREACH/Build Production Slice 0.8", priority = 2)]
+        public static void Build08()
+        {
+            BuildInternal("0.8", "0.7 validated presentation + schema-v6 workshop economy + real Item Power + permanent Bunker progression");
+        }
+
         private static void BuildInternal(string version, string featureSummary)
         {
             if (!Production06WeaponArtSetup.EnsureReady())
@@ -25,9 +31,9 @@ namespace Kamilunavo.Deadreach.Editor
                 return;
             }
 
-            // Reuse the fully real-Unity-validated 0.5 scene generation pipeline. 0.6/0.7 presentation,
-            // responsive layout and sector/reward polish bootstrap at runtime so we do not duplicate
-            // or destabilize the accepted scene authoring path.
+            // Reuse the fully real-Unity-validated scene generation pipeline. Newer progression,
+            // presentation and responsive systems bootstrap at runtime so we do not duplicate or
+            // destabilize the accepted scene authoring path.
             BunkerHubSceneBuilder.BuildCompleteSlice();
             Debug.Log($"DEADREACH Production Slice {version} generated: 0.5 validated baseline + {featureSummary}.");
         }
