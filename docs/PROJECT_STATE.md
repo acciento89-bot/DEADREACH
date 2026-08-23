@@ -19,7 +19,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 
 Core loop:
 
-**Bunker → Deploy → Expedition → Combat → Loot → Risk decision → Extract / Die / Abandon → Bunker → Equip / Upgrade → Deploy stronger**
+**Bunker → Deploy → Expedition → Mission / Combat → Loot → Risk decision → Extract / Die / Abandon → Bunker → Equip / Upgrade → Deploy stronger**
 
 ## 2. Validated / merged baselines
 
@@ -72,10 +72,11 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - stable branch: `main`
 - stable production level: **0.10**
 - stable merge: `f48368cd46799afa230c8bc52f475300d8f68761`
-- no active production branch is authoritative after the 0.10 merge
-- next production work must branch from current `main`
+- active branch: **`production/0.11-expedition-director`**
+- Production 0.11 is implemented in code but **not yet real-Unity validated**
+- next gate: fresh Unity compile → `Build Production Slice 0.11` → mission/runtime/mobile regression
 
-## 4. Stable Production 0.10 baseline
+## 4. Stable Production 0.10 baseline that must remain green
 
 ### Progression
 - save schema v6
@@ -83,59 +84,85 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - Workbench / Medbay / Cargo Rig / Scavenger Network
 - Workshop survives expedition → Bunker reload
 
-### Combat identities
-- WALKER baseline
-- RUNNER burst
-- BRUTE slam
-- STALKER flank
-- SAM Field Patch
-- RAVEN Vector Dash
-- BRIGGS Shockwave
-
-### Mobile
+### Combat identities / controls
+- WALKER / RUNNER / BRUTE / STALKER roles
+- SAM / RAVEN / BRIGGS active abilities
 - fixed lower-left MOVE
 - fixed lower-right AIM/FIRE
 - independent upper-right Ability
-- full 360-degree movement
-- direction-based aiming only
-- phone HUD readable
+- full 360-degree movement and direction-based aiming
 
 ### Combat impact / presentation
-- SAM heal rings / motes
-- RAVEN dash trails / endpoint pulse
-- BRIGGS expanding Shockwave ground pulse / radial impact
-- Runner burst trail
-- Brute slam rings / particles
-- Stalker flank trail / pulses
-- world hit marker on successful damage hits
-- distinct critical marker + critical pulse
-- subtle camera-lens impact for damage / heavy abilities / specials
-- existing tracer / muzzle / sparks / gore pipeline preserved
-- runtime URP-safe presentation with no external art dependency
+- operator ability VFX
+- infected special VFX
+- hit / critical markers
+- camera-lens impact
+- tracer / muzzle / sparks / gore
+- responsive mobile-readable FIELD OPS HUD
+- accepted Arsenal / Bunker / boss / reward / sector presentation
 
-### Presentation baseline preserved
-- accepted Arsenal orientation/framing
-- responsive Bunker layouts
-- boss/reward presentation
-- sector atmosphere FX
-- landscape-only mobile orientation
+## 5. Production 0.11 — Expedition Director — CODE IMPLEMENTED / NOT YET UNITY VALIDATED
 
-## 5. Next development entry point
+### Mission system
+- runtime `ExpeditionDirector` attaches only in expedition scenes with a real `RunSession` + player
+- mission rotates across normal runs using level + run history
+- boss levels force **BLACKSITE**
+- four primary mission types:
+  - **RECOVERY** — secure a world data core
+  - **PURGE** — eliminate a bounded infected target count
+  - **HOLDOUT** — activate uplink, remain in defense radius and survive timed reinforcement pressure
+  - **BLACKSITE** — breach terminal → eliminate response / mutation boss → secure vault core
 
-1. `git switch main`
-2. `git pull`
-3. branch the next production pass from current `main`
-4. preserve schema-v6 Workshop progression
-5. preserve fixed-zone mobile controls
-6. preserve the accepted Production 0.10 combat-impact layer
-7. never reintroduce external gameplay hand-mounted Rifle transforms
-8. keep mobile landscape-only
+### Objective world presentation
+- runtime mission markers use URP-safe generated line / light / core presentation
+- primary marker color identifies mission role
+- Holdout uses a large visible defense radius
+- objective markers pulse and switch to green when completed
+
+### Extraction authority
+- `RunSession` now tracks `ExtractionBlockedByMission`
+- `ExtractionZone` blocks extraction while the Production 0.11 primary objective is incomplete
+- existing boss and no-loot extraction gates remain intact
+- primary completion unlocks extraction and grants unsecured carried Scrap
+
+### Risk / reward decision
+- after primary completion the player may extract immediately
+- an optional orange **BLACK CACHE** appears away from the primary objective
+- approaching the cache triggers a reinforcement response
+- securing the cache grants a reserved bonus weapon
+- cache rarity is minimum Uncommon, minimum Rare at level 25+, plus bonus Item Power
+- if run inventory is full, mission reward remains pending and is banked only after successful extraction
+- death / abandon clears pending mission rewards
+
+### Reinforcement system
+- Holdout / Blacksite / optional-cache pressure can spawn runtime reinforcement waves
+- max live infected pressure is capped
+- reinforcements use the same production infected visual catalog
+- reinforcements are configured as Walker / Runner / Brute / Stalker and receive the existing 0.9 role brain + 0.10 special VFX path
+
+### FIELD OPS mission HUD
+- existing mobile-readable FIELD OPS panel now shows mission name + threat
+- primary / optional objective text and progress
+- extraction-sealed messaging names the current primary objective
+- short visible alerts cover mission start, reinforcements, uplink signal and objective completion
+- accepted mobile control zones are not modified
+
+### Build / validation
+- menu: `DEADREACH > Build Production Slice 0.11`
+- test plan: `docs/PRODUCTION_11_TEST.md`
+- **no real Unity compile/build/runtime claim yet**
 
 ## 6. Handoff protocol
 
 When resuming:
 1. read this file first
-2. stable baseline is Production 0.10 on `main`
-3. stable merge is `f48368cd46799afa230c8bc52f475300d8f68761`
-4. next production work starts from current `main`
-5. preserve all validated 0.10 progression, controls and combat presentation
+2. stable baseline remains Production 0.10 on `main`
+3. active work is Production 0.11 on `production/0.11-expedition-director`
+4. first gate is local Unity compile with **0 red compiler errors**
+5. then run `DEADREACH > Build Production Slice 0.11`
+6. then validate mission variety / extraction gate / optional cache / reinforcements / mobile controls
+7. preserve schema-v6 Workshop progression
+8. preserve fixed-zone mobile controls
+9. preserve Production 0.10 combat-impact presentation
+10. never reintroduce external gameplay hand-mounted Rifle transforms
+11. keep mobile landscape-only
