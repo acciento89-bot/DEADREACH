@@ -20,10 +20,9 @@ Core loop:
 
 **Bunker → Deploy → Expedition → Combat → Loot → Risk decision → Extract / Die / Abandon → Bunker → Equip / Upgrade → Deploy stronger**
 
-## 2. Validated / merged baselines
+## 2. Stable baseline and permanent rule
 
-### Production 0.1–0.5
-Production 0.1 through 0.5 are merged / validated. Stable main baseline remains Production 0.5 at `a066386f05c6593f1840ef6902f62c808cbdf319`.
+Production 0.1–0.5 are merged / validated. Stable main baseline remains Production 0.5 at `a066386f05c6593f1840ef6902f62c808cbdf319`.
 
 Permanent gameplay weapon rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig for gameplay
