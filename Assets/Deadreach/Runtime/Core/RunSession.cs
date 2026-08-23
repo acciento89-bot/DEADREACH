@@ -19,6 +19,8 @@ namespace Kamilunavo.Deadreach.Core
 
         public int CarriedScrap { get; private set; }
         public float ExtractionProgress { get; private set; }
+        public bool IsInExtractionZone { get; private set; }
+        public bool ExtractionBlockedByNoLoot { get; private set; }
         public bool IsCompleted { get; private set; }
         public bool IsFailed { get; private set; }
 
@@ -73,12 +75,26 @@ namespace Kamilunavo.Deadreach.Core
             ExtractionProgress = Mathf.Clamp01(normalized);
         }
 
+        public void SetExtractionPresence(bool inside, bool blockedByNoLoot)
+        {
+            if (IsCompleted || IsFailed)
+                return;
+
+            IsInExtractionZone = inside;
+            ExtractionBlockedByNoLoot = inside && blockedByNoLoot;
+
+            if (!inside)
+                ExtractionProgress = 0f;
+        }
+
         public void CompleteExtraction()
         {
             if (IsCompleted || IsFailed)
                 return;
 
             IsCompleted = true;
+            IsInExtractionZone = false;
+            ExtractionBlockedByNoLoot = false;
             ExtractionProgress = 1f;
             SaveService.RegisterExtraction(CarriedScrap);
             CarriedScrap = 0;
@@ -103,6 +119,8 @@ namespace Kamilunavo.Deadreach.Core
                 return;
 
             IsFailed = true;
+            IsInExtractionZone = false;
+            ExtractionBlockedByNoLoot = false;
             CarriedScrap = 0;
             ExtractionProgress = 0f;
             SaveService.RegisterFailedRun();
