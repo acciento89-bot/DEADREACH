@@ -1,5 +1,6 @@
 using Kamilunavo.Deadreach.Combat;
 using Kamilunavo.Deadreach.Core;
+using Kamilunavo.Deadreach.Inventory;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Player;
 using UnityEngine;
@@ -47,10 +48,11 @@ namespace Kamilunavo.Deadreach.UI
             var width = Mathf.Min(430f, safe.width * 0.46f);
             var session = RunSession.Current;
             var profile = SaveService.Data;
+            var inventory = RunInventory.Current;
 
             DrawDamageFlash(safe);
 
-            GUI.Box(new Rect(left, top, width, 178f), GUIContent.none);
+            GUI.Box(new Rect(left, top, width, 204f), GUIContent.none);
             GUI.Label(new Rect(left + 16f, top + 10f, width - 32f, 30f), "DEADREACH // FIELD OPS", _titleStyle);
 
             var hp = _playerHealth != null ? Mathf.CeilToInt(_playerHealth.CurrentHealth) : 0;
@@ -61,8 +63,9 @@ namespace Kamilunavo.Deadreach.UI
             DrawBar(new Rect(left + 16f, top + 67f, width - 32f, 12f), healthNormalized, new Color(0.22f, 0.78f, 0.36f), new Color(0.75f, 0.15f, 0.12f));
 
             GUI.Label(new Rect(left + 16f, top + 90f, width - 32f, 24f), $"CARRIED SCRAP   {session?.CarriedScrap ?? 0}", _textStyle);
-            GUI.Label(new Rect(left + 16f, top + 116f, width - 32f, 24f), $"SECURED   {profile.securedScrap}      STREAK   {profile.currentExtractionStreak}", _textStyle);
-            GUI.Label(new Rect(left + 16f, top + 142f, width - 32f, 24f), "Reach the green beacon with loot to extract.", _textStyle);
+            GUI.Label(new Rect(left + 16f, top + 116f, width - 32f, 24f), $"WEAPON LOOT   {inventory?.Weapons.Count ?? 0}/{inventory?.WeaponCapacity ?? 0}", _textStyle);
+            GUI.Label(new Rect(left + 16f, top + 142f, width - 32f, 24f), $"SECURED   {profile.securedScrap}      STREAK   {profile.currentExtractionStreak}", _textStyle);
+            GUI.Label(new Rect(left + 16f, top + 168f, width - 32f, 24f), "Reach the green beacon with any loot to extract.", _textStyle);
 
             GUI.Label(new Rect(left, safe.yMax - 42f, width + 220f, 28f), "WASD / LEFT THUMB = MOVE   •   MOUSE / RIGHT THUMB = AIM + FIRE", _textStyle);
 
@@ -87,7 +90,7 @@ namespace Kamilunavo.Deadreach.UI
             if (session.ExtractionBlockedByNoLoot)
             {
                 GUI.Label(new Rect(x + 18f, y + 12f, width - 36f, 32f), "EXTRACTION LOCKED", _centerStyle);
-                GUI.Label(new Rect(x + 18f, y + 48f, width - 36f, 24f), "Collect Scrap before extracting.", _smallCenterStyle);
+                GUI.Label(new Rect(x + 18f, y + 48f, width - 36f, 24f), "Collect Scrap or weapon loot before extracting.", _smallCenterStyle);
                 return;
             }
 
