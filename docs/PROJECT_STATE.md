@@ -62,11 +62,11 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - active branch: **`production/0.9-combat-depth`**
 - PR #9: Draft, targets `main`
 - enemy-role runtime gate passed: Walker baseline, Runner burst, Brute slam and Stalker flank behavior accepted
-- operator active-ability gameplay passed on desktop: SAM Field Patch, RAVEN Vector Dash and BRIGGS Shockwave accepted
+- operator active-ability gameplay passed: SAM Field Patch, RAVEN Vector Dash and BRIGGS Shockwave accepted
 - BRIGGS Shockwave dedicated FX remains non-blocking 0.10 visual debt
-- **mobile gate remains RED** after two rejected control implementations
-- current third implementation uses fixed safe-area controls, touch-begin Ability capture and visible Ability feedback
-- this third implementation is committed but **not yet Unity-validated**
+- first two mobile-control implementations were rejected and must never be treated as accepted
+- **third fixed-zone mobile implementation is real-runtime accepted**: MOVE, AIM/FIRE and ABILITY all work correctly in the landscape phone/Device Simulator setup; mobile HUD readability accepted
+- only remaining 0.9 blocker is the final 0.8 regression + 0 red runtime errors
 
 ## 4. Production 0.8 shipped baseline that must remain green
 
@@ -103,7 +103,7 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - attempt 2 rejected: firing improved but MOVE still used a floating first-touch origin and real mobile use remained unreliable; Ability lacked trustworthy visible confirmation
 - neither rejected implementation may be treated as accepted
 
-### Current fixed-zone mobile pass — AWAITING REAL VALIDATION
+### Fixed-zone mobile pass — REAL RUNTIME ACCEPTED
 - fixed lower-left MOVE center derived from `Screen.safeArea`
 - fixed lower-right AIM/FIRE center derived from `Screen.safeArea`
 - generous circular capture zones larger than the visible sticks
@@ -111,33 +111,29 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - mobile movement acceleration/deceleration is fast for immediate direction changes
 - AIM/FIRE uses camera-relative directional input only
 - absolute touch coordinates are never converted to a weapon world target
-- right stick fires immediately once directional input leaves its deadzone
+- right stick fires once directional input leaves its deadzone and stops on release
 - simulated mobile touch suppresses mirrored mouse-pointer aim
 - Ability is upper-right with an enlarged independent touch region
 - Ability queues on touch-begin
-- Ability shows `FIRED`, `NO TARGET`, `FULL HP`, `BLOCKED` or `COOLDOWN` feedback so input registration is visible
+- Ability shows `FIRED`, `NO TARGET`, `FULL HP`, `BLOCKED` or `COOLDOWN` feedback
 - fixed stick visuals and fixed input capture share the exact same centers
-- phone HUD remains scaled up for readability
+- phone HUD / Vitals / HP / loot / scrap / objective readability accepted
 
 ### Known 0.10 follow-up
 - BRIGGS Shockwave needs a dedicated expanding ring / ground pulse / impact VFX
 
 ## 6. Current 0.9 gate
 
-Already green:
+Green:
 1. enemy roles ✅
-2. SAM / RAVEN / BRIGGS gameplay on desktop ✅
+2. SAM / RAVEN / BRIGGS gameplay ✅
+3. fixed-zone mobile MOVE / AIM-FIRE / ABILITY ✅
+4. mobile HUD readability ✅
 
-Fresh gate required now:
-3. `git pull` latest branch
-4. Unity compile → **0 red compiler errors**
-5. MOVE remains fixed lower-left and supports up/down/left/right/diagonal
-6. movement stops/changes direction quickly
-7. AIM/FIRE remains fixed lower-right and both aiming + shooting work in every direction
-8. aim never snaps toward Ability/UI
-9. Ability upper-right gives immediate visible feedback and never becomes move/aim/fire
-10. mobile HUD remains comfortably readable
-11. final 0.8 regression + **0 red runtime errors**
+Remaining:
+5. full Production 0.8 regression: Bunker → Workshop → Deploy → combat/loot → extract → Bunker
+6. Workshop / progression / Arsenal / accepted presentation remain intact
+7. require **0 red runtime errors**
 
 ## 7. Handoff protocol
 
@@ -145,9 +141,9 @@ When resuming:
 1. read this file first
 2. stable baseline remains Production 0.8 on `main`
 3. active work is Production 0.9 on `production/0.9-combat-depth`
-4. enemy roles and operator gameplay are green
+4. enemy roles, operator abilities and fixed-zone mobile controls are green
 5. both earlier mobile implementations were rejected and must never be treated as accepted
-6. current fixed-zone mobile pass must pass fresh compile + runtime validation
+6. only final full regression + 0 red runtime errors remain before promotion
 7. BRIGGS Shockwave FX is tracked for 0.10 and does not block 0.9
 8. preserve schema-v6 Workshop progression and accepted presentation
 9. never reintroduce external gameplay hand-mounted Rifle transforms
