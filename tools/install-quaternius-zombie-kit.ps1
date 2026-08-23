@@ -28,7 +28,7 @@ if (Get-Command py -ErrorAction SilentlyContinue) {
 }
 
 Write-Host 'Installing/updating gdown for the original Quaternius Google Drive download...'
-& $python -m pip install --user --disable-pip-version-check -q gdown
+& $python -m pip install --user --disable-pip-version-check --no-warn-script-location -q gdown
 if ($LASTEXITCODE -ne 0) {
     throw 'Failed to install gdown.'
 }
@@ -39,7 +39,19 @@ if (Test-Path $tempRoot) {
 New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
 
 Write-Host 'Downloading Quaternius Zombie Apocalypse Kit from the original creator folder...'
-& $python -m gdown --folder $driveFolder --remaining-ok -O $tempRoot
+
+# gdown CLI flags differ between released versions. Older/newer builds may or may not
+# expose --remaining-ok. Detect support instead of hard-coding a version-specific flag.
+$gdownHelp = (& $python -m gdown --help 2>&1 | Out-String)
+$gdownArgs = @('-m', 'gdown', '--folder', $driveFolder, '-O', $tempRoot)
+if ($gdownHelp -match '(?m)^\s*--remaining-ok\b') {
+    Write-Host 'gdown supports --remaining-ok; enabling it.'
+    $gdownArgs += '--remaining-ok'
+} else {
+    Write-Host 'gdown does not expose --remaining-ok; using compatible folder download mode.'
+}
+
+& $python @gdownArgs
 if ($LASTEXITCODE -ne 0) {
     throw 'Quaternius download failed.'
 }
