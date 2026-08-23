@@ -7,11 +7,25 @@ namespace Kamilunavo.Deadreach.UI
 {
     /// <summary>
     /// RenderTexture-backed weapon inspector docked inside the Arsenal's right-hand inspector column.
-    /// It renders only while the Arsenal tab exists.
+    /// It renders only while the Arsenal tab exists and normalizes imported weapon orientation for preview only.
     /// </summary>
     public sealed class BunkerWeaponPreviewUI : MonoBehaviour
     {
         private const int PreviewLayer = 31;
+
+        private static readonly Quaternion[] OrientationCandidates =
+        {
+            Quaternion.identity,
+            Quaternion.Euler(0f, 0f, 90f),
+            Quaternion.Euler(0f, 0f, -90f),
+            Quaternion.Euler(90f, 0f, 0f),
+            Quaternion.Euler(-90f, 0f, 0f),
+            Quaternion.Euler(0f, 90f, 0f),
+            Quaternion.Euler(0f, -90f, 0f),
+            Quaternion.Euler(180f, 0f, 0f),
+            Quaternion.Euler(0f, 180f, 0f),
+            Quaternion.Euler(0f, 0f, 180f)
+        };
 
         private RenderTexture _renderTexture;
         private Camera _previewCamera;
@@ -46,7 +60,7 @@ namespace Kamilunavo.Deadreach.UI
             }
 
             if (_previewRoot != null && _previewRoot.activeSelf)
-                _previewRoot.transform.Rotate(Vector3.up, 22f * Time.unscaledDeltaTime, Space.World);
+                _previewRoot.transform.Rotate(Vector3.up, 15f * Time.unscaledDeltaTime, Space.World);
         }
 
         private void BuildPreviewCanvas()
@@ -159,31 +173,66 @@ namespace Kamilunavo.Deadreach.UI
             _weaponVisual.name = source != null ? "Preview_ProductionWeapon" : "Preview_FallbackWeapon";
 
             SetLayerRecursive(_weaponVisual, PreviewLayer);
-            NormalizeWeapon(_weaponVisual);
+            NormalizeWeaponForPreview(_weaponVisual);
         }
 
-        private static void NormalizeWeapon(GameObject visual)
+        private static void NormalizeWeaponForPreview(GameObject visual)
         {
-            var renderers = visual.GetComponentsInChildren<Renderer>(true);
-            if (renderers.Length == 0)
-                return;
+            visual.transform.localPosition = Vector3.zero;
+            visual.transform.localRotation = Quaternion.identity;
+            visual.transform.localScale = Vector3.one;
 
-            var bounds = renderers[0].bounds;
-            for (var i = 1; i < renderers.Length; i++)
-                bounds.Encapsulate(renderers[i].bounds);
+            if (!TryGetCombinedBounds(visual, out var bounds))
+                return;
 
             var longest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
             if (longest > 0.001f)
                 visual.transform.localScale *= 2.35f / longest;
 
-            renderers = visual.GetComponentsInChildren<Renderer>(true);
+            var bestRotation = Quaternion.identity;
+            var bestScore = float.NegativeInfinity;
+
+            // Imported weapon pivots/axes are not guaranteed to match the preview camera. Evaluate
+            // orthogonal candidate rotations and choose the one that makes the visible weapon widest
+            // on screen while penalizing vertical/depth extent. This is preview-only and never touches gameplay.
+            foreach (var candidate in OrientationCandidates)
+            {
+                visual.transform.localRotation = candidate;
+                if (!TryGetCombinedBounds(visual, out var candidateBounds))
+                    continue;
+
+                var score = candidateBounds.size.x * 2.4f
+                            - candidateBounds.size.y * 1.15f
+                            - candidateBounds.size.z * 0.12f;
+                if (score <= bestScore)
+                    continue;
+
+                bestScore = score;
+                bestRotation = candidate;
+            }
+
+            visual.transform.localRotation = Quaternion.Euler(4f, -11f, 0f) * bestRotation;
+
+            if (!TryGetCombinedBounds(visual, out bounds))
+                return;
+
+            visual.transform.position -= bounds.center;
+            visual.transform.position += Vector3.up * 0.06f;
+        }
+
+        private static bool TryGetCombinedBounds(GameObject visual, out Bounds bounds)
+        {
+            var renderers = visual.GetComponentsInChildren<Renderer>(true);
+            if (renderers.Length == 0)
+            {
+                bounds = default;
+                return false;
+            }
+
             bounds = renderers[0].bounds;
             for (var i = 1; i < renderers.Length; i++)
                 bounds.Encapsulate(renderers[i].bounds);
-
-            visual.transform.position -= bounds.center;
-            visual.transform.position += Vector3.up * 0.10f;
-            visual.transform.rotation = Quaternion.Euler(8f, -28f, -4f);
+            return true;
         }
 
         private static GameObject BuildFallbackWeapon(Transform parent)
