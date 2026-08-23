@@ -83,7 +83,7 @@ Physical-device touch/haptics and iOS/Android builds are still separate validati
 - PR #3 — `production: art asset binding and presentation pipeline 0.3` — Draft
 - Production 0.3 **real Unity compile + generator gate PASSED** on 2026-08-23
 - Production 0.3 **empty-catalog fallback runtime gate PASSED** on 2026-08-23
-- actual production 3D assets are not yet integrated
+- Quaternius Zombie Apocalypse Kit selected as first production-art source; binaries not yet integrated
 
 Do not claim 0.3 production-art complete until real Survivor/Infected/Weapon assets are assigned and validated.
 
@@ -221,29 +221,59 @@ Confirmed by the user on 2026-08-23:
 
 This proves the art-binding pipeline can safely fall back without destabilizing the validated gameplay loop.
 
-## 9. Next priorities inside 0.3
+## 9. Selected first production-art source
 
-1. obtain/integrate actual licensed/owned Survivor 3D asset + production Animator controller
-2. integrate actual Infected 3D assets + animations
-3. integrate actual weapon model(s)
-4. validate real visual replacement / Animator rebinding / weapon mounting / muzzle origin
-5. proper muzzle flash / impact production VFX
-6. first real combat audio-content pass
-7. Dead City production environment-art replacement framework
-8. URP post-processing / color grading / atmosphere
-9. replace prototype IMGUI with production HUD/loadout UI
-10. production NavMesh navigation
-11. physical-device mobile validation + iOS/Android build profiling
+**Quaternius — Zombie Apocalypse Kit**
 
-## 10. Handoff protocol
+Reason:
+
+- coherent single-source visual style
+- 4 playable characters with supplied animations
+- 4 infected/enemy characters
+- guns + melee weapons
+- matching city/street/survival props
+- FBX / OBJ / glTF / Blend formats
+- original creator states CC0 and commercial use
+
+Initial DEADREACH subset:
+
+- one survivor character
+- Zombie Basic
+- Zombie Chubby
+- Zombie Arm
+- Zombie Ribcage
+- Rifle
+
+License tracking:
+
+`docs/THIRD_PARTY_ASSETS.md`
+
+The pack is selected, but the actual binary model assets have not yet been copied into DEADREACH or tested through the production catalog.
+
+## 10. Next priorities inside 0.3
+
+1. import the selected Quaternius Survivor/Infected/Rifle subset
+2. create DEADREACH wrapper prefabs + Animator controllers
+3. create/fix Survivor weapon socket + Rifle muzzle socket
+4. assign all wrappers to ProductionAssetCatalog
+5. validate real visual replacement / Animator rebinding / weapon mounting / muzzle origin
+6. proper muzzle flash / impact production VFX
+7. first real combat audio-content pass
+8. extend the same kit into Dead City environment props
+9. URP post-processing / color grading / atmosphere
+10. replace prototype IMGUI with production HUD/loadout UI
+11. production NavMesh navigation
+12. physical-device mobile validation + iOS/Android build profiling
+
+## 11. Handoff protocol
 
 When resuming:
 
 1. read this file first
 2. inspect active branch / PR #3
 3. note that 0.3 compile/generator and empty-catalog fallback runtime gates have passed
-4. distinguish actual production-art integration from fallback pipeline validation
-5. continue with licensed/owned Survivor/Infected/Weapon asset integration
+4. note that Quaternius Zombie Apocalypse Kit is the selected CC0 first-art source, but binaries are not yet integrated
+5. continue with actual Survivor/Infected/Rifle import and wrapper-prefab integration
 6. update this file after the next major pass
 
 Do not rely on chat history alone.
