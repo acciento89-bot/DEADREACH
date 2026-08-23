@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Kamilunavo.Deadreach.Combat;
+using Kamilunavo.Deadreach.Inventory;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Player;
 using UnityEngine;
@@ -96,7 +97,11 @@ namespace Kamilunavo.Deadreach.Core
             IsInExtractionZone = false;
             ExtractionBlockedByNoLoot = false;
             ExtractionProgress = 1f;
-            SaveService.RegisterExtraction(CarriedScrap);
+
+            var extractedWeapons = RunInventory.Current?.CreateExtractionSnapshot();
+            SaveService.RegisterExtraction(CarriedScrap, extractedWeapons);
+            RunInventory.Current?.Clear();
+
             CarriedScrap = 0;
             ScrapChanged?.Invoke(CarriedScrap);
             ExtractionCompleted?.Invoke();
@@ -123,6 +128,7 @@ namespace Kamilunavo.Deadreach.Core
             ExtractionBlockedByNoLoot = false;
             CarriedScrap = 0;
             ExtractionProgress = 0f;
+            RunInventory.Current?.Clear();
             SaveService.RegisterFailedRun();
             ScrapChanged?.Invoke(CarriedScrap);
             RunFailed?.Invoke();
