@@ -20,6 +20,7 @@ namespace Kamilunavo.Deadreach.Core
         public event Action ExtractionCompleted;
         public event Action RunFailed;
         public event Action<WeaponInstanceData> BossRewardGranted;
+        public event Action<WeaponInstanceData> MissionRewardGranted;
 
         public int CarriedScrap { get; private set; }
         public int RunLevel { get; private set; }
@@ -27,14 +28,17 @@ namespace Kamilunavo.Deadreach.Core
         public bool IsInExtractionZone { get; private set; }
         public bool ExtractionBlockedByNoLoot { get; private set; }
         public bool ExtractionBlockedByBoss { get; private set; }
+        public bool ExtractionBlockedByMission { get; private set; }
         public bool IsCompleted { get; private set; }
         public bool IsFailed { get; private set; }
         public WeaponInstanceData PendingBossReward => _pendingBossReward;
+        public IReadOnlyList<WeaponInstanceData> PendingMissionRewards => _pendingMissionRewards;
 
         private Damageable _playerHealth;
         private Coroutine _returnRoutine;
         private WeaponInstanceData _pendingBossReward;
         private WeaponInstanceData _bossRewardGrantedThisRun;
+        private readonly List<WeaponInstanceData> _pendingMissionRewards = new();
 
         private void Awake()
         {
@@ -97,6 +101,25 @@ namespace Kamilunavo.Deadreach.Core
             Debug.Log($"DEADREACH BOSS REWARD ACQUIRED // {reward.displayNameSnapshot} // {WeaponVisualStyle.GetDisplayName(WeaponVisualStyle.ResolveFinishId(reward))}");
         }
 
+        public void GrantMissionReward(WeaponInstanceData reward)
+        {
+            if (reward == null || IsCompleted || IsFailed)
+                return;
+
+            var copy = reward.Clone();
+            if (RunInventory.Current != null && !RunInventory.Current.IsFull)
+            {
+                RunInventory.Current.TryAddWeapon(copy);
+            }
+            else
+            {
+                _pendingMissionRewards.Add(copy);
+            }
+
+            MissionRewardGranted?.Invoke(copy);
+            Debug.Log($"DEADREACH MISSION REWARD ACQUIRED // {copy.displayNameSnapshot} // PWR {copy.itemPower} // reserved until extraction.");
+        }
+
         public void SetExtractionProgress(float normalized)
         {
             if (IsCompleted || IsFailed)
@@ -107,10 +130,15 @@ namespace Kamilunavo.Deadreach.Core
 
         public void SetExtractionPresence(bool inside, bool blockedByNoLoot)
         {
-            SetExtractionPresence(inside, blockedByNoLoot, false);
+            SetExtractionPresence(inside, blockedByNoLoot, false, false);
         }
 
         public void SetExtractionPresence(bool inside, bool blockedByNoLoot, bool blockedByBoss)
+        {
+            SetExtractionPresence(inside, blockedByNoLoot, blockedByBoss, false);
+        }
+
+        public void SetExtractionPresence(bool inside, bool blockedByNoLoot, bool blockedByBoss, bool blockedByMission)
         {
             if (IsCompleted || IsFailed)
                 return;
@@ -118,6 +146,7 @@ namespace Kamilunavo.Deadreach.Core
             IsInExtractionZone = inside;
             ExtractionBlockedByNoLoot = inside && blockedByNoLoot;
             ExtractionBlockedByBoss = inside && blockedByBoss;
+            ExtractionBlockedByMission = inside && blockedByMission;
 
             if (!inside)
                 ExtractionProgress = 0f;
@@ -132,6 +161,7 @@ namespace Kamilunavo.Deadreach.Core
             IsInExtractionZone = false;
             ExtractionBlockedByNoLoot = false;
             ExtractionBlockedByBoss = false;
+            ExtractionBlockedByMission = false;
             ExtractionProgress = 1f;
 
             var extractedWeapons = RunInventory.Current?.CreateExtractionSnapshot() ?? new List<WeaponInstanceData>();
@@ -140,6 +170,13 @@ namespace Kamilunavo.Deadreach.Core
                 extractedWeapons.Add(_pendingBossReward.Clone());
                 _pendingBossReward = null;
             }
+
+            foreach (var reward in _pendingMissionRewards)
+            {
+                if (reward != null)
+                    extractedWeapons.Add(reward.Clone());
+            }
+            _pendingMissionRewards.Clear();
 
             SaveService.RegisterExtraction(CarriedScrap, extractedWeapons, RunLevel);
             if (_bossRewardGrantedThisRun != null)
@@ -172,10 +209,12 @@ namespace Kamilunavo.Deadreach.Core
             IsInExtractionZone = false;
             ExtractionBlockedByNoLoot = false;
             ExtractionBlockedByBoss = false;
+            ExtractionBlockedByMission = false;
             CarriedScrap = 0;
             ExtractionProgress = 0f;
             _pendingBossReward = null;
             _bossRewardGrantedThisRun = null;
+            _pendingMissionRewards.Clear();
             RunInventory.Current?.Clear();
             SaveService.RegisterFailedRun();
             ScrapChanged?.Invoke(CarriedScrap);
