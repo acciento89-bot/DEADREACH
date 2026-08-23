@@ -70,7 +70,9 @@ Current accepted Sam strategy:
 
 - `main` contains validated 0.1 + 0.2 + 0.3
 - active branch: **`production/0.4-environment-atmosphere`**
-- Production 0.4 is **IMPLEMENTED IN CODE, NOT YET UNITY COMPILED/RUNTIME VALIDATED**
+- PR #4 remains **Draft**
+- Production 0.4 implementation + downloaded environment/vehicle subset now **COMPILE CLEAN IN REAL UNITY**
+- Production 0.4 generator/runtime/visual gate is **NOT YET VALIDATED**
 - merge is forbidden until `docs/PRODUCTION_04_TEST.md` passes
 
 ## 6. Production 0.4 — implemented on branch
@@ -79,11 +81,9 @@ Goal: make Dead City read as a real environment while preserving the validated 0
 
 ### Quaternius Dead City asset installer
 
-New:
-
 `tools/install-quaternius-deadcity-set.ps1`
 
-Downloads a curated CC0 subset from the same Quaternius Zombie Apocalypse Kit visual family:
+Curated CC0 subset from the same Quaternius Zombie Apocalypse Kit visual family:
 - modular street / cracked street / intersection pieces
 - traffic + plastic barriers
 - real streetlight + traffic-light geometry
@@ -98,8 +98,6 @@ The script requires branch `production/0.4-environment-atmosphere`, supports `-C
 
 ### Dead City Environment Pass
 
-New:
-
 `Assets/Deadreach/Editor/DeadCityEnvironmentPass.cs`
 
 Current implementation:
@@ -109,7 +107,7 @@ Current implementation:
 - bounds colliders on major blockers/vehicles
 - explicit Quaternius environment atlas material
 - stronger cold moon / warmer street-light contrast
-- denser but still gameplay-targeted exponential fog
+- denser but gameplay-targeted exponential fog
 - global URP post-processing profile
   - ACES tonemapping
   - modest Bloom
@@ -117,7 +115,18 @@ Current implementation:
   - modest vignette
 - camera post-processing enabled through `UniversalAdditionalCameraData`
 - stronger extraction beacon column + green local light
-- pass can run without the optional assets and will warn instead of destroying gameplay
+- pass can run without optional assets and will warn instead of destroying gameplay
+
+### 0.4 compile/import repair
+
+First real-Unity pull exposed a missing `Unity.RenderPipelines.Core.Runtime` reference in `Deadreach.Editor.asmdef`, causing `VolumeProfile`, `Volume`, Bloom, ColorAdjustments, Tonemapping and Vignette compiler failures while glTF imports were also reporting failures.
+
+Fixes now on branch:
+- `Unity.RenderPipelines.Core.Runtime` added to `Deadreach.Editor.asmdef`
+- `DeadCityAssetRepair` added to force-reimport failed 0.4 environment/vehicle glTFs after scripts compile
+- manual repair menu available at `DEADREACH > Production > Repair Dead City 0.4 Imports`
+
+**Real Unity compile gate after these fixes: PASSED — user confirmed 0 errors on 2026-08-23.**
 
 ### Main generator
 
@@ -145,27 +154,18 @@ Critical regression lock:
 
 ## 7. Immediate next local gate
 
-On the local repo:
-
-```powershell
-git fetch
-git switch production/0.4-environment-atmosphere
-git pull
-powershell -ExecutionPolicy Bypass -File .\tools\install-quaternius-deadcity-set.ps1 -CommitAndPush
-```
-
-Then wait for Unity/glTFast import.
+Compile gate is complete.
 
 Required next:
-1. **0 red compiler errors**
-2. run `DEADREACH > Build Production Slice 0.4`
+1. run **`DEADREACH > Build Production Slice 0.4`**
+2. require generator to complete with no red errors
 3. Play → Deploy
 4. visually validate environment scale/orientation/colors/lighting/fog/post-processing
 5. validate environment blockers do not trap spawn or block extraction
 6. revalidate the locked 0.3 character/weapon/muzzle path
-7. run the full gameplay regression gate from `docs/PRODUCTION_04_TEST.md`
+7. run the gameplay regression gate from `docs/PRODUCTION_04_TEST.md`
 
-Do not claim 0.4 works until this real Unity gate passes.
+Do not claim 0.4 works until this real Unity runtime/visual gate passes.
 
 ## 8. After 0.4 environment validation
 
@@ -189,8 +189,8 @@ When resuming:
 3. never reintroduce external Rifle transform/socket hacks onto Sam
 4. current left-hand embedded weapon is accepted
 5. active work is `production/0.4-environment-atmosphere`
-6. 0.4 code exists but is **not yet real-Unity validated**
-7. next action is the environment installer + compile + Production Slice 0.4 acceptance run
+6. 0.4 compile gate has passed in real Unity with 0 errors
+7. next action is `DEADREACH > Build Production Slice 0.4` followed by Play → Deploy visual/gameplay acceptance
 8. update this file after each major validation/fix
 
 Do not rely on chat history alone.
