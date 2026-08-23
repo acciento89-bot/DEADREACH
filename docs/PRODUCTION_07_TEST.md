@@ -11,15 +11,21 @@ Production 0.7 is a focused polish pass stacked on the functionally validated Pr
 - Flooded Industrial rain, Ash District ash, Blackout dust and Ground Zero contamination must read as different atmosphere families.
 - No regression to 0.6 boss/reward persistence, extraction, weapon stats or sector traversal.
 
+## Validation progress
+
+- real Unity compile gate: ✅ 0 compiler errors on 2026-08-23
+- real Unity build gate: ✅ `DEADREACH > Build Production Slice 0.7` completed on 2026-08-23 with no blocking red build/import error reported
+- runtime presentation gates: pending
+
 ## Preflight
 
 1. `git fetch`
 2. `git switch production/0.7-presentation-polish`
 3. `git pull`
 4. let Unity finish compile/import
-5. require **0 red compiler errors**
-6. run **`DEADREACH > Build Production Slice 0.7`** once
-7. require no blocking red build/import errors
+5. require **0 red compiler errors** ✅
+6. run **`DEADREACH > Build Production Slice 0.7`** once ✅
+7. require no blocking red build/import errors ✅
 
 ## A. Bunker / responsive layout
 
