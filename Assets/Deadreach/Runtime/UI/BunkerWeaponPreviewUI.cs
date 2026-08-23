@@ -1,5 +1,6 @@
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Presentation;
+using Kamilunavo.Deadreach.Weapons;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -174,6 +175,7 @@ namespace Kamilunavo.Deadreach.UI
 
             SetLayerRecursive(_weaponVisual, PreviewLayer);
             NormalizeWeaponForPreview(_weaponVisual);
+            WeaponVisualStyle.Apply(_weaponVisual, SaveService.GetEquippedPrimaryWeapon());
         }
 
         private static void NormalizeWeaponForPreview(GameObject visual)
@@ -192,9 +194,6 @@ namespace Kamilunavo.Deadreach.UI
             var bestRotation = Quaternion.identity;
             var bestScore = float.NegativeInfinity;
 
-            // Imported weapon pivots/axes are not guaranteed to match the preview camera. Evaluate
-            // orthogonal candidate rotations and choose the one that makes the visible weapon widest
-            // on screen while penalizing vertical/depth extent. This is preview-only and never touches gameplay.
             foreach (var candidate in OrientationCandidates)
             {
                 visual.transform.localRotation = candidate;
@@ -211,7 +210,12 @@ namespace Kamilunavo.Deadreach.UI
                 bestRotation = candidate;
             }
 
-            visual.transform.localRotation = Quaternion.Euler(4f, -11f, 0f) * bestRotation;
+            // The Quaternius standalone firearm's canonical horizontal candidate is mirrored around
+            // the screen X axis: magazine/grip render above the receiver. Apply the preview-only
+            // 180° X correction after axis normalization. Gameplay weapon/muzzle transforms are untouched.
+            visual.transform.localRotation = Quaternion.Euler(180f, 0f, 0f)
+                                             * Quaternion.Euler(4f, -11f, 0f)
+                                             * bestRotation;
 
             if (!TryGetCombinedBounds(visual, out bounds))
                 return;
