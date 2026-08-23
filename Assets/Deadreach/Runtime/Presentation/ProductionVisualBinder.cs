@@ -19,8 +19,10 @@ namespace Kamilunavo.Deadreach.Presentation
         [SerializeField] private bool hidePrototypeRenderers = true;
 
         private GameObject _instance;
+        private GameObject _weaponInstance;
 
         public bool HasProductionVisual => _instance != null;
+        public GameObject VisualInstance => _instance;
 
         private void Start()
         {
@@ -88,11 +90,23 @@ namespace Kamilunavo.Deadreach.Presentation
 
             if (role == ProductionVisualRole.Survivor)
             {
-                var animationDriver = GetComponent<PlayerAnimationDriver>();
-                animationDriver?.SetAnimator(animator);
+                GetComponent<PlayerAnimationDriver>()?.SetAnimator(animator);
 
-                var muzzle = FindNamedTransform(_instance.transform, "MuzzleSocket")
-                             ?? FindNamedTransform(_instance.transform, "Muzzle");
+                Transform muzzle = null;
+                var weaponSocket = FindNamedTransform(_instance.transform, "WeaponSocket")
+                                   ?? FindNamedTransform(_instance.transform, "RightHandWeaponSocket");
+
+                if (catalog.PrimaryWeaponPrefab != null && weaponSocket != null)
+                {
+                    _weaponInstance = Instantiate(catalog.PrimaryWeaponPrefab, weaponSocket, false);
+                    _weaponInstance.name = "ProductionPrimaryWeapon";
+                    muzzle = FindNamedTransform(_weaponInstance.transform, "MuzzleSocket")
+                             ?? FindNamedTransform(_weaponInstance.transform, "Muzzle");
+                }
+
+                muzzle ??= FindNamedTransform(_instance.transform, "MuzzleSocket")
+                           ?? FindNamedTransform(_instance.transform, "Muzzle");
+
                 if (muzzle != null)
                     GetComponent<HitscanWeapon>()?.SetMuzzle(muzzle);
             }
