@@ -5,16 +5,22 @@ namespace Kamilunavo.Deadreach.Feedback
 {
     public readonly struct ShotFeedback
     {
-        public ShotFeedback(Vector3 origin, Vector3 endPoint, bool hitDamageable)
+        public ShotFeedback(Vector3 origin, Vector3 endPoint, bool hitDamageable, float tracerDuration, float tracerWidth, float hapticStrength)
         {
             Origin = origin;
             EndPoint = endPoint;
             HitDamageable = hitDamageable;
+            TracerDuration = tracerDuration;
+            TracerWidth = tracerWidth;
+            HapticStrength = hapticStrength;
         }
 
         public Vector3 Origin { get; }
         public Vector3 EndPoint { get; }
         public bool HitDamageable { get; }
+        public float TracerDuration { get; }
+        public float TracerWidth { get; }
+        public float HapticStrength { get; }
     }
 
     public readonly struct ImpactFeedback
