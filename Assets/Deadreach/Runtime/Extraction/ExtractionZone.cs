@@ -18,7 +18,14 @@ namespace Kamilunavo.Deadreach.Extraction
 
         private void Awake()
         {
-            GetComponent<Collider>().isTrigger = true;
+            // Extraction presentation is never allowed to become physical world geometry. Keep every
+            // collider attached below this zone as a trigger so runtime/editor dressing cannot trap a
+            // CharacterController inside a sealed extraction area.
+            foreach (var collider in GetComponentsInChildren<Collider>(true))
+            {
+                if (collider != null)
+                    collider.isTrigger = true;
+            }
         }
 
         private void Update()
