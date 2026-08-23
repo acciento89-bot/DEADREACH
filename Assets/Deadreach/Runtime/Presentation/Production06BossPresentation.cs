@@ -9,7 +9,6 @@ namespace Kamilunavo.Deadreach.Presentation
     {
         private RunDifficultyDirector _director;
         private CanvasGroup _overlayGroup;
-        private Text _nameText;
         private Text _phaseText;
         private Light _aura;
         private Renderer[] _bossRenderers;
@@ -36,7 +35,7 @@ namespace Kamilunavo.Deadreach.Presentation
             var tier = Mathf.Clamp(Mathf.Max(1, _director.Level / 10), 1, 5);
             _accent = GetTierColor(tier);
             BuildBossVisual(_director.BossHealth.gameObject, tier);
-            BuildOverlay(tier);
+            BuildOverlay();
 
             _director.BossPhaseChanged += HandlePhase;
             _director.BossDefeated += HandleDefeated;
@@ -85,41 +84,36 @@ namespace Kamilunavo.Deadreach.Presentation
             shape.radius = 1.25f + tier * 0.08f;
         }
 
-        private void BuildOverlay(int tier)
+        private void BuildOverlay()
         {
             var canvasObject = new GameObject("MutationBossIdentityCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
             canvasObject.transform.SetParent(transform, false);
             var canvas = canvasObject.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 54;
+            canvas.sortingOrder = 55;
+
             var scaler = canvasObject.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1600f, 900f);
             scaler.matchWidthOrHeight = 0.5f;
 
-            var panel = new GameObject("BossIdentityPanel", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+            var panel = new GameObject("BossPhaseChip", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
             panel.transform.SetParent(canvasObject.transform, false);
             var rect = panel.GetComponent<RectTransform>();
-            // The existing PrototypeHud owns the centered boss HP bar at the very top. Keep the
-            // identity card directly below it so both remain readable on desktop and phone landscape.
-            rect.anchorMin = new Vector2(0.37f, 0.745f);
-            rect.anchorMax = new Vector2(0.63f, 0.835f);
+            rect.anchorMin = new Vector2(0.41f, 0.885f);
+            rect.anchorMax = new Vector2(0.59f, 0.925f);
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
-            panel.GetComponent<Image>().color = new Color(0.015f, 0.015f, 0.018f, 0.88f);
+            panel.GetComponent<Image>().color = new Color(0.015f, 0.018f, 0.02f, 0.86f);
+
             _overlayGroup = panel.GetComponent<CanvasGroup>();
             _overlayGroup.blocksRaycasts = false;
             _overlayGroup.interactable = false;
 
-            _nameText = CreateText(panel.transform, "BossName", 21, FontStyle.Bold, TextAnchor.MiddleCenter,
-                new Vector2(0.03f, 0.43f), new Vector2(0.97f, 0.92f));
-            _nameText.color = _accent;
-            _nameText.text = $"TIER {tier} // {GetBossName(tier)}";
-
-            _phaseText = CreateText(panel.transform, "BossPhase", 12, FontStyle.Bold, TextAnchor.MiddleCenter,
-                new Vector2(0.03f, 0.08f), new Vector2(0.97f, 0.44f));
+            _phaseText = CreateText(panel.transform, "BossPhase", 11, FontStyle.Bold, TextAnchor.MiddleCenter,
+                new Vector2(0.03f, 0.05f), new Vector2(0.97f, 0.95f));
             _phaseText.color = Color.white;
-            _phaseText.text = "MUTATION STATE // STABLE";
+            _phaseText.text = "STATE // STABLE";
         }
 
         private void HandlePhase(int phase)
@@ -129,9 +123,9 @@ namespace Kamilunavo.Deadreach.Presentation
 
             _phaseText.text = phase switch
             {
-                1 => "MUTATION STATE // ENRAGED",
-                2 => "MUTATION STATE // TERMINAL OVERDRIVE",
-                _ => "MUTATION STATE // STABLE"
+                1 => "STATE // ENRAGED",
+                2 => "STATE // TERMINAL OVERDRIVE",
+                _ => "STATE // STABLE"
             };
 
             if (_aura != null)
@@ -180,18 +174,6 @@ namespace Kamilunavo.Deadreach.Presentation
                 3 => new Color(1f, 0.32f, 0.04f, 1f),
                 4 => new Color(0.62f, 0.25f, 1f, 1f),
                 _ => new Color(1f, 0.04f, 0.05f, 1f)
-            };
-        }
-
-        private static string GetBossName(int tier)
-        {
-            return tier switch
-            {
-                1 => "THE BREAKER",
-                2 => "FLOOD MAW",
-                3 => "ASH TITAN",
-                4 => "BLACKOUT WRAITH",
-                _ => "GROUND ZERO PRIME"
             };
         }
 

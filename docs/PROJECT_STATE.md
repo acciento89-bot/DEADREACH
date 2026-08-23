@@ -58,149 +58,100 @@ Real Unity acceptance included:
 - Arsenal weapon preview is upright
 - Dead City world boundaries / fall safety prevent void-running
 
-Known UX carry-over accepted into 0.6:
-- boss reward was functionally granted and visible in Console, but 0.5 did not visibly celebrate/confirm it to the player.
-
-`main` stable baseline is now Production 0.5.
+`main` stable baseline remains Production 0.5.
 
 ## 3. Current Git state
 
-- active branch: **`production/0.6-content-rewards-mobile`**
-- base: Production 0.5 merge `a066386f05c6593f1840ef6902f62c808cbdf319`
-- Production 0.6 implementation is in progress / not yet real-Unity validated
-- next PR should remain Draft until 0.6 compile/build/runtime acceptance
+- active stacked branch: **`production/0.7-presentation-polish`**
+- parent branch: **`production/0.6-content-rewards-mobile`**
+- PR #7 is Draft and targets the 0.6 branch
+- Production 0.7 compile gate passed in real Unity on 2026-08-23
+- Production 0.7 build gate passed in real Unity on 2026-08-23
+- Arsenal weapon orientation gate passed in real Unity on 2026-08-23
+- Bunker layout gate passed for supported landscape ratios: 4:3 / 16:10 / 16:9 / ~19:9
+- mobile production orientation is intentionally landscape-only; portrait 9:16 is unsupported
+- reward/sector runtime presentation gates remain before promotion
 
-## 4. Production 0.6 implemented scope
+## 4. Production 0.6 functional scope inherited by 0.7
 
-### 4.1 Boss reward presentation — two-stage confirmation
+- visible boss reward acquisition
+- persistent post-extraction Bunker reward debrief
+- save schema v5 for secured boss reward state
+- true persistent weapon families Rifle / SMG / Pistol / Shotgun
+- family-specific combat profiles
+- family-aware loot and boss relics
+- standalone Quaternius Arsenal models
+- five sector identities
+- five named mutation boss identities
+- safe-area-aware Bunker implementation
+- `DEADREACH > Build Production Slice 0.6`
 
-The 0.5 functional reward path is preserved.
+## 5. Production 0.7 presentation polish implemented
 
-0.6 adds:
-1. **immediate combat popup** on `RunSession.BossRewardGranted`
-   - `MUTATION RELIC SECURED`
-   - reward name
-   - rarity / family / item power
-   - finish
-   - affixes
-2. **persistent Bunker recovery debrief** after successful extraction
-   - save schema v5 stores `lastBossReward` + `bossRewardDebriefPending`
-   - the debrief appears after returning to Bunker
-   - `TRANSFER TO ARSENAL` acknowledges it
-   - reward remains risk-based: death/abandon before extraction does not persist the debrief/reward
+### Bunker / responsive layout
+- separate header / navigation / content / deploy anchor zones
+- dedicated ultrawide / 16:9 / 16:10 / 4:3 landscape behavior
+- compact landscape navigation rail tightened to return space to content
+- Operator 3D preview binds to the real `OperatorInspector` panel instead of fixed screen percentages
+- Operator preview preserves square render framing and avoids compact-layout drift
+- portrait is intentionally excluded because the project bootstrap disables portrait autorotation
 
-### 4.2 True weapon families
+### Arsenal 3D inspector
+- DR-7 baseline orientation preserved
+- SMG / Pistol / Shotgun no longer inherit the incorrect Rifle inversion
+- family-aware yaw
+- combined-bounds recentering
+- automatic camera framing
+- real Unity Arsenal gate accepted
 
-Persistent weapon family enum:
-- Rifle
-- SMG
-- Pistol
-- Shotgun
+### Sector atmosphere
+- runtime particle materials use URP / Standard / Sprite fallback instead of materialless magenta rendering
+- Flooded Industrial: cool rain
+- Ash District: drifting ash
+- Blackout: sparse dust with reduced purple intensity
+- Ground Zero: rising contamination motes
 
-Legacy 0.5 weapon JSON naturally migrates to Rifle because Rifle is enum value 0.
+### Reward / debrief presentation
+- Bunker debrief uses safe-area-aware modal sizing and blocks underlying interaction
+- human-readable affix names
+- combat reward was further redesigned after real Unity screenshots showed the centered card still obscured gameplay
+- combat reward is now a compact lower-right **RELIC SECURED** toast with weapon / rarity / family / power / finish / affixes
+- detailed post-extraction reward review remains in the Bunker
 
-Loot now rolls multiple families instead of always generating `dr7-rifle`.
+### Gameplay HUD polish
+Real Unity screenshots showed that the old runtime field HUD still read like a development overlay even after the first 0.7 reward pass. Follow-up implementation now includes:
+- Field Ops panel reduced from a 255px debug-style block to a denser production HUD
+- carried Scrap / weapon loot compressed onto one row
+- objective line shortened to a dedicated compact status row
+- desktop control hint shortened and omitted on mobile builds
+- mutation boss bar reduced to a compact top-center strip
+- boss name integrated into the boss health bar (`TIER // NAME`)
+- the separate large boss identity box is removed
+- boss mutation phase survives as a small status chip only
+- extraction feedback panel reduced in size
+- run-result panel reduced in size
 
-Family identities:
-- **DR-7 Rifle** — balanced baseline
-- **RV-9 SMG** — lower damage / much higher fire rate / shorter range
-- **PX-4 Sidearm** — lower sustained output / higher crit identity
-- **SG-12 Shotgun** — heavy slow short-range slug profile in 0.6; pellet spread is a later combat feature
+## 6. Current 0.7 real Unity gate state
 
-Boss relic family varies by boss tier.
+Passed:
+1. 0 red compiler errors
+2. `DEADREACH > Build Production Slice 0.7`
+3. Arsenal Rifle / SMG / Pistol / Shotgun orientation and framing
+4. Bunker layout at supported landscape ratios
 
-### 4.3 Real Arsenal family models
+Needs re-test after latest runtime-only HUD changes:
+5. Level 10 gameplay HUD / boss bar / phase chip
+6. boss kill → compact Relic toast
+7. extraction → Bunker relic debrief regression
+8. Levels 11 / 21 / 31 / 41 sector FX presentation
+9. final no-red-error regression
 
-`ProductionAssetCatalog` now supports standalone Rifle / SMG / Pistol / Shotgun production prefabs.
+Latest gameplay-HUD polish commits:
+- `1a4f1fb50a23c7ac53c0460dd0044c1583beb432`
+- `169cd95320857d438f28cc89635f8b546d677a8b`
+- `9e85c0d564f9d827f4069ce6b1bace1699fb152c`
 
-`Production06WeaponArtSetup` automatically downloads the self-contained Quaternius standalone Pistol / SMG / Shotgun glTFs, builds unpacked production preview prefabs and configures them into the catalog. Existing validated Rifle prefab remains the Rifle source.
-
-`BunkerWeaponPreviewUI` now chooses the actual model from `WeaponInstanceData.family` and still applies the validated upright preview normalization + finish styling.
-
-Important gameplay rule remains unchanged: runtime survivor gameplay continues to use the stable artist-rigged operator firearm. 0.6 does **not** reintroduce an external hand-mounted weapon just to force family visuals onto every operator.
-
-### 4.4 Five stronger sector identities
-
-`Production06SectorIdentity` layers runtime presentation over the validated 0.5 Dead City geometry:
-- **Sector 01 / Dead City** — cold emergency blue/red lights
-- **Sector 02 / Flooded Industrial** — teal flood patches / cyan industrial lighting / wet mist
-- **Sector 03 / Ash District** — scorch zones / warm fire lighting / ash fall
-- **Sector 04 / Blackout Sector** — global light reduction / purple-blue flicker lights / sparse particles
-- **Sector 05 / Ground Zero** — mutation pools / aggressive red lighting / contamination atmosphere
-
-The validated streets, collision and extraction layout remain untouched.
-
-### 4.5 Boss identity presentation
-
-Each mutation tier receives a distinct identity:
-- Tier 1 — **THE BREAKER**
-- Tier 2 — **FLOOD MAW**
-- Tier 3 — **ASH TITAN**
-- Tier 4 — **BLACKOUT WRAITH**
-- Tier 5 — **GROUND ZERO PRIME**
-
-0.6 adds:
-- tier color tint via `MaterialPropertyBlock`
-- mutation aura light
-- mutation particles
-- dedicated boss-name overlay
-- phase text updates on the existing ~66% / ~33% mutation phases
-- target-eliminated state
-
-### 4.6 First serious mobile-landscape responsive pass
-
-`BunkerMobileResponsiveUI` applies runtime layout adaptation without destroying the accepted desktop source layout:
-- `Screen.safeArea` applied to the Bunker backdrop
-- ultrawide/notched phone breakpoint
-- compact landscape/tablet breakpoint
-- CanvasScaler changes by aspect ratio
-- navigation/content/header/deploy proportions reflow per breakpoint
-- minimum touch-target hints via `LayoutElement`
-
-Gameplay HUD already uses `Screen.safeArea` from 0.5.
-
-**This is not final mobile acceptance.** Real-device iPhone + Android validation remains mandatory before release.
-
-### 4.7 Runtime bootstrap
-
-`Production06RuntimeBootstrap` attaches 0.6 presentation systems on scene load:
-- expedition: SectorIdentity / BossPresentation / BossRewardPresentationUI
-- Bunker: MobileResponsiveUI / BossRewardDebriefUI
-
-No manual scene-component wiring is required.
-
-### 4.8 Production 0.6 build entry
-
-Use:
-
-`DEADREACH > Build Production Slice 0.6`
-
-It:
-1. prepares standalone weapon-family art
-2. reuses the real-Unity-validated Production 0.5 scene generation pipeline
-3. relies on 0.6 runtime bootstrap for the new presentation systems
-
-## 5. Mandatory mobile release gate
-
-Production 0.6 introduces the first responsive implementation, but release still requires:
-- representative notched iPhone landscape
-- representative Android landscape
-- safe-area verification
-- readable Bunker tabs / Arsenal / Operators / Campaign / Store
-- touch targets usable with fingers
-- gameplay twin-stick + HUD safe-area verification
-- no clipping at ultrawide and compact landscape ratios
-
-Do **not** call mobile UI final until real-device checks pass.
-
-## 6. Next action — Production 0.6 acceptance
-
-1. switch/pull `production/0.6-content-rewards-mobile`
-2. require 0 red compiler errors
-3. run `DEADREACH > Build Production Slice 0.6`
-4. verify weapon-family import gate passes
-5. run `docs/PRODUCTION_06_TEST.md`
-6. keep PR Draft until real Unity acceptance
+These are runtime-only changes; no scene rebuild is required after pulling them, but Unity must compile with 0 red errors before re-test.
 
 ## 7. Handoff protocol
 
@@ -208,7 +159,7 @@ When resuming:
 1. read this file first
 2. treat 0.1–0.5 as merged / real-Unity validated baseline
 3. never reintroduce external gameplay hand-mounted Rifle transforms
-4. active branch is `production/0.6-content-rewards-mobile`
-5. 0.6 is not yet real-Unity validated
-6. use `DEADREACH > Build Production Slice 0.6`
-7. mobile responsive work is implementation-only until real-device validation passes
+4. active branch is `production/0.7-presentation-polish`
+5. PR #7 remains Draft until remaining runtime presentation gates pass
+6. use landscape-only mobile assumptions
+7. latest required re-test starts with Level 10 gameplay HUD / compact reward toast
