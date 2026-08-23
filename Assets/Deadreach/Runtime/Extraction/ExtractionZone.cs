@@ -24,7 +24,10 @@ namespace Kamilunavo.Deadreach.Extraction
             if (_occupant == null || session == null || session.IsCompleted || session.IsFailed)
                 return;
 
-            if (requireLoot && session.CarriedScrap <= 0)
+            var blocked = requireLoot && session.CarriedScrap <= 0;
+            session.SetExtractionPresence(true, blocked);
+
+            if (blocked)
             {
                 _elapsed = 0f;
                 session.SetExtractionProgress(0f);
@@ -42,8 +45,13 @@ namespace Kamilunavo.Deadreach.Extraction
         private void OnTriggerEnter(Collider other)
         {
             var player = other.GetComponentInParent<PlayerMotor>();
-            if (player != null)
-                _occupant = player;
+            if (player == null)
+                return;
+
+            _occupant = player;
+            var session = RunSession.Current;
+            if (session != null)
+                session.SetExtractionPresence(true, requireLoot && session.CarriedScrap <= 0);
         }
 
         private void OnTriggerExit(Collider other)
@@ -54,7 +62,13 @@ namespace Kamilunavo.Deadreach.Extraction
 
             _occupant = null;
             _elapsed = 0f;
-            RunSession.Current?.SetExtractionProgress(0f);
+            RunSession.Current?.SetExtractionPresence(false, false);
+        }
+
+        private void OnDisable()
+        {
+            if (_occupant != null)
+                RunSession.Current?.SetExtractionPresence(false, false);
         }
     }
 }
