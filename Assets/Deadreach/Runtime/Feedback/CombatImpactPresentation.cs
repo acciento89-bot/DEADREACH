@@ -13,6 +13,9 @@ namespace Kamilunavo.Deadreach.Feedback
         private float _baseFieldOfView;
         private float _baseOrthoSize;
         private float _cameraKick;
+        private Vector3 _hitMarkerPoint;
+        private float _hitMarkerUntil;
+        private bool _hitMarkerCritical;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureInstance()
@@ -55,6 +58,38 @@ namespace Kamilunavo.Deadreach.Feedback
             ResolveCamera();
             _cameraKick = Mathf.MoveTowards(_cameraKick, 0f, Time.unscaledDeltaTime * 4.8f);
             ApplyCameraLensKick();
+        }
+
+        private void OnGUI()
+        {
+            if (Time.unscaledTime >= _hitMarkerUntil)
+                return;
+
+            ResolveCamera();
+            if (_camera == null)
+                return;
+
+            var screen = _camera.WorldToScreenPoint(_hitMarkerPoint);
+            if (screen.z <= 0f)
+                return;
+
+            var guiPoint = new Vector2(screen.x, Screen.height - screen.y);
+            var size = Mathf.Clamp(Screen.safeArea.height * 0.022f, 12f, 25f);
+            var thickness = Mathf.Max(2f, size * 0.14f);
+            var gap = size * 0.32f;
+            var length = size * 0.58f;
+            var fade = Mathf.Clamp01((_hitMarkerUntil - Time.unscaledTime) / 0.18f);
+            var tint = _hitMarkerCritical
+                ? new Color(1f, 0.18f, 0.88f, fade)
+                : new Color(1f, 0.72f, 0.24f, fade * 0.92f);
+
+            var old = GUI.color;
+            GUI.color = tint;
+            GUI.DrawTexture(new Rect(guiPoint.x - gap - length, guiPoint.y - thickness * 0.5f, length, thickness), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(guiPoint.x + gap, guiPoint.y - thickness * 0.5f, length, thickness), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(guiPoint.x - thickness * 0.5f, guiPoint.y - gap - length, thickness, length), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(guiPoint.x - thickness * 0.5f, guiPoint.y + gap, thickness, length), Texture2D.whiteTexture);
+            GUI.color = old;
         }
 
         private void HandleAbility(AbilityImpactFeedback feedback)
@@ -133,7 +168,14 @@ namespace Kamilunavo.Deadreach.Feedback
 
         private void HandleImpact(ImpactFeedback feedback)
         {
-            if (!feedback.Critical || !feedback.HitDamageable)
+            if (!feedback.HitDamageable)
+                return;
+
+            _hitMarkerPoint = feedback.Point;
+            _hitMarkerCritical = feedback.Critical;
+            _hitMarkerUntil = Time.unscaledTime + (feedback.Critical ? 0.2f : 0.14f);
+
+            if (!feedback.Critical)
                 return;
 
             var critical = new Color(1f, 0.18f, 0.88f, 0.9f);
