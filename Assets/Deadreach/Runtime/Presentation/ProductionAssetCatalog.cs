@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Presentation
@@ -7,6 +8,8 @@ namespace Kamilunavo.Deadreach.Presentation
     {
         [Header("Characters")]
         [SerializeField] private GameObject survivorPrefab;
+        [SerializeField] private GameObject survivorScoutPrefab;
+        [SerializeField] private GameObject survivorWardenPrefab;
         [SerializeField] private GameObject[] infectedPrefabs;
 
         [Header("Weapons")]
@@ -23,6 +26,8 @@ namespace Kamilunavo.Deadreach.Presentation
         [SerializeField, Min(0.01f)] private float infectedScale = 1f;
 
         public GameObject SurvivorPrefab => survivorPrefab;
+        public GameObject SurvivorScoutPrefab => survivorScoutPrefab;
+        public GameObject SurvivorWardenPrefab => survivorWardenPrefab;
         public GameObject PrimaryWeaponPrefab => primaryWeaponPrefab;
         public int InfectedPrefabCount => infectedPrefabs?.Length ?? 0;
         public Vector3 SurvivorLocalPosition => survivorLocalPosition;
@@ -31,6 +36,17 @@ namespace Kamilunavo.Deadreach.Presentation
         public Vector3 InfectedLocalPosition => infectedLocalPosition;
         public Vector3 InfectedLocalEuler => infectedLocalEuler;
         public float InfectedScale => infectedScale;
+
+        public GameObject GetSurvivorPrefab(string operatorId)
+        {
+            if (string.Equals(operatorId, "scout", StringComparison.OrdinalIgnoreCase) && survivorScoutPrefab != null)
+                return survivorScoutPrefab;
+
+            if (string.Equals(operatorId, "warden", StringComparison.OrdinalIgnoreCase) && survivorWardenPrefab != null)
+                return survivorWardenPrefab;
+
+            return survivorPrefab;
+        }
 
         public GameObject GetInfectedPrefab(int variantIndex)
         {
@@ -46,6 +62,14 @@ namespace Kamilunavo.Deadreach.Presentation
             survivorPrefab = survivor;
             infectedPrefabs = infected;
             primaryWeaponPrefab = primaryWeapon;
+        }
+
+        public void ConfigureSurvivorOperators(GameObject ranger, GameObject scout, GameObject warden)
+        {
+            if (ranger != null)
+                survivorPrefab = ranger;
+            survivorScoutPrefab = scout;
+            survivorWardenPrefab = warden;
         }
 
         public void ConfigureVisualOffsets(
