@@ -1,4 +1,5 @@
 using System;
+using Kamilunavo.Deadreach.Weapons;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Presentation
@@ -14,6 +15,9 @@ namespace Kamilunavo.Deadreach.Presentation
 
         [Header("Weapons")]
         [SerializeField] private GameObject primaryWeaponPrefab;
+        [SerializeField] private GameObject pistolWeaponPrefab;
+        [SerializeField] private GameObject smgWeaponPrefab;
+        [SerializeField] private GameObject shotgunWeaponPrefab;
 
         [Header("Survivor Transform")]
         [SerializeField] private Vector3 survivorLocalPosition;
@@ -29,6 +33,9 @@ namespace Kamilunavo.Deadreach.Presentation
         public GameObject SurvivorScoutPrefab => survivorScoutPrefab;
         public GameObject SurvivorWardenPrefab => survivorWardenPrefab;
         public GameObject PrimaryWeaponPrefab => primaryWeaponPrefab;
+        public GameObject PistolWeaponPrefab => pistolWeaponPrefab;
+        public GameObject SmgWeaponPrefab => smgWeaponPrefab;
+        public GameObject ShotgunWeaponPrefab => shotgunWeaponPrefab;
         public int InfectedPrefabCount => infectedPrefabs?.Length ?? 0;
         public Vector3 SurvivorLocalPosition => survivorLocalPosition;
         public Vector3 SurvivorLocalEuler => survivorLocalEuler;
@@ -48,6 +55,17 @@ namespace Kamilunavo.Deadreach.Presentation
             return survivorPrefab;
         }
 
+        public GameObject GetWeaponPrefab(WeaponFamily family)
+        {
+            return family switch
+            {
+                WeaponFamily.Pistol when pistolWeaponPrefab != null => pistolWeaponPrefab,
+                WeaponFamily.Smg when smgWeaponPrefab != null => smgWeaponPrefab,
+                WeaponFamily.Shotgun when shotgunWeaponPrefab != null => shotgunWeaponPrefab,
+                _ => primaryWeaponPrefab
+            };
+        }
+
         public GameObject GetInfectedPrefab(int variantIndex)
         {
             if (infectedPrefabs == null || infectedPrefabs.Length == 0)
@@ -62,6 +80,15 @@ namespace Kamilunavo.Deadreach.Presentation
             survivorPrefab = survivor;
             infectedPrefabs = infected;
             primaryWeaponPrefab = primaryWeapon;
+        }
+
+        public void ConfigureWeaponFamilies(GameObject rifle, GameObject smg, GameObject pistol, GameObject shotgun)
+        {
+            if (rifle != null)
+                primaryWeaponPrefab = rifle;
+            smgWeaponPrefab = smg;
+            pistolWeaponPrefab = pistol;
+            shotgunWeaponPrefab = shotgun;
         }
 
         public void ConfigureSurvivorOperators(GameObject ranger, GameObject scout, GameObject warden)
