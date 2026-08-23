@@ -4,147 +4,101 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$driveFolder = 'https://drive.google.com/drive/folders/1mWP6sCHun7OUMHQeDNZLrXTteXlzWg_t?usp=sharing'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $targetRoot = Join-Path $repoRoot 'Assets\Deadreach\ThirdParty\Quaternius\ZombieApocalypseKit'
-$fbxTarget = Join-Path $targetRoot 'FBX'
-$textureTarget = Join-Path $targetRoot 'Textures'
-$tempRoot = Join-Path $env:TEMP 'deadreach_quaternius_zombie_apocalypse'
+$gltfTarget = Join-Path $targetRoot 'glTF'
+$branchRequired = 'production/0.3-art-presentation'
+
+# The creator's original Google Drive folder intermittently blocks automated tools.
+# Use a public mirror of the SAME Quaternius pack for the selected glTF files.
+# The official creator page remains the license/source authority and explicitly states CC0/commercial use.
+$mirrorBase = 'https://raw.githubusercontent.com/agentkaerf/FreeModels/main/Zombie%20Apocalypse%20Kit%20-%20March%202024'
+$officialPage = 'https://quaternius.com/packs/zombieapocalypsekit.html'
+$officialDrive = 'https://drive.google.com/drive/folders/1mWP6sCHun7OUMHQeDNZLrXTteXlzWg_t?usp=sharing'
+$mirrorRepo = 'https://github.com/agentkaerf/FreeModels/tree/main/Zombie%20Apocalypse%20Kit%20-%20March%202024'
 
 Set-Location $repoRoot
 
 $branch = (git branch --show-current).Trim()
-if ($branch -ne 'production/0.3-art-presentation') {
-    throw "Expected branch production/0.3-art-presentation, current branch is '$branch'."
+if ($branch -ne $branchRequired) {
+    throw "Expected branch $branchRequired, current branch is '$branch'."
 }
 
-$python = $null
-if (Get-Command py -ErrorAction SilentlyContinue) {
-    $python = 'py'
-} elseif (Get-Command python -ErrorAction SilentlyContinue) {
-    $python = 'python'
-} else {
-    throw 'Python was not found. Install Python or add it to PATH, then run this script again.'
-}
+New-Item -ItemType Directory -Force -Path $gltfTarget | Out-Null
 
-Write-Host 'Installing/updating gdown for the original Quaternius Google Drive download...'
-& $python -m pip install --user --disable-pip-version-check --no-warn-script-location -q gdown
-if ($LASTEXITCODE -ne 0) {
-    throw 'Failed to install gdown.'
-}
-
-if (Test-Path $tempRoot) {
-    Remove-Item $tempRoot -Recurse -Force
-}
-New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
-
-Write-Host 'Downloading Quaternius Zombie Apocalypse Kit from the original creator folder...'
-
-# gdown CLI flags differ between released versions. Older/newer builds may or may not
-# expose --remaining-ok. Detect support instead of hard-coding a version-specific flag.
-$gdownHelp = (& $python -m gdown --help 2>&1 | Out-String)
-$gdownArgs = @('-m', 'gdown', '--folder', $driveFolder, '-O', $tempRoot)
-if ($gdownHelp -match '(?m)^\s*--remaining-ok\b') {
-    Write-Host 'gdown supports --remaining-ok; enabling it.'
-    $gdownArgs += '--remaining-ok'
-} else {
-    Write-Host 'gdown does not expose --remaining-ok; using compatible folder download mode.'
-}
-
-& $python @gdownArgs
-if ($LASTEXITCODE -ne 0) {
-    throw 'Quaternius download failed.'
-}
-
-New-Item -ItemType Directory -Force -Path $fbxTarget | Out-Null
-New-Item -ItemType Directory -Force -Path $textureTarget | Out-Null
-
-function Find-AssetFile {
+function Download-CheckedFile {
     param(
-        [Parameter(Mandatory=$true)][string[]]$Patterns,
-        [string[]]$ExcludePatterns = @()
+        [Parameter(Mandatory=$true)][string]$Url,
+        [Parameter(Mandatory=$true)][string]$Destination,
+        [int]$MinimumBytes = 1024
     )
 
-    $files = Get-ChildItem $tempRoot -Recurse -File
-    foreach ($pattern in $Patterns) {
-        $match = $files | Where-Object {
-            $_.Name -like $pattern -and -not ($ExcludePatterns | Where-Object { $_ -and $_.Length -gt 0 -and $_.Name -like $_ })
-        } | Select-Object -First 1
-        if ($match) { return $match }
-    }
-    return $null
-}
+    Write-Host "Downloading $(Split-Path $Destination -Leaf)..."
+    Invoke-WebRequest -Uri $Url -OutFile $Destination -UseBasicParsing -Headers @{ 'User-Agent' = 'DEADREACH-Asset-Importer' }
 
-# Avoid PowerShell scope confusion in the generic exclusion helper by selecting explicitly below.
-$allFiles = Get-ChildItem $tempRoot -Recurse -File
-
-function Find-PreferredFbx {
-    param(
-        [Parameter(Mandatory=$true)][string[]]$NamePatterns,
-        [string[]]$RejectPatterns = @()
-    )
-
-    foreach ($pattern in $NamePatterns) {
-        $candidate = $allFiles | Where-Object {
-            $_.Extension -ieq '.fbx' -and $_.Name -like $pattern
-        } | Where-Object {
-            $name = $_.Name
-            -not ($RejectPatterns | Where-Object { $name -like $_ })
-        } | Select-Object -First 1
-
-        if ($candidate) { return $candidate }
+    if (-not (Test-Path $Destination)) {
+        throw "Download did not create '$Destination'."
     }
 
-    return $null
+    $size = (Get-Item $Destination).Length
+    if ($size -lt $MinimumBytes) {
+        Remove-Item $Destination -Force -ErrorAction SilentlyContinue
+        throw "Downloaded file '$Destination' is unexpectedly small ($size bytes)."
+    }
 }
 
 $selection = @(
-    @{ Out='Survivor_Sam.fbx'; Patterns=@('Characters_Sam.fbx','*Sam*.fbx'); Reject=@('*SingleWeapon*') },
-    @{ Out='Infected_Basic.fbx'; Patterns=@('Zombie_Basic.fbx','*Zombie*Basic*.fbx'); Reject=@() },
-    @{ Out='Infected_Chubby.fbx'; Patterns=@('Zombie_Chubby.fbx','*Zombie*Chubby*.fbx'); Reject=@() },
-    @{ Out='Infected_Arm.fbx'; Patterns=@('Zombie_Arm.fbx','*Zombie*Arm*.fbx'); Reject=@() },
-    @{ Out='Infected_Ribcage.fbx'; Patterns=@('Zombie_Ribcage.fbx','*Zombie*Ribcage*.fbx'); Reject=@() },
-    @{ Out='Weapon_Rifle.fbx'; Patterns=@('Rifle.fbx','Weapons_Rifle.fbx','*Rifle*.fbx'); Reject=@() }
+    @{ Out='Survivor_Sam.gltf'; Relative='Characters/glTF/Characters_Sam.gltf'; Minimum=100000 },
+    @{ Out='Infected_Basic.gltf'; Relative='Characters/glTF/Zombie_Basic.gltf'; Minimum=100000 },
+    @{ Out='Infected_Chubby.gltf'; Relative='Characters/glTF/Zombie_Chubby.gltf'; Minimum=100000 },
+    @{ Out='Infected_Arm.gltf'; Relative='Characters/glTF/Zombie_Arm.gltf'; Minimum=100000 },
+    @{ Out='Infected_Ribcage.gltf'; Relative='Characters/glTF/Zombie_Ribcage.gltf'; Minimum=100000 },
+    @{ Out='Weapon_Rifle.gltf'; Relative='Weapons/glTF/Rifle.gltf'; Minimum=10000 }
 )
 
-$missing = @()
 foreach ($entry in $selection) {
-    $source = Find-PreferredFbx -NamePatterns $entry.Patterns -RejectPatterns $entry.Reject
-    if (-not $source) {
-        $missing += $entry.Out
-        continue
-    }
-
-    $dest = Join-Path $fbxTarget $entry.Out
-    Copy-Item $source.FullName $dest -Force
-    Write-Host "Selected $($source.Name) -> $($entry.Out)"
+    $relativeUrl = ($entry.Relative -replace ' ', '%20')
+    $url = "$mirrorBase/$relativeUrl"
+    $dest = Join-Path $gltfTarget $entry.Out
+    Download-CheckedFile -Url $url -Destination $dest -MinimumBytes $entry.Minimum
 }
 
-if ($missing.Count -gt 0) {
-    Write-Warning ("Could not locate these FBX files in the downloaded pack: " + ($missing -join ', '))
-    Write-Warning 'The download remains in the temp folder so the file names can be inspected.'
-}
-
-$pngs = $allFiles | Where-Object { $_.Extension -ieq '.png' }
-foreach ($png in $pngs) {
-    Copy-Item $png.FullName (Join-Path $textureTarget $png.Name) -Force
+# Keep a copy of the mirror's CC0 license evidence as well.
+$mirrorLicensePath = Join-Path $targetRoot 'MIRROR_LICENSE.txt'
+Download-CheckedFile -Url "$mirrorBase/License.txt" -Destination $mirrorLicensePath -MinimumBytes 100
+$mirrorLicense = Get-Content $mirrorLicensePath -Raw
+if ($mirrorLicense -notmatch 'CC0\s+1\.0') {
+    throw 'Mirror license file did not contain the expected CC0 1.0 marker. Import aborted.'
 }
 
 $licenseText = @"
 Quaternius — Zombie Apocalypse Kit
-Source: https://quaternius.com/packs/zombieapocalypsekit.html
-Original creator download: $driveFolder
+Official source: $officialPage
+Original creator download: $officialDrive
+Public mirror used for automated selected-file retrieval: $mirrorRepo
 License: Creative Commons CC0 1.0 / public domain dedication.
 Commercial use and modification are permitted by the original creator.
 
-This DEADREACH import intentionally uses only a selected subset of the original pack.
+Reason for mirror fallback:
+The original Google Drive folder currently rejects automated gdown access for at least one public file. The selected files are therefore retrieved from the public mirror above while the official Quaternius page remains the license/source authority.
+
+Selected DEADREACH subset:
+- Survivor Sam
+- Zombie Basic
+- Zombie Chubby
+- Zombie Arm
+- Zombie Ribcage
+- Rifle
+
+Unity import format: glTF via Unity glTFast.
 "@
 Set-Content -Path (Join-Path $targetRoot 'LICENSE_AND_SOURCE.txt') -Value $licenseText -Encoding UTF8
 
 Write-Host ''
-Write-Host "Imported starter art into: $targetRoot"
-Write-Host 'Unity will import the FBX/texture files automatically.'
-Write-Host 'Then use: DEADREACH > Production > Setup Quaternius Starter Art'
+Write-Host "Imported Quaternius starter art into: $gltfTarget"
+Write-Host 'Unity will import the .gltf files through Unity glTFast.'
+Write-Host 'After Unity finishes package/import work, use:'
+Write-Host '  DEADREACH > Production > Setup Quaternius Starter Art'
 
 if ($CommitAndPush) {
     Write-Host ''
