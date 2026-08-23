@@ -10,11 +10,11 @@ namespace Kamilunavo.Deadreach.Input
         public static DeadreachInput Current { get; private set; }
 
         [SerializeField, Min(40f)] private float virtualStickRadius = 140f;
-        [SerializeField, Range(0f, 0.5f)] private float moveDeadZone = 0.14f;
-        [SerializeField, Range(0f, 0.5f)] private float aimDeadZone = 0.16f;
-        [SerializeField, Range(0.5f, 2f)] private float moveResponseExponent = 1.05f;
-        [SerializeField, Range(0.5f, 2f)] private float aimResponseExponent = 0.9f;
-        [SerializeField, Range(0.02f, 0.5f)] private float aimFireThreshold = 0.12f;
+        [SerializeField, Range(0f, 0.5f)] private float moveDeadZone = 0.12f;
+        [SerializeField, Range(0f, 0.5f)] private float aimDeadZone = 0.10f;
+        [SerializeField, Range(0.5f, 2f)] private float moveResponseExponent = 0.92f;
+        [SerializeField, Range(0.5f, 2f)] private float aimResponseExponent = 0.88f;
+        [SerializeField, Range(1f, 2f)] private float touchCaptureMultiplier = 1.55f;
 
         public Vector2 Move { get; private set; }
         public Vector2 Aim { get; private set; }
@@ -28,18 +28,18 @@ namespace Kamilunavo.Deadreach.Input
         public bool HasAimTouch => _aimTouchId >= 0;
         public bool HasAbilityTouch => _abilityTouchId >= 0;
         public bool TouchModeActive => HasMoveTouch || HasAimTouch || HasAbilityTouch || Time.unscaledTime < _touchModeUntil;
-        public Vector2 MoveTouchOrigin => _moveOrigin;
+        public Vector2 MoveTouchOrigin => MoveStickCenter;
         public Vector2 MoveTouchPosition => _movePosition;
-        public Vector2 AimTouchOrigin => _aimOrigin;
+        public Vector2 AimTouchOrigin => AimStickCenter;
         public Vector2 AimTouchPosition => _aimPosition;
         public float VirtualStickRadius => GetEffectiveStickRadius();
+        public Vector2 MoveStickCenter => GetStickCenter(false);
+        public Vector2 AimStickCenter => GetStickCenter(true);
 
         private int _moveTouchId = -1;
         private int _aimTouchId = -1;
         private int _abilityTouchId = -1;
-        private Vector2 _moveOrigin;
         private Vector2 _movePosition;
-        private Vector2 _aimOrigin;
         private Vector2 _aimPosition;
         private Rect _abilityTouchRegion;
         private bool _abilityTouchRegionValid;
@@ -73,8 +73,15 @@ namespace Kamilunavo.Deadreach.Input
 
         public void SetAbilityTouchRegion(Rect screenSpaceRegion)
         {
-            _abilityTouchRegion = screenSpaceRegion;
-            _abilityTouchRegionValid = screenSpaceRegion.width > 1f && screenSpaceRegion.height > 1f;
+            // The visible button gets a generous invisible hit target. This makes the control reliable
+            // on real phones without letting it overlap the lower-right aim/fire stick.
+            var padding = Mathf.Max(14f, screenSpaceRegion.width * 0.18f);
+            _abilityTouchRegion = new Rect(
+                screenSpaceRegion.x - padding,
+                screenSpaceRegion.y - padding,
+                screenSpaceRegion.width + padding * 2f,
+                screenSpaceRegion.height + padding * 2f);
+            _abilityTouchRegionValid = _abilityTouchRegion.width > 1f && _abilityTouchRegion.height > 1f;
         }
 
         public bool ConsumeAbilityPress()
@@ -127,8 +134,8 @@ namespace Kamilunavo.Deadreach.Input
                 FireHeld = Gamepad.current != null && Gamepad.current.rightTrigger.ReadValue() > 0.35f;
             }
 
-            // On a phone / Device Simulator the mouse often mirrors the simulated finger. Never let
-            // that mirrored pointer become a second aim source; touch owns the mobile control scheme.
+            // Device Simulator can mirror touch through the mouse pointer. Touch owns mobile aiming,
+            // otherwise the simulated pointer would fight the right stick.
             if (!PreferTouchControls && Mouse.current != null)
             {
                 AimScreenPosition = Mouse.current.position.ReadValue();
@@ -143,17 +150,14 @@ namespace Kamilunavo.Deadreach.Input
             if (!PreferTouchControls)
                 return;
 
+            var moveCenter = MoveStickCenter;
+            var aimCenter = AimStickCenter;
+            var radius = GetEffectiveStickRadius();
+            var captureRadius = radius * touchCaptureMultiplier;
+
             if (Touch.activeTouches.Count == 0)
             {
-                _moveTouchId = -1;
-                _aimTouchId = -1;
-                _abilityTouchId = -1;
-                Move = Vector2.zero;
-                Aim = Vector2.zero;
-                HasDirectionalAim = false;
-                HasPointerAim = false;
-                HasAim = false;
-                FireHeld = false;
+                ResetTouchControls(moveCenter, aimCenter);
                 return;
             }
 
@@ -165,18 +169,15 @@ namespace Kamilunavo.Deadreach.Input
             HasAim = false;
             FireHeld = false;
 
-            var safe = Screen.safeArea;
-            var controlBandTop = safe.yMin + safe.height * 0.62f;
-            var radius = GetEffectiveStickRadius();
-
             foreach (var touch in Touch.activeTouches)
             {
                 var id = touch.touchId;
                 var position = touch.screenPosition;
+                var ended = touch.phase is UnityEngine.InputSystem.TouchPhase.Ended or UnityEngine.InputSystem.TouchPhase.Canceled;
 
                 if (id == _abilityTouchId)
                 {
-                    if (touch.phase is UnityEngine.InputSystem.TouchPhase.Ended or UnityEngine.InputSystem.TouchPhase.Canceled)
+                    if (ended)
                         _abilityTouchId = -1;
                     continue;
                 }
@@ -190,16 +191,14 @@ namespace Kamilunavo.Deadreach.Input
                         continue;
                     }
 
-                    if (position.y <= controlBandTop && position.x < safe.center.x && _moveTouchId < 0)
+                    if (_moveTouchId < 0 && Vector2.Distance(position, moveCenter) <= captureRadius)
                     {
                         _moveTouchId = id;
-                        _moveOrigin = position;
                         _movePosition = position;
                     }
-                    else if (position.y <= controlBandTop && position.x >= safe.center.x && _aimTouchId < 0)
+                    else if (_aimTouchId < 0 && Vector2.Distance(position, aimCenter) <= captureRadius)
                     {
                         _aimTouchId = id;
-                        _aimOrigin = position;
                         _aimPosition = position;
                     }
                 }
@@ -207,11 +206,12 @@ namespace Kamilunavo.Deadreach.Input
                 if (id == _moveTouchId)
                 {
                     _movePosition = position;
-                    Move = ShapeStick((_movePosition - _moveOrigin) / radius, moveDeadZone, moveResponseExponent);
+                    Move = ShapeStick((_movePosition - moveCenter) / radius, moveDeadZone, moveResponseExponent);
 
-                    if (touch.phase is UnityEngine.InputSystem.TouchPhase.Ended or UnityEngine.InputSystem.TouchPhase.Canceled)
+                    if (ended)
                     {
                         _moveTouchId = -1;
+                        _movePosition = moveCenter;
                         Move = Vector2.zero;
                     }
                     continue;
@@ -220,15 +220,16 @@ namespace Kamilunavo.Deadreach.Input
                 if (id == _aimTouchId)
                 {
                     _aimPosition = position;
-                    var rawAim = Vector2.ClampMagnitude((_aimPosition - _aimOrigin) / radius, 1f);
-                    Aim = ShapeStick(rawAim, aimDeadZone, aimResponseExponent);
+                    Aim = ShapeStick((_aimPosition - aimCenter) / radius, aimDeadZone, aimResponseExponent);
                     HasDirectionalAim = Aim.sqrMagnitude > 0.0001f;
                     HasAim = HasDirectionalAim;
-                    FireHeld = rawAim.magnitude >= aimFireThreshold;
+                    // Twin-stick shooter behavior: once the right stick leaves its deadzone it fires.
+                    FireHeld = HasDirectionalAim;
 
-                    if (touch.phase is UnityEngine.InputSystem.TouchPhase.Ended or UnityEngine.InputSystem.TouchPhase.Canceled)
+                    if (ended)
                     {
                         _aimTouchId = -1;
+                        _aimPosition = aimCenter;
                         Aim = Vector2.zero;
                         HasDirectionalAim = false;
                         HasAim = false;
@@ -238,9 +239,35 @@ namespace Kamilunavo.Deadreach.Input
             }
         }
 
+        private void ResetTouchControls(Vector2 moveCenter, Vector2 aimCenter)
+        {
+            _moveTouchId = -1;
+            _aimTouchId = -1;
+            _abilityTouchId = -1;
+            _movePosition = moveCenter;
+            _aimPosition = aimCenter;
+            Move = Vector2.zero;
+            Aim = Vector2.zero;
+            HasDirectionalAim = false;
+            HasPointerAim = false;
+            HasAim = false;
+            FireHeld = false;
+        }
+
+        private Vector2 GetStickCenter(bool right)
+        {
+            var safe = Screen.safeArea;
+            var radius = GetEffectiveStickRadius();
+            var bottomPadding = Mathf.Max(18f, safe.height * 0.028f);
+            var sidePadding = Mathf.Max(22f, safe.width * 0.016f);
+            return right
+                ? new Vector2(safe.xMax - radius - sidePadding, safe.yMin + radius + bottomPadding)
+                : new Vector2(safe.xMin + radius + sidePadding, safe.yMin + radius + bottomPadding);
+        }
+
         private float GetEffectiveStickRadius()
         {
-            return Mathf.Clamp(Mathf.Max(virtualStickRadius, Screen.safeArea.height * 0.15f), 110f, 190f);
+            return Mathf.Clamp(Mathf.Max(virtualStickRadius, Screen.safeArea.height * 0.145f), 100f, 170f);
         }
 
         private static Vector2 ShapeStick(Vector2 raw, float deadZone, float exponent)
