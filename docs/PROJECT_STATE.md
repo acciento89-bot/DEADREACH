@@ -62,6 +62,7 @@ Validated in real Unity:
   - Arsenal weapon preview auto-orientation fix
   - real distinct operator models
   - automatic Quaternius operator-art bootstrap
+  - operator-specific animation controller generation with Sam-controller fallback
   - one consolidated **MEGA Runtime Gate**
 - because code changed after the earlier compile pass, require a fresh 0-error compile before the Mega Runtime Gate
 
@@ -155,7 +156,11 @@ New editor system:
 
 `DEADREACH > Build Production Slice 0.5` now automatically ensures Lis/Matt operator art is present.
 
-If missing, Unity Editor downloads the two known CC0 Quaternius `SingleWeapon` glTF files from the same public mirror already used for the project, normalizes the local `Zombie_Atlas.png` reference, imports them synchronously, builds production wrapper prefabs using the validated Sam animation controller/material family, and stores them in `ProductionAssetCatalog`.
+If missing, Unity Editor downloads the two known CC0 Quaternius `SingleWeapon` glTF files from the same public mirror already used for the project, normalizes the local `Zombie_Atlas.png` reference, imports them synchronously, builds production wrapper prefabs, and stores them in `ProductionAssetCatalog`.
+
+Animator hardening:
+- Lis and Matt get dedicated animator controllers built from their own imported clips when available
+- if an export exposes no clips, the already validated Sam controller is used only as a fallback
 
 Therefore the user workflow remains **git pull + Unity build menu**; no manual transform/prefab setup is intended.
 
