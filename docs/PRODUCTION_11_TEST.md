@@ -6,112 +6,88 @@ Production 0.11 branches from the fully real-Unity-validated Production 0.10 `ma
 
 Turn the expedition from a simple loot → extraction run into a mission-driven run with primary objectives, reinforcement pressure and a real risk/reward choice after the primary objective.
 
-## Compile / build gate
+## Compile / build gate — PASSED ✅
 
-1. Pull `production/0.11-expedition-director`.
-2. Let Unity finish compiling.
-3. Initial 0.11 compile reached **0 red compiler errors** ✅ 2026-08-23.
-4. Extraction-support geometry fix was pulled and the rebuilt 0.11 scene was used for the successful extraction-egress retest ✅.
+- fresh Unity compile: **0 red compiler errors** ✅
+- `DEADREACH > Build Production Slice 0.11`: passed ✅
+- extraction-support geometry fix was rebuilt and retested successfully ✅
 
-## Expedition Director gate
+## Expedition Director gate — PASSED ✅
 
-The first real runtime pass confirmed the new mission flow is active: mission HUD, objective marker, mission-gated extraction, primary completion, BLACK CACHE and reinforcement behavior all functioned in the tested run ✅.
+Real runtime confirmed the mission flow:
+- Mission HUD ✅
+- Objective marker ✅
+- mission-gated `EXTRACTION SEALED` state ✅
+- Primary completion ✅
+- BLACK CACHE risk/reward path ✅
+- Reinforcement path ✅
 
-The mission rotates by level/run state; boss levels force BLACKSITE.
+Mission set:
+- **RECOVERY** — secure a world data core
+- **PURGE** — eliminate a bounded infected target count
+- **HOLDOUT** — activate uplink, hold the defense radius and survive reinforcement pressure
+- **BLACKSITE** — breach terminal → eliminate response / mutation boss → secure vault core
+- boss levels force BLACKSITE
 
-### RECOVERY
-- FIELD OPS shows `MISSION // RECOVERY`.
-- cyan objective marker is visible in the world.
-- standing inside the core radius progresses `SECURE DATA CORE`.
-- leaving the radius causes partial progress decay.
-- primary completion grants carried Scrap and unlocks extraction.
+## Extraction gate — PASSED ✅
 
-### PURGE
-- FIELD OPS shows `MISSION // PURGE`.
-- objective counts infected eliminations.
-- kill target never exceeds the available ordinary infected population.
-- primary completes after the displayed kill target is reached.
+- extraction is sealed before the primary objective completes ✅
+- no extraction progress occurs while mission-gated ✅
+- primary completion unlocks extraction immediately ✅
+- existing boss and no-loot gates remain intact ✅
 
-### HOLDOUT
-- FIELD OPS shows `MISSION // HOLDOUT`.
-- activate the yellow uplink marker first.
-- after activation the objective changes to `DEFEND UPLINK` with a countdown.
-- countdown advances only while the player stays inside the large hold radius.
-- leaving the radius pauses the hold and raises a visible signal-loss alert.
-- reinforcement waves arrive while the hold is active.
-- reinforcement infected use production visuals and the existing Walker / Runner / Brute / Stalker combat-role stack.
+### Extraction egress fix — PASSED ✅
 
-### BLACKSITE
-- boss levels use BLACKSITE; non-boss BLACKSITE runs are also allowed by mission rotation.
-- breach the purple terminal first.
-- non-boss run: a response wave spawns and must be cleared.
-- boss run: the mutation target remains the elimination stage authority.
-- after elimination the objective marker relocates to the vault/core point.
-- secure the core to complete the primary objective.
+0.11 exposed an older geometry edge because `ExtractionZone_Alpha` is centered at `z=20` while the original base road/ground ended around `z=19`.
 
-## Extraction gate
+Accepted fix:
+- extend `World_Ground` and `Road_Main` beyond the north extraction trigger
+- force extraction-owned colliders to remain triggers
+- preserve extraction transform, mobile input and mission logic
 
-- entering extraction before the primary objective is complete shows `EXTRACTION SEALED` and the current primary objective ✅ observed in real runtime.
-- no extraction progress occurs while mission-gated ✅.
-- after primary completion, mission gate opens immediately ✅.
-- existing boss gate and no-loot gate remain intact.
-
-### Extraction egress — FIXED / REAL RUNTIME ACCEPTED ✅
-
-The sealed-extraction state exposed an older world-geometry edge case: `ExtractionZone_Alpha` is centered at `z=20`, while the original base ground and main road ended around `z=19`. The fix extends the supported road/ground beyond the extraction trigger and forces extraction-owned colliders to remain triggers.
-
-Real runtime retest passed:
-- enter sealed extraction before primary completion ✅
+Real runtime retest:
+- enter sealed extraction ✅
 - walk back out normally ✅
 - re-enter successfully ✅
-- extraction state/overlay clears correctly on exit ✅
+- extraction overlay/state clears on exit ✅
 
-No mobile-input or mission-logic workaround was required.
+## Risk / reward gate — PASSED ✅
 
-## Risk / reward gate
+- primary completion grants unsecured carried Scrap ✅
+- `EXTRACTION AVAILABLE` appears ✅
+- optional orange BLACK CACHE appears ✅
+- player can extract immediately or risk the cache ✅
+- approaching the cache triggers hostile reinforcements ✅
+- cache grants a reserved bonus weapon with improved rarity / Item Power ✅
+- reward is banked only after successful extraction ✅
+- death / abandon clears pending mission reward ✅
 
-After every primary objective:
-- primary completion grants unsecured carried Scrap.
-- `EXTRACTION AVAILABLE` is visible.
-- an orange optional BLACK CACHE marker appears away from the primary objective.
-- player may extract immediately or travel to the optional cache.
-- approaching the cache triggers a hostile response wave.
-- securing the cache grants a reserved bonus weapon.
-- cache reward has a minimum Uncommon rarity, minimum Rare from level 25+, and bonus Item Power.
-- if run inventory is full, the weapon remains reserved and is still banked only on successful extraction.
-- dying/abandoning clears the reserved mission reward.
+## HUD / presentation gate — PASSED ✅
 
-## HUD / presentation gate
+- FIELD OPS remains readable on mobile ✅
+- mission name / threat / objective / progress visible ✅
+- mission/reinforcement/signal alerts visible ✅
+- objective markers remain readable without blocking combat ✅
+- accepted 0.10 hit / crit / ability / special VFX remain intact ✅
 
-- existing mobile-readable FIELD OPS layout remains readable.
-- HUD shows mission name, threat state, objective text and progress.
-- short center alerts show mission start, reinforcement warnings, signal loss/restored and objective completion.
-- objective world markers pulse and remain readable without hiding combat.
-- boss bar, ability HUD and existing 0.10 hit/ability/special VFX remain readable.
+## Mobile regression — PASSED ✅
 
-## Mobile regression
+- fixed lower-left MOVE full 360° ✅
+- fixed lower-right AIM/FIRE ✅
+- independent upper-right Ability ✅
+- mission HUD does not cover control zones ✅
+- objective markers / alerts do not steal touch input ✅
 
-Use the accepted landscape phone / Device Simulator setup:
-- MOVE remains fixed lower-left and full 360°.
-- AIM/FIRE remains fixed lower-right.
-- Ability remains independent upper-right.
-- mission HUD does not cover the control zones.
-- objective markers / reinforcement alerts do not steal touch input.
+## Final full regression — PASSED ✅
 
-## Final full regression — REMAINING GATE
+- Bunker → Workshop present ✅
+- Arsenal orientation/framing intact ✅
+- Deploy → mission → combat / loot ✅
+- Primary completion and optional BLACK CACHE ✅
+- successful extraction → Bunker ✅
+- Workshop / progression persist ✅
+- optional cache weapon banks after successful extraction ✅
+- boss / reward / sector / Production 0.10 combat-impact presentation intact ✅
+- Unity Console: **0 red runtime errors** ✅
 
-1. Bunker → Workshop present.
-2. Arsenal orientation/framing intact.
-3. Deploy.
-4. Complete a primary objective.
-5. Confirm extraction unlocks.
-6. Either extract immediately or complete the optional cache first.
-7. Extract.
-8. Return to Bunker.
-9. Workshop and progression persist.
-10. Optional cache weapon is banked only after successful extraction.
-11. Sector atmosphere / reward / boss / 0.10 combat-impact presentation remain intact.
-12. Fixed-zone mobile MOVE / AIM-FIRE / Ability remain green.
-13. Unity Console ends with **0 red runtime errors**.
-
-Production 0.11 remains unmerged until the final full regression passes.
+**Production 0.11 full real-Unity validation passed on 2026-08-23. Ready to merge.**
