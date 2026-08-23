@@ -4,11 +4,9 @@ Production 0.8 starts from the fully real-Unity-validated Production 0.7 `main` 
 
 ## Phase A — progression engine / migration gate
 
-1. Pull `production/0.8-workshop-progression`.
-2. Let Unity finish compiling.
-3. Require **0 red compiler errors**.
-4. Run `DEADREACH > Build Production Slice 0.8`.
-5. Require no blocking red build/setup error.
+Status:
+- initial Phase A Unity compile: **0 red compiler errors** ✅ — 2026-08-23
+- Phase B Workshop UI was implemented after that compile gate, so a fresh compile is required before build/runtime acceptance
 
 ### Schema-v6 invariants
 - existing secured Scrap remains intact
@@ -32,21 +30,41 @@ Other helpers:
 
 ## Phase B — Workshop UI / economy gate
 
-Added after Phase A compile/build is green.
+Implemented:
+- dedicated WORKSHOP navigation entry injected into the validated Bunker Command Center
+- permanent-system cards for Workbench / Medbay / Cargo Rig / Scavenger Network
+- live ranks, effects, escalating Scrap costs and purchase buttons
+- weapon calibration list with family / rarity / Item Power / calibration / real Item-Power damage contribution
+- calibration spends Scrap and refreshes the Workshop immediately
+- two-step salvage confirmation for non-equipped weapons
+- active loadout remains unsalvageable
+- Workshop profile-summary Scrap refresh after every transaction
+- responsive layout uses the validated Bunker content viewport rather than a second independent screen-space canvas
 
-Required acceptance:
-- dedicated Bunker Workshop surface
-- equipped weapon can be calibrated while below the Workbench limit
-- calibration spends secured Scrap, increments calibration level and Item Power, and persists
-- Item Power changes real combat damage; calibration also gives small handling/crit gains
-- non-equipped weapons can be salvaged for displayed Scrap value
-- equipped weapon cannot be salvaged
-- Workbench / Medbay / Cargo Rig / Scavenger Network purchases persist and spend Scrap
-- Workbench raises calibration ceiling
-- Medbay raises actual operator max HP
-- Cargo Rig raises actual expedition weapon capacity
-- Scavenger Network raises actual Scrap banked on extraction
-- Bunker HUD/profile Scrap display refreshes after purchases
+### Required real Unity acceptance
+1. pull latest `production/0.8-workshop-progression`
+2. Unity compile → **0 red compiler errors**
+3. run `DEADREACH > Build Production Slice 0.8`
+4. require no blocking red build/setup error
+5. run `DEADREACH > Dev > 0.8 Set Workshop Test Profile`
+6. Play → Bunker → WORKSHOP is visible and opens correctly
+7. supported landscape layouts remain usable at 4:3 / 16:10 / 16:9 / ~19:9
+8. calibrate a weapon below the Workbench ceiling:
+   - Scrap decreases by displayed amount
+   - calibration rank increases by one
+   - Item Power increases by 8
+   - displayed POWER DMG contribution rises
+   - values persist after leaving/reopening Workshop
+9. try calibration at the current Workbench ceiling → button must require Workbench rather than silently exceed the cap
+10. salvage a non-equipped weapon:
+   - first press changes to CONFIRM SALVAGE
+   - second press removes the weapon and adds the displayed Scrap value
+11. equipped weapon must show ACTIVE LOADOUT and cannot be salvaged
+12. buy one Bunker system rank and verify cost/rank/effect refresh
+13. Workbench raises calibration ceiling
+14. Medbay raises actual operator max HP on deployment
+15. Cargo Rig raises actual expedition weapon capacity
+16. Scavenger Network raises actual Scrap banked on successful extraction
 
 ## Final regression
 - Arsenal orientation/framing remains accepted
