@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Weapons;
 using UnityEngine;
 
@@ -27,6 +28,9 @@ namespace Kamilunavo.Deadreach.Inventory
                 return;
             }
 
+            // Production 0.8 Cargo Rig is a permanent profile upgrade. Preserve any scene-authored
+            // capacity above the baseline while guaranteeing the profile bonus is never lost.
+            weaponCapacity = Mathf.Max(weaponCapacity, SaveService.GetRunWeaponCapacity());
             Current = this;
         }
 
