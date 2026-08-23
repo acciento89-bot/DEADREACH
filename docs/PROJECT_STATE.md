@@ -24,7 +24,7 @@ Premium-feeling mobile 3D survival/extraction roguelite with persistent progress
 
 Core loop:
 
-**Bunker → Deploy → Expedition → Combat → Loot → Risk decision → Extract / Die / Abandon → Persistent result → Bunker**
+**Bunker → Deploy → Expedition → Combat → Loot → Risk decision → Extract / Die / Abandon → Persistent result → Bunker → Equip / Upgrade → Deploy stronger**
 
 Long-term pillars:
 
@@ -46,7 +46,7 @@ Long-term pillars:
 - **Language:** C#
 - **Input:** Unity Input System 1.17
 - **Camera package available:** Cinemachine 3.1.5
-- **Current prototype camera:** custom perspective high-angle follow rig
+- **Current camera:** custom perspective high-angle follow rig
 - **Serialization:** Force Text
 - **Version control:** GitHub + Git LFS
 - **iOS / Android scripting backend:** IL2CPP
@@ -57,139 +57,333 @@ Long-term pillars:
 - **Addressables:** planned
 - **Production AI navigation:** planned; current prototype uses direct steering
 
-Graphics target: real 3D environments/characters, PBR, proper lighting/probes, post-processing, VFX, animation, audio and scalable mobile quality. Primitive prototype art must be replaced, not polished into final art.
-
-Runtime presets: Performance / Balanced / Ultra.
+Graphics target: real 3D environments/characters, PBR, proper lighting/probes, post-processing, VFX, animation, audio and scalable mobile quality. Primitive prototype art remains temporary scaffolding.
 
 ## 4. Milestone status
 
-### Vertical Slice 0.1 — ACCEPTED
+### Vertical Slice 0.1 — ACCEPTED / MERGED
 
-All editor-foundation gates passed in real Unity `6000.3.22f1` on 2026-08-23.
+PR #1 **`foundation: Unity 6.3 vertical slice 0.1 — validated`** was merged to `main` on 2026-08-23.
 
-Confirmed:
+Squash merge commit:
 
-- clean compile with **0 C# errors**
-- complete Bunker + Dead City generation
-- deterministic Build Settings: Bunker index 0, Dead City index 1
-- Bunker starts
-- Deploy loads Dead City
-- movement / aiming / firing work
-- infected chase, melee and player death work
-- death registers failed run and returns to Bunker
-- Scrap collection works
-- extraction progress works
-- successful extraction returns to Bunker
-- secured Scrap increases
-- extraction streak increments
-- secured Scrap + streak persist after leaving/re-entering Play Mode
-- Pause → Resume works
-- Pause → Abandon Run returns to Bunker with failed-run accounting
-- Performance / Balanced / Ultra switching works without blocking Console errors
+`e4d5dbe2c52d3e9aeed52f421fdd99f7c6b01877`
 
-Validated core loop:
+All editor-foundation gates passed in real Unity `6000.3.22f1`:
+
+- 0 C# compiler errors
+- Bunker + Dead City generation
+- Bunker → Deploy → gameplay
+- movement / aiming / firing
+- infected chase / melee / death
+- player death → failed run → Bunker
+- Scrap collection
+- extraction progress
+- successful extraction → Bunker
+- secured Scrap + extraction streak persistence
+- Pause → Resume
+- Pause → Abandon → failed-run accounting
+- Performance / Balanced / Ultra switching
+
+Validated foundation loop:
 
 **Bunker → Deploy → Combat/Loot → Extraction / Death / Abandon → Bunker → persistent result**
 
-Unity-6.3 compatibility fixes found during live validation:
+## 5. Current Git state
 
-- removed unsupported `AudioListener.pause` calls
-- removed inaccessible `UniversalRenderPipelineAsset.EnsureGlobalSettings()` call
-- centralized scene Build Settings registration to prevent Dead-City-only return failures
+- `main` — contains accepted Vertical Slice 0.1 foundation
+- `production/0.2-gamefeel` — active Production Pass 0.2 branch
+- PR #1 — merged
+- Production Pass 0.2 is **NOT YET Unity-compiled or runtime-validated** after the changes listed below
 
-Physical-device touch and iOS/Android builds are deferred to Production Pass 0.2/device validation and were not blockers for the foundation merge.
+Do not claim Production Pass 0.2 is stable until the next real Unity validation gate passes.
 
-## 5. Foundation implemented
+## 6. Production Pass 0.2 — IMPLEMENTED ON BRANCH, AWAITING UNITY VALIDATION
 
-- Unity `.gitignore`
-- Git LFS rules
-- editor pin `6000.3.22f1`
-- URP 17.3.0
-- Input System 1.17.0
-- Cinemachine 3.1.5
-- Unity UI 2.0.0
-- Runtime / Editor asmdefs
-- automatic project settings/bootstrap
-- automatic URP bootstrap
-- 60 FPS target, VSync off, sleep disabled
-- adaptive Performance/Balanced/Ultra quality service
+### A. Mobile controls / feedback
 
-Gameplay currently implemented:
+`DeadreachInput.cs` now exposes active touch-stick state without replacing the proven input path.
 
-- WASD / gamepad / mouse / touch input
-- CharacterController survivor movement
-- perspective high-angle follow camera
-- factions + health/damage/death
-- hitscan shooting
-- infected chase + melee AI
-- enemy Scrap drops + placed Scrap caches
-- extraction hold/progress
-- death/abandon loses carried loot
-- extraction banks Scrap
-- persistent JSON profile for Scrap, successes, failures and streaks
-- Bunker menu
-- pause/resume/abandon
-- Bunker ↔ Dead City scene flow
-- HP bar / damage flash / extraction messaging / progress HUD
+`MobileTwinStickOverlay.cs` adds a visible dynamic mobile overlay:
 
-## 6. Scene generation tooling
+- left MOVE zone / dynamic movement stick
+- right AIM/FIRE reticle
+- Safe Area handling
+- hidden in Bunker
+- automatically shown for mobile/touchscreen targets
+- presentation-only layer over the existing input system
 
-Primary command:
+`HapticsService.cs` adds:
 
-`DEADREACH > Build Complete Vertical Slice 0.1`
+- gamepad shot rumble
+- stronger critical-hit rumble
+- damage/death feedback
+- coarse iOS/Android vibration fallback
 
-Dev-only generators:
+### B. Combat feedback / VFX architecture
+
+`CombatFeedback.cs` is now the decoupled gameplay-feedback event bus.
+
+Events/payloads cover:
+
+- shot origin/end point
+- damageable hit
+- critical hit
+- impact point/normal
+- player damage
+- player death
+
+`CombatFeedbackPresenter.cs` currently provides temporary runtime presentation:
+
+- visible tracers
+- hit impacts
+- different damageable/non-damageable feedback
+- stronger magenta critical-hit feedback
+
+This runtime VFX is an architecture/proof layer, not final production VFX art.
+
+### C. Audio architecture
+
+`AudioCue.cs` provides data-driven audio assets with:
+
+- clip variations
+- volume
+- random pitch range
+- spatial blend
+- max distance
+
+`AudioService.cs` provides a small pooled runtime AudioSource system.
+
+`WeaponDefinition` now supports shot and impact AudioCue references.
+
+No final audio clips have been added yet.
+
+### D. Real character/infected integration hooks
+
+`PlayerAnimationDriver.cs` exposes Animator parameters/triggers for:
+
+- Speed
+- IsMoving
+- IsAiming
+- IsDead
+- Hit
+
+`InfectedAnimationDriver.cs` exposes:
+
+- Speed
+- Attack
+- Hit
+- IsDead
+
+`InfectedChaser` now exposes an Attack event for presentation without moving animation logic into AI.
+
+The generated slice attaches these drivers even when no real Animator/model is present, allowing future real assets to be plugged in without rewriting gameplay.
+
+### E. Data-driven weapons
+
+`WeaponDefinition.cs` introduces ScriptableObject weapon definitions.
+
+Current weapon metadata/stat support:
+
+- weapon ID / display name
+- archetype
+- rarity
+- base damage
+- rounds per second
+- range
+- aim turn speed
+- haptic strength
+- tracer duration/width
+- shot/impact AudioCues
+
+Weapon rarities:
+
+- Common
+- Uncommon
+- Rare
+- Epic
+- Legendary
+
+### F. Weapon instances, rarity and affixes
+
+`WeaponInstanceData.cs` adds serializable individual loot instances.
+
+Each extracted weapon can contain:
+
+- unique instance ID
+- definition ID
+- display-name snapshot
+- rarity
+- item power
+- random affixes
+
+Current affix pool:
+
+- Damage %
+- Fire Rate %
+- Range %
+- Crit Chance %
+- Crit Damage %
+
+`WeaponLootFactory.cs` provides deterministic prototype rolls by seed + normalized zone depth.
+
+Deeper weapon cases improve rarity odds. Affix count scales by rarity:
+
+- Common: 0
+- Uncommon: 1
+- Rare: 2
+- Epic: 3
+- Legendary: 4
+
+### G. Run inventory → extraction → permanent stash
+
+`RunInventory.cs` adds a run-only weapon inventory with current capacity 6.
+
+`WeaponLootPickup.cs` creates extractable weapon loot with rarity presentation.
+
+Production Slice 0.2 adds two prototype weapon cases:
+
+- mid-zone weapon case
+- deeper/higher-value weapon case
+
+Rules now implemented:
+
+- picked-up weapons remain unsecured during the run
+- death/abandon clears run weapon loot
+- successful extraction snapshots the run inventory
+- extracted weapons are cloned into the persistent profile stash
+- extraction can be completed with either Scrap or weapon loot
+
+### H. Save schema / persistent equipment
+
+`SaveService` schema is now version 3.
+
+It persists:
+
+- secured Scrap
+- successful extractions
+- failed runs
+- current/best extraction streak
+- weapon stash
+- equipped primary weapon ID
+
+Old foundation save data is migrated rather than intentionally reset.
+
+First extracted weapon auto-equips if no primary weapon was previously selected.
+
+### I. Equipped loot actually changes the next run
+
+`WeaponStatResolver.cs` converts the equipped weapon's affixes into runtime combat stats.
+
+`HitscanWeapon.cs` now:
+
+- loads the equipped persistent primary weapon
+- resolves damage/fire-rate/range bonuses
+- applies Crit Chance + Crit Damage
+- produces stronger critical-hit VFX/haptic feedback
+- remains compatible with base/fallback weapon stats if the stash is empty
+
+This establishes the first real progression loop:
+
+**Find weapon → survive → extract → weapon enters stash → equip → next run is stronger/different**
+
+### J. Bunker + HUD additions
+
+Bunker UI now displays:
+
+- weapon stash count
+- equipped primary weapon
+- rarity / item power
+- up to three affixes
+- recent extracted weapons
+- equipped marker
+- `EQUIP NEXT STASH WEAPON` control
+
+Field HUD now displays:
+
+- equipped primary name
+- item power or BASE state
+- resolved damage
+- resolved critical chance
+- carried Scrap
+- weapon-loot inventory count
+
+### K. Production slice generation
+
+The main editor command for this branch is now:
+
+**`DEADREACH > Build Production Slice 0.2`**
+
+It:
+
+1. regenerates Dead City
+2. attaches presentation/animation hooks
+3. adds RunInventory
+4. adds mid/deep weapon cases
+5. regenerates the Bunker
+6. verifies Bunker index 0 / Dead City index 1
+7. opens Bunker ready for Play Mode
+
+Dev-only individual builders remain under:
 
 `DEADREACH > Dev > ...`
 
-Generated scenes:
+## 7. Production 0.2 validation gate — NEXT
 
-- `Assets/Deadreach/Scenes/Bunker_Hub.unity`
-- `Assets/Deadreach/Scenes/DeadCity_VerticalSlice.unity`
+The code above has been committed but has **not yet been compiled in the user's real Unity editor**.
 
-Repair command:
+Required next validation on Windows / Unity `6000.3.22f1`:
 
-`DEADREACH > Project > Repair Scene Build Settings`
+1. switch local repo to `production/0.2-gamefeel`
+2. pull latest branch
+3. wait for Unity compilation
+4. require **0 red compiler errors**
+5. run **`DEADREACH > Build Production Slice 0.2`**
+6. start from Bunker
+7. verify old Scrap/streak save still loads
+8. Deploy to Dead City
+9. verify tracers/impact feedback while firing
+10. collect a weapon case and confirm `WEAPON LOOT 1/6`
+11. intentionally die/abandon once and confirm that unsecured weapon does NOT enter stash
+12. next run collect a weapon case and successfully extract
+13. confirm Bunker `WEAPON STASH` increases
+14. confirm weapon rarity / power / affixes are displayed
+15. use `EQUIP NEXT STASH WEAPON`
+16. Deploy again and confirm FIELD HUD shows equipped name/power and changed runtime damage/crit values
+17. confirm normal extraction/death/pause foundation behavior still works
+18. physical-device mobile twin-stick/haptic validation comes after clean editor validation
 
-## 7. Git / release state
+## 8. Known deliberate limitations of 0.2
 
-- `foundation/unity-6.3` — Vertical Slice 0.1 foundation, fully validated and ready for merge
-- PR #1 — **foundation: Unity 6.3 vertical slice 0.1 — validated**
-- next branch after merge: `production/0.2-gamefeel`
+- primitive survivor/infected/environment geometry is still not production art
+- Animator hooks exist, but real animated character assets/controllers are not yet supplied
+- VFX are runtime placeholders, not final particles/shaders
+- audio framework exists, but no final audio content is supplied
+- weapon cases use temporary geometry
+- tracer creation should later move to pooling for mobile optimization
+- weapon pickup rarity coloring should later use shared materials / MaterialPropertyBlock instead of per-instance material access
+- mobile vibration is currently coarse and should later move to better platform-specific haptics
+- production NavMesh enemy navigation is still pending
 
-## 8. Production Pass 0.2 — NEXT
-
-Goal: stop looking like a systems prototype and establish the first production-quality gameplay presentation while preserving mobile performance.
+## 9. After 0.2 validation
 
 Priority:
 
-1. production mobile HUD / visible twin-stick controls + haptics architecture
-2. character presentation hooks + animation-state architecture for real survivor asset integration
-3. infected presentation/animation-state architecture
-4. data-driven weapon definitions and runtime weapon configuration
-5. muzzle flash / tracer / impact / hit-feedback VFX architecture
-6. audio event framework and first combat audio pass
-7. Dead City production environment replacement path
-8. URP post-processing / color grading / atmosphere
-9. rarity / affix model for weapons
-10. real run inventory/equipment
-11. deeper risk/reward decisions and multiple extraction choices
-12. bunker room upgrade architecture
-13. first boss encounter
-14. Addressables/content organization
-15. backend/accounts/leaderboards/events
-16. IAP cosmetics/season structure
-17. iOS/Android build pipeline + physical-device profiling
-
-## 9. Immediate next step
-
-After PR #1 merge:
-
-1. create `production/0.2-gamefeel` from updated `main`
-2. add production gameplay/presentation architecture in a large pass
-3. keep generated primitive geometry only as fallback scaffolding
-4. require another clean Unity compile before merging Production Pass 0.2
-5. begin physical-device touch validation and mobile build preparation
+1. real survivor 3D model + animation controller
+2. real infected models + animation sets
+3. real weapon model / hands/attachment presentation
+4. proper pooled muzzle/tracer/impact VFX
+5. first real audio content pass
+6. Dead City environment art replacement
+7. URP post-processing / color grading / atmosphere
+8. better stash/loadout UI instead of prototype IMGUI
+9. deeper run choices / multiple extraction decisions
+10. bunker upgrade rooms
+11. first boss
+12. Addressables/content organization
+13. iOS/Android build pipeline + physical-device profiling
+14. backend/accounts/leaderboards/events
+15. IAP cosmetics / season structure
 
 ## 10. Non-negotiables
 
@@ -197,6 +391,7 @@ After PR #1 merge:
 - Primitive geometry is temporary scaffolding.
 - Mobile performance matters from the first production art/shader decisions.
 - Keep gameplay modular/data-driven.
+- Do not merge Production Pass 0.2 until real Unity compilation/runtime validation passes.
 - Update this file after every major pass.
 - Store name stays **DEADREACH**.
 - No advertising SDKs or ad-based rewards.
@@ -205,9 +400,10 @@ After PR #1 merge:
 
 When resuming in another chat:
 
-1. Read this file first.
-2. Inspect latest commits / open PRs / current production branch.
-3. Continue from **Immediate next step** or the newest recorded milestone.
-4. Update this file before ending a major pass.
+1. read this file first
+2. inspect current branch / newest PR
+3. determine whether Production 0.2 Unity validation has happened
+4. continue from **Production 0.2 validation gate** if not
+5. after validation, update this file before merge and begin the next art/content pass
 
 Do not rely on chat history alone.
