@@ -35,6 +35,12 @@ namespace Kamilunavo.Deadreach.Editor
             BuildInternal("0.10", "0.9 validated combat depth + operator ability VFX + infected special impact FX + camera/critical feedback polish");
         }
 
+        [MenuItem("DEADREACH/Build Production Slice 0.11", priority = 5)]
+        public static void Build11()
+        {
+            BuildInternal("0.11", "0.10 validated combat impact + expedition director + mission variety + objective-gated extraction + optional risk/reward caches + reinforcement waves");
+        }
+
         private static void BuildInternal(string version, string featureSummary)
         {
             if (!Production06WeaponArtSetup.EnsureReady())
