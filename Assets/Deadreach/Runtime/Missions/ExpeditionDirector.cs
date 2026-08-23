@@ -211,7 +211,7 @@ namespace Kamilunavo.Deadreach.Missions
                 case ExpeditionMissionType.Purge:
                     Stage = ExpeditionMissionStage.Eliminate;
                     var ordinaryCount = Mathf.Max(1, _bossFlags.Count(pair => !pair.Value));
-                    _primaryKillTarget = Mathf.Clamp(4 + Level / 15, 4, ordinaryCount);
+                    _primaryKillTarget = Mathf.Min(ordinaryCount, Mathf.Max(1, 4 + Level / 15));
                     _primaryMarker = CreateMarker("Mission_PurgeBeacon", ObjectivePoints[4], new Color(1f, 0.22f, 0.08f, 0.95f), 2.35f);
                     break;
 
@@ -545,7 +545,7 @@ namespace Kamilunavo.Deadreach.Missions
             var chaser = enemy.AddComponent<InfectedChaser>();
             enemy.AddComponent<InfectedAnimationDriver>();
 
-            var role = (InfectedCombatRole)Mathf.Abs(Level + index) % 4;
+            var role = (InfectedCombatRole)(Mathf.Abs(Level + index) % 4);
             ConfigureReinforcement(chaser, role, index);
 
             var binder = enemy.AddComponent<ProductionVisualBinder>();
