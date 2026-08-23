@@ -1,0 +1,19 @@
+{
+  "name": "Deadreach.Editor",
+  "rootNamespace": "Kamilunavo.Deadreach.Editor",
+  "references": [
+    "Deadreach.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
