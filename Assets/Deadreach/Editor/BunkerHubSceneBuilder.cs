@@ -31,18 +31,38 @@ namespace Kamilunavo.Deadreach.Editor
             Debug.Log($"DEADREACH Bunker Hub generated at {ScenePath}");
         }
 
-        [MenuItem("DEADREACH/Build Production Slice 0.3", priority = 1)]
+        [MenuItem("DEADREACH/Build Production Slice 0.4", priority = 1)]
         public static void BuildCompleteSlice()
         {
+            // Hard gate: never generate a visually incomplete 0.4 scene. Earlier builds could
+            // silently skip failed glTF imports, which made vehicles/containers disappear.
+            if (!DeadCityAssetRepair.EnsureRequiredAssetsReady())
+            {
+                Debug.LogError("DEADREACH Production Slice 0.4 aborted: required environment imports are not healthy. No partial scene was generated.");
+                return;
+            }
+
             VerticalSliceSceneBuilder.Build();
             ProductionSliceEnhancer.EnhanceCurrentDeadCityScene();
+            DeadCityEnvironmentPass.EnhanceCurrentDeadCityScene();
+
+            // Production dressing may create believable choke points, but it must never make
+            // the extraction objective physically unreachable. Run the traversal gate before
+            // leaving Dead City or generating the Bunker.
+            if (!DeadCityTraversalSafetyPass.Apply())
+            {
+                Debug.LogError("DEADREACH Production Slice 0.4 aborted: extraction traversal safety gate failed.");
+                return;
+            }
+
             Build();
 
             if (!DeadreachBuildSettings.ConfigureCompleteSlice())
                 return;
 
+            DeadreachPlayModeStart.Configure();
             EditorSceneManager.OpenScene(DeadreachBuildSettings.BunkerScenePath, OpenSceneMode.Single);
-            Debug.Log("DEADREACH Production Slice 0.3 generated. Build Settings verified: Bunker first, Dead City second. Weapon loot + production asset catalog/binders included.");
+            Debug.Log("DEADREACH Production Slice 0.4 generated. Build Settings verified: Bunker first, Dead City second. Required streets/containers/vehicles validated and extraction traversal corridor verified before acceptance; Editor Play Mode starts from Bunker_Hub.");
         }
 
         private static void EnsureFolders()

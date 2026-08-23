@@ -27,165 +27,148 @@ Core loop:
 
 No cheap generic mobile finish. Primitive geometry is temporary scaffolding. No advertising SDKs.
 
-## 3. Validated / merged milestones
+## 3. Validated / merged baselines
 
 ### Vertical Slice 0.1 — MERGED / VALIDATED
+Merge: `e4d5dbe2c52d3e9aeed52f421fdd99f7c6b01877`
 
-PR #1 merged on 2026-08-23.
-
-Merge commit:
-
-`e4d5dbe2c52d3e9aeed52f421fdd99f7c6b01877`
-
-Validated:
-- clean compile
-- Bunker / Dead City generation
-- movement / aim / fire
-- infected combat / death
-- Scrap / extraction / persistence
-- Pause / Resume / Abandon
-- quality presets
+Validated: Bunker/Dead City generation, movement, aim/fire, infected combat/death, Scrap/extraction/persistence, Pause/Resume/Abandon, quality presets.
 
 ### Production 0.2 — MERGED / VALIDATED
+Merge: `fd0dca0ece7d18ca005f2f4b52d65039904fad27`
 
-PR #2 merged on 2026-08-23.
-
-Merge commit:
-
-`fd0dca0ece7d18ca005f2f4b52d65039904fad27`
-
-Validated:
-- 0 compiler errors / 0 compiler warnings at acceptance
-- tracer / impact / critical feedback
-- weapon pickups + run inventory
-- unsecured weapon loss on death/abandon
-- extraction into persistent stash
-- rarity / item power / affixes
-- equipped primary persistence
-- affixes modifying next-run combat stats
-- foundation death / extraction / pause / abandon flows remain functional
-
-Established progression loop:
-
-**Find weapon → survive → extract → stash → equip → next run becomes stronger/different**
+Validated: combat feedback, weapon loot/run inventory, extraction stash, rarity/item power/affixes, equipped primary persistence, affix-driven next-run combat stats, no regression to foundation flows.
 
 ### Production 0.3 — MERGED / REAL UNITY VALIDATED
+PR #3 merge: `924e8ff4ae250da13fd0d198b121802cf80131b0`
 
-PR #3 `production: art asset binding and presentation pipeline 0.3 — validated` merged on 2026-08-23.
-
-Squash merge commit:
-
-`924e8ff4ae250da13fd0d198b121802cf80131b0`
-
-Real Unity validation passed:
+Validated in Unity `6000.3.22f1`:
 - 0 compiler errors
-- `DEADREACH > Build Production Slice 0.3` completes with 0 errors
-- empty-catalog fallback remains functional
-- real Quaternius Survivor replaces Capsule
-- real Infected variants replace prototype enemies
-- atlas/material colors render correctly in gameplay
-- embedded artist-rigged Survivor weapon is visible and stable
-- current embedded weapon is on the **left hand**; accepted and locked for this starter-art pass
+- Production Slice 0.3 generator passes
+- real Quaternius Survivor/Infected replace prototypes
+- atlas colors/materials render correctly
+- embedded artist-rigged Survivor weapon is stable
+- current embedded weapon is on the **left hand**; this is accepted and locked
 - weapon remains aligned while moving / aiming / firing
-- muzzle/tracer originate from the embedded weapon
-- movement / combat / loot / extraction / Bunker return remain functional
+- muzzle/tracer originate from embedded weapon
+- movement/combat/loot/extraction/Bunker return remain functional
 - no blocking Console errors reported
 
-## 4. Production 0.3 architecture / locked decisions
+## 4. Locked 0.3 presentation decision
 
-### Production Asset Catalog
+Do **not** reintroduce the old external Rifle hand-socket transform approach.
 
-`ProductionAssetCatalog` supports:
-- Survivor prefab
-- Infected variants
-- Primary Weapon prefab for progression/future presentation
-- survivor/infected visual offsets/scales
+Current accepted Sam strategy:
+1. `Characters_Sam_SingleWeapon.gltf` is the visible Survivor source
+2. use its artist-authored embedded weapon
+3. do not instantiate a second external Rifle on Sam
+4. do not rotate/reposition the embedded weapon to move it from the left hand
+5. derive gameplay muzzle from the embedded weapon mesh
+6. keep external Rifle asset for progression/future authored rifle-hold work
 
-Catalog path:
-
-`Assets/Deadreach/Resources/Deadreach/ProductionAssetCatalog.asset`
-
-### Production Visual Binder
-
-`ProductionVisualBinder` keeps gameplay roots separate from production art:
-- gameplay CharacterController / Damageable / AI / weapon logic remain on validated roots
-- production prefab replaces prototype rendering
-- Animator is rebound into existing animation drivers
-- missing art safely falls back to prototype visuals
-
-### Current Sam weapon strategy — LOCKED
-
-Earlier attempts to mount `Weapon_Rifle.gltf` on discovered/fallback hand sockets produced unstable orientation and repeated transform conflicts.
-
-The accepted strategy is:
-1. use Quaternius `Characters_Sam_SingleWeapon.gltf`
-2. use its artist-authored embedded weapon as the visible Survivor weapon
-3. do **not** instantiate a second external Rifle on Sam
-4. do **not** rotate/reposition the embedded weapon to move it from the left hand
-5. derive gameplay muzzle directly from the embedded weapon mesh
-6. keep the external Rifle asset for progression/future weapon presentation until a proper rifle-hold rig/animation path exists
-
-Do not reintroduce the old transform/socket hacks.
-
-### Combat VFX hardening
-
-`CombatFeedbackPresenter` uses a preallocated tracer pool instead of per-shot GameObject creation/destruction.
-
-## 5. Production art source
-
-**Quaternius — Zombie Apocalypse Kit**
-
-Current subset:
-- Survivor Sam / Sam SingleWeapon
-- Zombie Basic
-- Zombie Chubby
-- Zombie Arm
-- Zombie Ribcage
-- Rifle asset for future/progression use
-- shared `Zombie_Atlas.png`
-
-License/source tracking:
-
-`docs/THIRD_PARTY_ASSETS.md`
-
-Unity package:
-
-`com.unity.cloud.gltfast` `6.17.0`
-
-Git LFS tracks glTF/GLB and large art assets.
-
-## 6. Current Git state
+## 5. Current Git state
 
 - `main` contains validated 0.1 + 0.2 + 0.3
-- latest validated merge: `924e8ff4ae250da13fd0d198b121802cf80131b0`
-- next production branch: **`production/0.4-environment-atmosphere`**
+- active branch: **`production/0.4-environment-atmosphere`**
+- PR #4 remains **Draft**
+- Production 0.4 compile gate: **PASSED in real Unity**
+- Production 0.4 environment visual gate: **PASSED in real Unity**
+- final gameplay/start-flow regression gate is still pending before merge
 
-## 7. Production 0.4 target
+## 6. Production 0.4 — implemented on branch
 
-Goal: make Dead City stop looking like prototype geometry and start reading as a real game environment without breaking the validated 0.3 character/combat path.
+Goal: make Dead City read as a real environment while preserving the validated 0.3 character/combat baseline.
 
-Priority order:
-1. real Dead City environment props/building pieces from compatible licensed assets
-2. environment dressing / streets / barriers / debris / wreckage / vertical landmarks
-3. URP lighting pass
-4. fog / atmosphere / dust / sparks / local VFX
-5. post-processing / tonemapping / bloom / color grading
-6. stronger extraction-beacon presentation
-7. production muzzle flash / impact VFX
-8. first real combat audio-content pass
-9. preserve 0.3 character/weapon mount exactly
-10. retain mobile performance presets
+### Quaternius Dead City asset installer
 
-## 8. Deferred / later
+`tools/install-quaternius-deadcity-set.ps1`
 
-- proper authored rifle-hold character/animation path
-- production HUD/loadout UI replacing prototype IMGUI
-- production NavMesh navigation
-- Addressables/content organization
-- physical-device touch/haptics validation
-- iOS / Android builds and profiling
-- backend/accounts/leaderboards/events
-- IAP cosmetics / season structure
+Curated CC0 subset from the same Quaternius Zombie Apocalypse Kit visual family:
+- modular street / cracked street / intersection pieces
+- traffic + plastic barriers
+- real streetlight + traffic-light geometry
+- containers
+- barrel / broken pallet / pipes / trash / wheel stack
+- blood ground props
+- WaterTower landmark
+- pickup / sports car / truck
+- shared `Zombie_Atlas.png`
+
+### Dead City Environment Pass
+
+`Assets/Deadreach/Editor/DeadCityEnvironmentPass.cs`
+
+Current implementation:
+- deterministic environment root `Production_DeadCity_Environment_0_4`
+- modular real street surfaces over retained prototype collision underlay
+- containers / barriers / landmark / wrecked vehicles / street clutter
+- DEADREACH-owned `CollisionBounds` child colliders on major blockers/vehicles
+- explicit Quaternius environment atlas material
+- cold moon / warm street-light contrast
+- gameplay-targeted exponential fog
+- global URP post-processing profile
+  - ACES tonemapping
+  - modest Bloom
+  - contrast/saturation/color filter
+  - modest vignette
+- stronger extraction beacon column + green local light
+
+### Import / collider hardening
+
+First real-Unity 0.4 validation exposed:
+- missing `Unity.RenderPipelines.Core.Runtime` reference in `Deadreach.Editor.asmdef`
+- glTF reimport state not retrying after the compile fix
+- imported glTF prefab roots rejecting/invalidating direct `BoxCollider` authoring
+
+Fixes now on branch:
+- Core Runtime assembly reference added
+- required environment gate + forced synchronous glTF reimport added
+- Production Slice 0.4 refuses to build if required streets/containers/vehicles are unavailable
+- Play Mode start locked to `Bunker_Hub`
+- bounds colliders moved onto plain DEADREACH-owned `CollisionBounds` child objects
+
+## 7. Real Unity 0.4 validation status
+
+### Compile gate — PASSED
+User confirmed **0 C# compiler errors** after Core Runtime/import-repair fixes.
+
+### Generator / visual environment gate — PASSED
+After the required-asset and collider fixes, the real Unity screenshot/user acceptance confirmed:
+- Production Slice 0.4 generates and runs
+- real street surfaces are visible
+- green/red containers are visible
+- multiple vehicles/wrecks are visible, including colored car/truck silhouettes
+- traffic barriers / road furniture / barrels / street props are visible
+- extraction beacon is visible
+- environment scale and overall dressing are acceptable for this pass
+- user response: **“sehr gut”**
+
+This is a real visual acceptance, not an inferred pass.
+
+### Final merge gate — PENDING
+Before merging PR #4, confirm in one short regression run:
+1. pressing Play starts at **Bunker_Hub / main menu**
+2. Deploy loads Dead City
+3. movement / aim / firing work
+4. embedded left-hand weapon remains stable and tracer/muzzle remain aligned
+5. loot pickup works
+6. extraction returns to Bunker
+7. no blocking Console errors
+
+If all seven pass, mark PR #4 ready and squash-merge to `main` immediately.
+
+## 8. After 0.4 merge
+
+Next priorities:
+1. production muzzle flash + impact VFX
+2. first real combat audio-content pass
+3. replace prototype IMGUI with production HUD/loadout UI
+4. production NavMesh navigation
+5. Addressables/content organization
+6. physical-device mobile validation + iOS/Android profiling
+7. proper authored rifle-hold character/animation path later
+8. backend/accounts/leaderboards/events
+9. IAP cosmetics / season structure
 
 ## 9. Handoff protocol
 
@@ -194,7 +177,9 @@ When resuming:
 2. treat 0.1 / 0.2 / 0.3 as validated merged baselines
 3. never reintroduce external Rifle transform/socket hacks onto Sam
 4. current left-hand embedded weapon is accepted
-5. active work should continue on `production/0.4-environment-atmosphere`
-6. update this file after each major 0.4 pass / Unity validation
+5. active work is `production/0.4-environment-atmosphere`
+6. 0.4 compile + environment visual gates have passed in real Unity
+7. only the short gameplay/start-flow regression gate remains before PR #4 can be marked ready and merged
+8. update this file after final validation/merge
 
 Do not rely on chat history alone.

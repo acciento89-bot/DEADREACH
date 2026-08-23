@@ -3,6 +3,7 @@
   "rootNamespace": "Kamilunavo.Deadreach.Editor",
   "references": [
     "Deadreach.Runtime",
+    "Unity.RenderPipelines.Core.Runtime",
     "Unity.RenderPipelines.Universal.Runtime"
   ],
   "includePlatforms": [
