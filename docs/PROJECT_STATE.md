@@ -59,6 +59,7 @@ Validated:
 - second Bunker UI polish is accepted as a good **Unity Editor/Desktop** direction
 - Atomic `Production05OperatorArtSetupV2` has now passed the real Unity `Build Production Slice 0.5` step with **no blocking error**
 - the previous `Missing Nested Prefab Asset` + glTFast import blocker is therefore **resolved in real Unity**
+- `docs/PRODUCTION_05_TEST.md` now records the preflight/build as passed
 - full Production 0.5 is **not yet accepted**; the consolidated MEGA Runtime Gate remains outstanding
 
 ## 4. Production 0.5 scope on branch
@@ -235,6 +236,7 @@ When resuming:
 3. never reintroduce an external hand-mounted Rifle path
 4. active branch is `production/0.5-bunker-progression-boss-ui`
 5. Atomic `Production05OperatorArtSetupV2` import/build blocker is **REAL UNITY VALIDATED FIXED**
-6. next immediate action is the single `docs/PRODUCTION_05_TEST.md` MEGA Runtime Gate
-7. do not repeat importer mini-tests unless a new import error appears
-8. keep PR #5 Draft until full 0.5 acceptance
+6. `docs/PRODUCTION_05_TEST.md` preflight is recorded as passed
+7. next immediate action is the single MEGA Runtime Gate
+8. do not repeat importer mini-tests unless a new import error appears
+9. keep PR #5 Draft until full 0.5 acceptance
