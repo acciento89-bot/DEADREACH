@@ -50,14 +50,20 @@ namespace Kamilunavo.Deadreach.Weapons
                 affixes = RollAffixes(random, rarity, affixCount)
             };
 
-            // Boss rewards always carry a meaningful offensive identity even if random affixes miss damage.
+            // Boss rewards always carry a meaningful offensive identity while respecting the
+            // normal rarity affix-count cap.
             if (!reward.affixes.Exists(item => item != null && item.stat == WeaponAffixStat.DamagePercent))
             {
-                reward.affixes.Add(new WeaponAffixRollData
+                var damageAffix = new WeaponAffixRollData
                 {
                     stat = WeaponAffixStat.DamagePercent,
                     value = 12f + tier * 3.5f
-                });
+                };
+
+                if (reward.affixes.Count >= affixCount && reward.affixes.Count > 0)
+                    reward.affixes[0] = damageAffix;
+                else
+                    reward.affixes.Add(damageAffix);
             }
 
             return reward;
