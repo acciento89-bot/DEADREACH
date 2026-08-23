@@ -20,6 +20,7 @@ namespace Kamilunavo.Deadreach.Presentation
 
         private GameObject _instance;
         private GameObject _weaponInstance;
+        private Transform _weaponSocket;
 
         public bool HasProductionVisual => _instance != null;
         public GameObject VisualInstance => _instance;
@@ -27,6 +28,12 @@ namespace Kamilunavo.Deadreach.Presentation
         private void Start()
         {
             BindNow();
+        }
+
+        private void LateUpdate()
+        {
+            if (role == ProductionVisualRole.Survivor && _weaponInstance != null && _weaponSocket != null)
+                AlignMountedWeapon();
         }
 
         public void Configure(ProductionVisualRole newRole, int newVariantIndex = 0, ProductionAssetCatalog newCatalog = null)
@@ -93,13 +100,22 @@ namespace Kamilunavo.Deadreach.Presentation
                 GetComponent<PlayerAnimationDriver>()?.SetAnimator(animator);
 
                 Transform muzzle = null;
-                var weaponSocket = FindNamedTransform(_instance.transform, "WeaponSocket")
-                                   ?? FindNamedTransform(_instance.transform, "RightHandWeaponSocket");
+                _weaponSocket = FindNamedTransform(_instance.transform, "WeaponSocket")
+                                ?? FindNamedTransform(_instance.transform, "RightHandWeaponSocket");
 
-                if (catalog.PrimaryWeaponPrefab != null && weaponSocket != null)
+                if (catalog.PrimaryWeaponPrefab != null && _weaponSocket != null)
                 {
-                    _weaponInstance = Instantiate(catalog.PrimaryWeaponPrefab, weaponSocket, false);
+                    _weaponInstance = Instantiate(catalog.PrimaryWeaponPrefab, _weaponSocket, false);
                     _weaponInstance.name = "ProductionPrimaryWeapon";
+
+                    // The Quaternius hand bone has its own authored bind rotation. The rifle prefab,
+                    // however, is normalized so local +Z is the barrel/forward direction. Keep the
+                    // grip at the animated hand position but align the weapon itself to the actual
+                    // DEADREACH gameplay-facing direction instead of inheriting the hand-bone basis.
+                    // LateUpdate reapplies this after Animator evaluation so the rifle never tilts
+                    // vertically or sideways while the player is aiming/running.
+                    AlignMountedWeapon();
+
                     muzzle = FindNamedTransform(_weaponInstance.transform, "MuzzleSocket")
                              ?? FindNamedTransform(_weaponInstance.transform, "Muzzle");
                 }
@@ -114,6 +130,33 @@ namespace Kamilunavo.Deadreach.Presentation
             {
                 GetComponent<InfectedAnimationDriver>()?.SetAnimator(animator);
             }
+        }
+
+        private void AlignMountedWeapon()
+        {
+            if (_weaponInstance == null || _weaponSocket == null)
+                return;
+
+            // Position is driven by the animated right hand/grip socket.
+            _weaponInstance.transform.position = _weaponSocket.position;
+
+            // DEADREACH combat is planar, so keep the rifle level and point its normalized +Z
+            // exactly along the gameplay root's facing direction. This also keeps the child
+            // MuzzleSocket at the real barrel tip, so HitscanWeapon/tracers originate visually
+            // from the rifle rather than from the hand-bone's arbitrary imported rotation.
+            var forward = transform.forward;
+            forward.y = 0f;
+
+            if (forward.sqrMagnitude < 0.0001f && _instance != null)
+            {
+                forward = _instance.transform.forward;
+                forward.y = 0f;
+            }
+
+            if (forward.sqrMagnitude < 0.0001f)
+                forward = Vector3.forward;
+
+            _weaponInstance.transform.rotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
         }
 
         private static Transform FindNamedTransform(Transform root, string targetName)
