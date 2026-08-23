@@ -10,8 +10,8 @@ namespace Kamilunavo.Deadreach.UI
     {
         private static MobileTwinStickOverlay _instance;
 
-        [SerializeField, Range(0.2f, 1f)] private float idleOpacity = 0.34f;
-        [SerializeField, Range(0.2f, 1f)] private float activeOpacity = 0.78f;
+        [SerializeField, Range(0.2f, 1f)] private float idleOpacity = 0.38f;
+        [SerializeField, Range(0.2f, 1f)] private float activeOpacity = 0.82f;
 
         private Texture2D _outerTexture;
         private Texture2D _innerTexture;
@@ -44,22 +44,25 @@ namespace Kamilunavo.Deadreach.UI
                 return;
 
             EnsureStyle();
-            var safe = Screen.safeArea;
             var radius = input.VirtualStickRadius;
-            var bottomPadding = Mathf.Max(24f, safe.height * 0.035f);
-            var sidePadding = Mathf.Max(26f, safe.width * 0.018f);
-            var leftIdle = new Vector2(safe.xMin + radius + sidePadding, safe.yMin + radius + bottomPadding);
-            var rightIdle = new Vector2(safe.xMax - radius - sidePadding, safe.yMin + radius + bottomPadding);
+            var moveCenter = input.MoveStickCenter;
+            var aimCenter = input.AimStickCenter;
 
-            if (input.HasMoveTouch)
-                DrawStick(input.MoveTouchOrigin, input.MoveTouchPosition, radius, new Color(0.35f, 0.9f, 1f), "MOVE", activeOpacity);
-            else
-                DrawStick(leftIdle, leftIdle, radius, new Color(0.35f, 0.9f, 1f), "MOVE", idleOpacity);
+            DrawStick(
+                moveCenter,
+                input.HasMoveTouch ? input.MoveTouchPosition : moveCenter,
+                radius,
+                new Color(0.35f, 0.9f, 1f),
+                "MOVE",
+                input.HasMoveTouch ? activeOpacity : idleOpacity);
 
-            if (input.HasAimTouch)
-                DrawStick(input.AimTouchOrigin, input.AimTouchPosition, radius, new Color(1f, 0.62f, 0.18f), "AIM / FIRE", activeOpacity);
-            else
-                DrawStick(rightIdle, rightIdle, radius, new Color(1f, 0.62f, 0.18f), "AIM / FIRE", idleOpacity);
+            DrawStick(
+                aimCenter,
+                input.HasAimTouch ? input.AimTouchPosition : aimCenter,
+                radius,
+                new Color(1f, 0.62f, 0.18f),
+                "AIM / FIRE",
+                input.HasAimTouch ? activeOpacity : idleOpacity);
         }
 
         private bool ShouldShow()
