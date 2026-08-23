@@ -9,11 +9,13 @@ Reason for mirror fallback:
 The original Google Drive folder currently rejects automated gdown access for at least one public file. The selected files are therefore retrieved from the public mirror above while the official Quaternius page remains the license/source authority.
 
 Selected DEADREACH subset:
-- Survivor Sam
+- Survivor Sam (SingleWeapon source variant; embedded weapon visual suppressed by DEADREACH wrapper)
 - Zombie Basic
 - Zombie Chubby
 - Zombie Arm
 - Zombie Ribcage
 - Rifle
+- Zombie_Atlas.png shared material atlas
 
 Unity import format: glTF via Unity glTFast.
+The original glTF atlas paths are normalized to a local Zombie_Atlas.png beside the selected models.
