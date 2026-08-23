@@ -17,34 +17,45 @@ Turn existing statistical enemy/operator variants into real gameplay identities 
 ### Operator active abilities
 - SAM / FIELD PATCH ✅
 - RAVEN / VECTOR DASH ✅
-- BRIGGS / SHOCKWAVE ✅
+- BRIGGS / SHOCKWAVE gameplay ✅
 
 ### Non-blocking 0.10 visual debt
 - BRIGGS Shockwave has no dedicated visible shockwave FX yet.
 - Add expanding ring / ground pulse / impact treatment in Production 0.10.
 
-## First mobile attempt — REJECTED
+## Mobile attempts rejected
 
-Real phone/Device Simulator use exposed blocking problems:
-- movement/aim did not feel production usable
-- movement could behave one-sided/wrong
-- right-side pointer aiming could pull weapon aim toward the Ability UI while firing
-- Ability occupied the same practical control space as aim/fire
-- Field Ops / health / status UI was too small for comfortable phone reading
+### First attempt — REJECTED
+- movement/aim not production usable
+- pointer aiming could pull weapon toward Ability UI
+- Ability overlapped practical aim/fire space
+- phone HUD too small
 
-0.9 must not be promoted on that implementation.
+### Second attempt — REJECTED
+- firing/aim improved but still failed during real Device Simulator use
+- floating MOVE origin appeared where the first touch landed instead of remaining at a predictable control position
+- movement was not reliably usable in all directions
+- mobile Ability did not provide trustworthy visible confirmation
 
-## Replacement mobile implementation
+0.9 must not be promoted on either rejected implementation.
 
-- left stick = relative 360-degree movement vector with deadzone + response shaping
-- faster mobile acceleration/deceleration for immediate direction changes
-- right stick = relative directional aim/fire vector with its own deadzone
-- absolute finger screen position is no longer the weapon world target
+## Current fixed-zone mobile implementation — AWAITING VALIDATION
+
+- MOVE has a fixed lower-left safe-area center
+- AIM/FIRE has a fixed lower-right safe-area center
+- both controls have generous circular capture zones larger than the visible stick
+- MOVE uses full 360-degree X/Y vector with deadzone + response shaping
+- mobile movement acceleration/deceleration is faster for immediate changes
+- AIM/FIRE is camera-relative directional input only
+- absolute finger screen position can never become the weapon world target
+- right stick fires whenever directional input leaves its deadzone
+- releasing right stick stops firing
 - mobile/Device Simulator touch suppresses mirrored mouse-pointer aim
-- right-stick fire begins only after a small threshold
-- Ability is separately captured above the lower-right stick control band
-- virtual stick radius/visuals scale with `Screen.safeArea.height`
-- mobile Field Ops panel, Vitals/HP bar, weapon/loot/scrap/objective text, boss bar and extraction UI scale up for phone readability
+- Ability uses a separate upper-right region with enlarged invisible hit target
+- Ability queues on touch-begin rather than touch-release
+- Ability displays immediate `FIRED`, `NO TARGET`, `FULL HP`, `BLOCKED` or `COOLDOWN` feedback so input registration is visible even before dedicated Shockwave FX exists
+- fixed stick visuals use the exact same centers as input capture
+- mobile Field Ops / Vitals / HP / loot / scrap / objective / boss / extraction UI remain scaled for phone readability
 
 ## Fresh compile gate
 
@@ -52,36 +63,38 @@ Real phone/Device Simulator use exposed blocking problems:
 2. Let Unity finish compiling.
 3. Require **0 red compiler errors**.
 
-## Replacement mobile runtime gate
+## Current mobile runtime gate
 
-Use the same landscape phone/Device Simulator setup where the first attempt failed.
+Use the same landscape phone/Device Simulator setup where the earlier attempts failed.
 
 ### MOVE
-1. Push left stick up / down / left / right / diagonals.
-2. Character must move in all corresponding directions.
-3. Movement must not remain one-sided.
-4. Returning stick to center must stop quickly without floaty slide.
-5. Stick knob direction must visually match thumb direction.
+1. The MOVE stick must stay fixed lower-left before and during use.
+2. Touch inside/near its visible circle.
+3. Push up / down / left / right / diagonals.
+4. Character must move in all corresponding directions.
+5. Returning to center/releasing must stop quickly.
 
 ### AIM / FIRE
-1. Use lower-right stick.
-2. Rotate through all directions.
-3. Character/weapon must aim by stick direction, not absolute finger location.
-4. Push beyond threshold to fire.
+1. The AIM/FIRE stick must stay fixed lower-right.
+2. Push it in any direction.
+3. Character/weapon must aim by stick direction only.
+4. Once outside deadzone, firing must start reliably.
 5. Aim must never snap toward Ability/UI.
-6. Releasing the stick stops firing.
+6. Releasing the stick must stop firing.
 
 ### ABILITY
-1. Ability appears clearly separated above lower-right control band.
-2. Touching it triggers only the operator ability.
-3. It must not also move, aim or fire.
-4. READY/cooldown state remains readable.
+1. Ability remains upper-right, away from both sticks.
+2. Pressing it must immediately change the button feedback text.
+3. RAVEN should show `FIRED` and dash when ready.
+4. SAM at full HP may show `FULL HP`; after taking damage it must show `FIRED` and heal.
+5. BRIGGS with no infected in range may show `NO TARGET`; with infected in range it must show `FIRED` and deal Shockwave damage.
+6. Ability touch must not also move, aim or fire.
 
 ### PHONE HUD
 - FIELD OPS title readable
 - LEVEL / zone readable
 - VITALS value readable
-- HP bar thick enough to understand immediately
+- HP bar readable at a glance
 - primary weapon + carried/secured/loot values readable
 - objective readable
 - boss/extraction UI readable when present
