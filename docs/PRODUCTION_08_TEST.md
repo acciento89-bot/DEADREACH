@@ -6,7 +6,8 @@ Production 0.8 starts from the fully real-Unity-validated Production 0.7 `main` 
 
 Status:
 - initial Phase A Unity compile: **0 red compiler errors** ✅ — 2026-08-23
-- Phase B Workshop UI was implemented after that compile gate, so a fresh compile is required before build/runtime acceptance
+- Phase B fresh Unity compile after Workshop UI: **0 red compiler errors** ✅ — 2026-08-23
+- `DEADREACH > Build Production Slice 0.8`: **passed with no blocking red error** ✅ — 2026-08-23
 
 ### Schema-v6 invariants
 - existing secured Scrap remains intact
@@ -30,41 +31,39 @@ Other helpers:
 
 ## Phase B — Workshop UI / economy gate
 
-Implemented:
-- dedicated WORKSHOP navigation entry injected into the validated Bunker Command Center
-- permanent-system cards for Workbench / Medbay / Cargo Rig / Scavenger Network
-- live ranks, effects, escalating Scrap costs and purchase buttons
-- weapon calibration list with family / rarity / Item Power / calibration / real Item-Power damage contribution
-- calibration spends Scrap and refreshes the Workshop immediately
-- two-step salvage confirmation for non-equipped weapons
-- active loadout remains unsalvageable
-- Workshop profile-summary Scrap refresh after every transaction
-- responsive layout uses the validated Bunker content viewport rather than a second independent screen-space canvas
+Status: **PASSED functionally** on 2026-08-23.
 
-### Required real Unity acceptance
-1. pull latest `production/0.8-workshop-progression`
-2. Unity compile → **0 red compiler errors**
-3. run `DEADREACH > Build Production Slice 0.8`
-4. require no blocking red build/setup error
-5. run `DEADREACH > Dev > 0.8 Set Workshop Test Profile`
-6. Play → Bunker → WORKSHOP is visible and opens correctly
-7. supported landscape layouts remain usable at 4:3 / 16:10 / 16:9 / ~19:9
-8. calibrate a weapon below the Workbench ceiling:
-   - Scrap decreases by displayed amount
-   - calibration rank increases by one
-   - Item Power increases by 8
-   - displayed POWER DMG contribution rises
-   - values persist after leaving/reopening Workshop
-9. try calibration at the current Workbench ceiling → button must require Workbench rather than silently exceed the cap
-10. salvage a non-equipped weapon:
-   - first press changes to CONFIRM SALVAGE
-   - second press removes the weapon and adds the displayed Scrap value
-11. equipped weapon must show ACTIVE LOADOUT and cannot be salvaged
-12. buy one Bunker system rank and verify cost/rank/effect refresh
-13. Workbench raises calibration ceiling
-14. Medbay raises actual operator max HP on deployment
-15. Cargo Rig raises actual expedition weapon capacity
-16. Scavenger Network raises actual Scrap banked on successful extraction
+Validated in real Unity:
+- dedicated WORKSHOP navigation entry opens correctly inside the Bunker
+- permanent-system cards for Workbench / Medbay / Cargo Rig / Scavenger Network render and refresh
+- calibration spends the displayed Scrap cost
+- calibration rank increases by one
+- Item Power increases by 8
+- displayed POWER DMG contribution refreshes
+- non-equipped weapon salvage uses two-step confirmation
+- salvage removes the weapon and adds the displayed Scrap value
+- equipped weapon shows ACTIVE LOADOUT and cannot be salvaged
+- Bunker-system purchases spend Scrap and update rank/effect/cost
+- Workbench ceiling updates correctly
+- profile-summary Scrap refreshes after transactions
+
+## Remaining expedition/runtime bonus gate
+
+With the currently tested profile shown in Workshop:
+- Medbay rank 2 = **+12% field HP**
+- Cargo Rig rank 2 = **loot capacity 8**
+- Scavenger Network rank 2 = **+16% Scrap banked on successful extraction**
+
+Use operator SAM for the clearest HP check.
+
+1. Deploy a normal expedition.
+2. Confirm HUD starts at **VITALS 112/112** for SAM.
+3. Confirm HUD shows **WEAPON LOOT 0/8**.
+4. Pick up Scrap and note the exact carried amount before extraction.
+5. Extract successfully.
+6. Confirm secured Scrap rises by approximately `round(carriedScrap × 1.16)` from the run reward, excluding any other deliberate Workshop transaction.
+7. Re-enter Bunker/WORKSHOP and confirm calibrated weapon Item Power/calibration are still present.
+8. Deploy with that calibrated weapon and confirm normal combat with no red runtime error.
 
 ## Final regression
 - Arsenal orientation/framing remains accepted
