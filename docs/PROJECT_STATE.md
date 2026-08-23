@@ -103,61 +103,42 @@ Shows persistent stash, rarity, item power, affix rolls, equipped state and Equi
 
 `BunkerWeaponPreviewUI` now uses preview-only canonical orientation scoring so imported weapons should appear horizontally instead of standing vertically/on their head. This must never alter gameplay weapon transforms or muzzle binding.
 
-### 4.4 Distinct operator plan — corrected after inspecting original Quaternius exports
+### 4.4 Distinct operator plan
 
-Display profiles remain:
+Profiles:
 - **SAM / Ranger** — balanced
 - **RAVEN / Scout** — faster / less durable
 - **BRIGGS / Warden** — slower / tougher / harder hitting
 
-The originally attempted Lis/Matt `SingleWeapon` mapping was rejected after inspecting the original files:
-- `Characters_Lis_SingleWeapon.gltf` carries a **Guitar**
-- `Characters_Matt_SingleWeapon.gltf` carries **Knife / WoodenBat_Saw**
-
-Those are not valid shooter production operators.
-
-Corrected production mapping:
-- **SAM → Quaternius Sam SingleWeapon / artist-rigged Pistol** — already validated baseline
+Production mapping:
+- **SAM → Quaternius Sam SingleWeapon / artist-rigged Pistol**
 - **RAVEN → Quaternius Shaun SingleWeapon / artist-rigged SMG**
 - **BRIGGS → Quaternius Matt full export / artist-rigged Rifle only**
 
-The Matt full export contains Axe, Guitar, Knife, Pistol, Rifle, Shotgun, SMG, Spear and bat variants already parented to the artist hand rig. The 0.5 wrapper hides every embedded weapon renderer except Rifle. No external weapon mount is introduced.
-
-`ProductionVisualBinder` now chooses an **enabled** embedded firearm first. This preserves the wrapper's explicit Matt/Rifle choice; only if no enabled firearm exists does it fall back to a disabled firearm for compatibility with the historical validated Sam wrapper.
-
-Selected operator model is used both in Bunker preview and actual Dead City gameplay. Stats still modify health / mobility / damage.
+The Matt wrapper keeps only Rifle visible. No external weapon mount is introduced. `ProductionVisualBinder` prefers the intentionally enabled embedded firearm, and selected operator model is used in both Bunker preview and Dead City gameplay.
 
 ### 4.5 Atomic operator glTF import V2 — REAL UNITY BUILD VALIDATED
 
-Public entry point:
-`Assets/Deadreach/Editor/Production05OperatorArtSetup.cs`
+Public entry point: `Assets/Deadreach/Editor/Production05OperatorArtSetup.cs`
 
-Implementation:
-`Assets/Deadreach/Editor/Production05OperatorArtSetupV2.cs`
+Implementation: `Assets/Deadreach/Editor/Production05OperatorArtSetupV2.cs`
 
-Atomic V2 is accepted as the active importer path. It removes legacy/generated files before AssetDatabase refresh, prepares both operator glTF sources and dependencies before Unity sees them, performs one synchronous import pass, fully unpacks generated wrappers, preserves Shaun/SMG + Matt/Rifle, and does not reintroduce an external hand-mounted weapon path.
+Atomic V2 prepares the full filesystem/dependency graph before Unity import, performs one synchronous import pass, fully unpacks generated wrappers and preserves Shaun/SMG + Matt/Rifle without any external hand-mounted weapon path.
 
-**Real Unity result on 2026-08-23:** `DEADREACH > Build Production Slice 0.5` completed with no blocking error after pulling Atomic V2. The prior nested-prefab/glTFast blocker is accepted as fixed. Runtime/visual behavior of the full 0.5 scope still requires the MEGA Runtime Gate below.
+**Real Unity result on 2026-08-23:** `DEADREACH > Build Production Slice 0.5` completed with no blocking error. The prior nested-prefab/glTFast blocker is accepted as fixed.
 
 ### 4.6 Enemies / boss / runtime progression
 
-Runtime infected archetypes:
-- Walker
-- Runner
-- Brute
-- Stalker
+Runtime infected archetypes: Walker, Runner, Brute, Stalker.
 
-Boss operations: 10 / 20 / 30 / 40 / 50.
-Boss has increased size/HP, tier scaling, mutation phases around 66% and 33% HP, boss HUD and extraction lock until death.
+Boss operations: 10 / 20 / 30 / 40 / 50, with tier scaling, mutation phases around 66% and 33% HP, boss HUD and extraction lock until death.
 
-Editor boss shortcut:
-`DEADREACH > Dev > 0.5 Select Boss Level 10`
+Editor boss shortcut: `DEADREACH > Dev > 0.5 Select Boss Level 10`
 
 ### 4.7 Combat presentation
 
 0.5 combat FX:
-- pooled tracer core
-- glow trail
+- pooled tracer core + glow
 - muzzle flash
 - environment sparks
 - infected gore/spark streaks
@@ -168,44 +149,17 @@ The artist-rigged embedded firearm remains the muzzle source.
 
 ### 4.8 Store
 
-Store surface includes cosmetics, Bunker themes, weapon finishes and season content.
-No fake purchases. StoreKit / Google Play verification remains a later integration gate.
+Store surface includes cosmetics, Bunker themes, weapon finishes and season content. No fake purchases. StoreKit / Google Play verification remains a later integration gate.
 
 ## 5. Mandatory mobile UI release gate
 
-Current accepted UI screenshots are **Unity Editor/Desktop preview only**.
-
-Before release, landscape mobile validation must cover:
-- `Screen.safeArea`
-- notch / Dynamic Island / rounded corners
-- representative iPhone + Android aspect ratios including wide 19.5:9 / 20:9
-- small physical screen readability
-- minimum touch target size/spacing
-- responsive reflow instead of simple shrink
-- Arsenal preview/list separation
-- Operator preview/selection readability
-- Campaign usability
-- Store stacking/scrolling
-- gameplay HUD/twin-stick safe area
-- at least one real notched iPhone and one representative Android phone
+Current accepted UI screenshots are **Unity Editor/Desktop preview only**. Before release, landscape mobile validation must cover safe areas/notches, representative iPhone + Android aspect ratios, touch targets, responsive reflow, gameplay HUD/twin-stick layout, and at least one real notched iPhone plus representative Android phone.
 
 Do **not** mark UI/release final until this gate passes.
 
 ## 6. Next action — Production 0.5 MEGA Runtime Gate
 
-The import/build blocker is resolved. Do not spend another turn on importer repair unless a new reproducible import error appears.
-
-Run the consolidated `docs/PRODUCTION_05_TEST.md` acceptance in one end-to-end pass:
-- Bunker/menu/persistence
-- horizontal Arsenal preview
-- distinct Sam/Pistol, Raven/Shaun/SMG, Briggs/Matt/Rifle previews and runtime swaps
-- Level 1 gameplay / operator stats
-- combat VFX
-- infected variety
-- loot / extraction / Level 2 unlock
-- abandon regression
-- Level 10 boss / extraction seal / boss clear / progression
-- final 0.4 regression sweep
+The import/build blocker is resolved. Run `docs/PRODUCTION_05_TEST.md` as one end-to-end acceptance covering Bunker/menu/persistence, horizontal Arsenal preview, all three operator previews/runtime swaps, Level 1 gameplay/operator stats, combat VFX, infected variety, loot/extraction/Level 2 unlock, abandon regression, Level 10 boss/extraction seal/boss clear/progression and final 0.4 regression sweep.
 
 PR #5 stays Draft until that entire real-Unity gate passes.
 
@@ -219,5 +173,4 @@ When resuming:
 5. Atomic `Production05OperatorArtSetupV2` import/build blocker is **REAL UNITY VALIDATED FIXED**
 6. `docs/PRODUCTION_05_TEST.md` preflight is recorded as passed
 7. next immediate action is the single MEGA Runtime Gate
-8. do not repeat importer mini-tests unless a new import error appears
-9. keep PR #5 Draft until full 0.5 acceptance
+8. keep PR #5 Draft until full 0.5 acceptance
