@@ -41,6 +41,7 @@ namespace Kamilunavo.Deadreach.Progression
             Level = Mathf.Clamp(SaveService.Data.selectedLevel, 1, SaveService.MaxCampaignLevel);
             IsBossLevel = Level % 10 == 0;
             BossGateCleared = !IsBossLevel;
+            ApplySectorAtmosphere();
             ConfigureEncounter();
         }
 
@@ -133,6 +134,69 @@ namespace Kamilunavo.Deadreach.Progression
             _bossHealth = boss.GetComponent<Damageable>();
             if (_bossHealth != null)
                 _bossHealth.Died += HandleBossDeath;
+        }
+
+        private void ApplySectorAtmosphere()
+        {
+            Color fog;
+            Color key;
+            float density;
+            float intensity;
+
+            if (Level <= 10)
+            {
+                fog = new Color(0.055f, 0.075f, 0.09f);
+                key = new Color(0.55f, 0.68f, 0.9f);
+                density = 0.0125f;
+                intensity = 0.85f;
+            }
+            else if (Level <= 20)
+            {
+                fog = new Color(0.035f, 0.085f, 0.075f);
+                key = new Color(0.42f, 0.74f, 0.63f);
+                density = 0.015f;
+                intensity = 0.72f;
+            }
+            else if (Level <= 30)
+            {
+                fog = new Color(0.13f, 0.07f, 0.035f);
+                key = new Color(0.92f, 0.58f, 0.31f);
+                density = 0.018f;
+                intensity = 0.78f;
+            }
+            else if (Level <= 40)
+            {
+                fog = new Color(0.035f, 0.027f, 0.06f);
+                key = new Color(0.42f, 0.38f, 0.72f);
+                density = 0.021f;
+                intensity = 0.58f;
+            }
+            else
+            {
+                fog = new Color(0.09f, 0.018f, 0.018f);
+                key = new Color(0.82f, 0.24f, 0.18f);
+                density = 0.023f;
+                intensity = 0.68f;
+            }
+
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.ExponentialSquared;
+            RenderSettings.fogColor = fog;
+            RenderSettings.fogDensity = density;
+            RenderSettings.ambientSkyColor = Color.Lerp(Color.black, key, 0.22f);
+            RenderSettings.ambientEquatorColor = Color.Lerp(Color.black, fog, 0.35f);
+            RenderSettings.ambientGroundColor = Color.Lerp(Color.black, fog, 0.12f);
+
+            var moon = GameObject.Find("Lighting_MoonKey")?.GetComponent<Light>();
+            if (moon != null)
+            {
+                moon.color = key;
+                moon.intensity = intensity;
+            }
+
+            var camera = Camera.main;
+            if (camera != null)
+                camera.backgroundColor = Color.Lerp(Color.black, fog, 0.55f);
         }
 
         private void HandleBossDeath()
