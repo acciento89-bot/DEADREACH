@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Progression;
 using UnityEngine;
@@ -6,7 +7,7 @@ namespace Kamilunavo.Deadreach.Presentation
 {
     public sealed class Production06SectorIdentity : MonoBehaviour
     {
-        private Material _runtimeMaterial;
+        private readonly List<Material> _runtimeMaterials = new();
 
         private void Start()
         {
@@ -46,7 +47,7 @@ namespace Kamilunavo.Deadreach.Presentation
             CreateGroundPatch(root, "Flood_B", new Vector3(1.8f, 0.075f, 10.2f), new Vector3(5.2f, 0.025f, 4.8f), new Color(0.02f, 0.17f, 0.2f));
             AddPointLight(root, "FloodCyan_A", new Vector3(-3.4f, 1.2f, 3.5f), new Color(0.05f, 0.9f, 0.72f), 3.2f, 8f);
             AddPointLight(root, "FloodCyan_B", new Vector3(3.1f, 1.5f, 13.2f), new Color(0.05f, 0.55f, 0.72f), 2.7f, 7f);
-            AddRainMist(root, new Color(0.38f, 0.75f, 0.75f, 0.55f), 55f, 0.035f, -1.2f);
+            AddAtmosphereParticles(root, new Color(0.38f, 0.75f, 0.75f, 0.55f), 55f, 0.035f, 1.2f, 1.5f);
         }
 
         private void BuildAshDistrict(Transform root)
@@ -55,7 +56,7 @@ namespace Kamilunavo.Deadreach.Presentation
             CreateGroundPatch(root, "Scorch_B", new Vector3(2.4f, 0.078f, 14.5f), new Vector3(3.2f, 0.028f, 3.5f), new Color(0.17f, 0.045f, 0.015f));
             AddPointLight(root, "AshFire_A", new Vector3(-3.6f, 1.2f, 6.5f), new Color(1f, 0.24f, 0.035f), 4.2f, 8f);
             AddPointLight(root, "AshFire_B", new Vector3(3.8f, 1.0f, 15.2f), new Color(1f, 0.48f, 0.06f), 3.3f, 6f);
-            AddRainMist(root, new Color(0.55f, 0.42f, 0.32f, 0.7f), 95f, 0.055f, -0.45f);
+            AddAtmosphereParticles(root, new Color(0.55f, 0.42f, 0.32f, 0.7f), 95f, 0.055f, 0.42f, 0.7f);
         }
 
         private void BuildBlackoutSector(Transform root)
@@ -71,7 +72,7 @@ namespace Kamilunavo.Deadreach.Presentation
             flickerA.gameObject.AddComponent<Production06LightFlicker>();
             var flickerB = AddPointLight(root, "BlackoutFlicker_B", new Vector3(3.5f, 2f, 13.8f), new Color(0.12f, 0.4f, 1f), 3.1f, 7f);
             flickerB.gameObject.AddComponent<Production06LightFlicker>();
-            AddRainMist(root, new Color(0.18f, 0.15f, 0.3f, 0.55f), 35f, 0.025f, -0.25f);
+            AddAtmosphereParticles(root, new Color(0.18f, 0.15f, 0.3f, 0.55f), 35f, 0.025f, 0.18f, 0.45f);
         }
 
         private void BuildGroundZero(Transform root)
@@ -80,7 +81,7 @@ namespace Kamilunavo.Deadreach.Presentation
             CreateGroundPatch(root, "MutationPool_B", new Vector3(2.3f, 0.08f, 12.1f), new Vector3(4.4f, 0.03f, 4.2f), new Color(0.34f, 0.008f, 0.025f));
             AddPointLight(root, "GroundZeroRed_A", new Vector3(-3f, 1.5f, 4.2f), new Color(1f, 0.015f, 0.02f), 5.5f, 9f);
             AddPointLight(root, "GroundZeroRed_B", new Vector3(3.2f, 1.6f, 14.1f), new Color(1f, 0.06f, 0.015f), 5f, 9f);
-            AddRainMist(root, new Color(0.65f, 0.045f, 0.045f, 0.72f), 80f, 0.045f, 0.18f);
+            AddAtmosphereParticles(root, new Color(0.65f, 0.045f, 0.045f, 0.72f), 80f, 0.045f, -0.18f, 0.9f);
         }
 
         private void CreateGroundPatch(Transform parent, string name, Vector3 position, Vector3 scale, Color color)
@@ -91,22 +92,28 @@ namespace Kamilunavo.Deadreach.Presentation
             patch.transform.position = position;
             patch.transform.localScale = scale;
             Destroy(patch.GetComponent<Collider>());
-            patch.GetComponent<Renderer>().sharedMaterial = CreateMaterial(color);
+            var material = CreateMaterial(color);
+            if (material != null)
+                patch.GetComponent<Renderer>().sharedMaterial = material;
         }
 
         private Material CreateMaterial(Color color)
         {
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            _runtimeMaterial = new Material(shader);
-            if (_runtimeMaterial.HasProperty("_BaseColor"))
-                _runtimeMaterial.SetColor("_BaseColor", color);
-            if (_runtimeMaterial.HasProperty("_Color"))
-                _runtimeMaterial.SetColor("_Color", color);
-            if (_runtimeMaterial.HasProperty("_Smoothness"))
-                _runtimeMaterial.SetFloat("_Smoothness", 0.62f);
-            if (_runtimeMaterial.HasProperty("_Metallic"))
-                _runtimeMaterial.SetFloat("_Metallic", 0.05f);
-            return _runtimeMaterial;
+            if (shader == null)
+                return null;
+
+            var material = new Material(shader);
+            if (material.HasProperty("_BaseColor"))
+                material.SetColor("_BaseColor", color);
+            if (material.HasProperty("_Color"))
+                material.SetColor("_Color", color);
+            if (material.HasProperty("_Smoothness"))
+                material.SetFloat("_Smoothness", 0.62f);
+            if (material.HasProperty("_Metallic"))
+                material.SetFloat("_Metallic", 0.05f);
+            _runtimeMaterials.Add(material);
+            return material;
         }
 
         private static Light AddPointLight(Transform parent, string name, Vector3 position, Color color, float intensity, float range)
@@ -123,7 +130,7 @@ namespace Kamilunavo.Deadreach.Presentation
             return light;
         }
 
-        private static void AddRainMist(Transform parent, Color color, float rate, float size, float gravity)
+        private static void AddAtmosphereParticles(Transform parent, Color color, float rate, float size, float gravity, float stretch)
         {
             var obj = new GameObject("SectorAtmosphereParticles");
             obj.transform.SetParent(parent, false);
@@ -147,14 +154,18 @@ namespace Kamilunavo.Deadreach.Presentation
 
             var renderer = particles.GetComponent<ParticleSystemRenderer>();
             renderer.renderMode = ParticleSystemRenderMode.Stretch;
-            renderer.lengthScale = 1.5f;
+            renderer.lengthScale = stretch;
             renderer.velocityScale = 0.35f;
         }
 
         private void OnDestroy()
         {
-            if (_runtimeMaterial != null)
-                Destroy(_runtimeMaterial);
+            foreach (var material in _runtimeMaterials)
+            {
+                if (material != null)
+                    Destroy(material);
+            }
+            _runtimeMaterials.Clear();
         }
     }
 }
