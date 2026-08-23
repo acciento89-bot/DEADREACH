@@ -98,7 +98,23 @@ namespace Kamilunavo.Deadreach.Combat
 
         private void UpdateAim(DeadreachInput input)
         {
-            if (input.HasAim)
+            if (input.HasDirectionalAim)
+            {
+                var forward = _camera.transform.forward;
+                var right = _camera.transform.right;
+                forward.y = 0f;
+                right.y = 0f;
+                forward.Normalize();
+                right.Normalize();
+
+                var direction = Vector3.ClampMagnitude(forward * input.Aim.y + right * input.Aim.x, 1f);
+                if (direction.sqrMagnitude > 0.001f)
+                {
+                    var aimDistance = Mathf.Max(12f, _runtimeStats.Range);
+                    _aimPoint = transform.position + Vector3.up * 0.9f + direction.normalized * aimDistance;
+                }
+            }
+            else if (input.HasPointerAim)
             {
                 var ray = _camera.ScreenPointToRay(input.AimScreenPosition);
                 if (Physics.Raycast(ray, out var hit, 250f, hitMask, QueryTriggerInteraction.Ignore))
