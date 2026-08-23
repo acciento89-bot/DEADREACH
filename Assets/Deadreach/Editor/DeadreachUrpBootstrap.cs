@@ -35,7 +35,6 @@ namespace Kamilunavo.Deadreach.Editor
                     AssetDatabase.AddObjectToAsset(rendererData, pipeline);
                 }
 
-                pipeline.EnsureGlobalSettings();
                 EditorUtility.SetDirty(pipeline);
                 AssetDatabase.SaveAssets();
             }
