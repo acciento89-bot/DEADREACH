@@ -82,6 +82,7 @@ Physical-device touch/haptics and iOS/Android builds are still separate validati
 - active branch: **`production/0.3-art-presentation`**
 - PR #3 — `production: art asset binding and presentation pipeline 0.3` — Draft
 - Production 0.3 **real Unity compile + generator gate PASSED** on 2026-08-23
+- Production 0.3 **empty-catalog fallback runtime gate PASSED** on 2026-08-23
 - actual production 3D assets are not yet integrated
 
 Do not claim 0.3 production-art complete until real Survivor/Infected/Weapon assets are assigned and validated.
@@ -111,7 +112,7 @@ Editor menu:
 
 ### Production Visual Binder
 
-`ProductionVisualBinder` now separates gameplay roots from production art.
+`ProductionVisualBinder` separates gameplay roots from production art.
 
 Behavior:
 
@@ -205,20 +206,20 @@ Confirmed by the user in real Unity `6000.3.22f1` on 2026-08-23:
 - **0 compiler errors after pulling 0.3**
 - `DEADREACH > Build Production Slice 0.3` completes with **0 errors**
 
-### Fallback runtime gate — NEXT
+### Empty-catalog fallback runtime gate — PASSED
 
-Before integrating real art, verify the empty-catalog fallback remains safe:
+Confirmed by the user on 2026-08-23:
 
-1. press Play from generated Bunker
-2. Deploy to Dead City
-3. confirm prototype survivor/infected remain visible
-4. confirm movement / aiming / shooting still work
-5. confirm combat, weapon loot, extraction and Bunker return still work
-6. run `DEADREACH > Production > Create or Select Asset Catalog`
-7. run `DEADREACH > Production > Validate Asset Catalog`
-8. with no real assets assigned, validator warnings about missing production assets are expected; exceptions/red errors are not
+- Play from generated Bunker works
+- Deploy to Dead City works
+- prototype Survivor/Infected remain visible when production catalog is empty
+- movement / aiming / shooting remain functional
+- combat / weapon loot / extraction / Bunker return remain functional
+- `Create or Select Asset Catalog` runs
+- `Validate Asset Catalog` runs without exception/red error
+- only expected yellow warnings are produced for missing production Survivor/Infected/Weapon assets
 
-After this fallback check, the next step is actual production-asset integration.
+This proves the art-binding pipeline can safely fall back without destabilizing the validated gameplay loop.
 
 ## 9. Next priorities inside 0.3
 
@@ -240,9 +241,9 @@ When resuming:
 
 1. read this file first
 2. inspect active branch / PR #3
-3. note that 0.3 compile + generator gate has passed
-4. distinguish fallback-runtime validation from actual production-art integration
-5. continue with fallback test if still pending, then real asset integration
+3. note that 0.3 compile/generator and empty-catalog fallback runtime gates have passed
+4. distinguish actual production-art integration from fallback pipeline validation
+5. continue with licensed/owned Survivor/Infected/Weapon asset integration
 6. update this file after the next major pass
 
 Do not rely on chat history alone.
