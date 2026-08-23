@@ -33,6 +33,7 @@ namespace Kamilunavo.Deadreach.Weapons
             if (instance != null)
             {
                 ApplyFamilyProfile(instance.family, ref damageMultiplier, ref fireRateMultiplier, ref rangeMultiplier, ref critChance, ref critMultiplier);
+                ApplyItemPower(instance, ref damageMultiplier, ref rangeMultiplier, ref critChance);
             }
 
             if (instance?.affixes != null)
@@ -71,6 +72,24 @@ namespace Kamilunavo.Deadreach.Weapons
                 critMultiplier);
         }
 
+        private static void ApplyItemPower(
+            WeaponInstanceData instance,
+            ref float damageMultiplier,
+            ref float rangeMultiplier,
+            ref float critChance)
+        {
+            // Production 0.8 turns Item Power from presentation-only metadata into real progression.
+            // 100 power is the field baseline. The cap keeps old/high-tier saves from exploding balance.
+            var powerMultiplier = Mathf.Clamp(1f + (instance.itemPower - 100) * 0.0024f, 0.86f, 1.65f);
+            damageMultiplier *= powerMultiplier;
+
+            // Calibration is intentionally secondary to the weapon's rolled affixes/family identity.
+            // Each workshop rank adds a small handling/precision gain in addition to its Item Power bump.
+            var calibration = Mathf.Clamp(instance.upgradeLevel, 0, 10);
+            rangeMultiplier *= 1f + calibration * 0.006f;
+            critChance += calibration * 0.0025f;
+        }
+
         private static void ApplyFamilyProfile(
             WeaponFamily family,
             ref float damageMultiplier,
@@ -95,7 +114,7 @@ namespace Kamilunavo.Deadreach.Weapons
                     critMultiplier += 0.2f;
                     break;
                 case WeaponFamily.Shotgun:
-                    // The current combat layer remains hitscan-single-ray in 0.6; the shotgun profile
+                    // The current combat layer remains hitscan-single-ray; the shotgun profile
                     // therefore represents a heavy slug until pellet spread is introduced later.
                     damageMultiplier *= 1.72f;
                     fireRateMultiplier *= 0.42f;
