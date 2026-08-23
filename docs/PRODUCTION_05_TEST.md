@@ -6,7 +6,7 @@ Production 0.5 is intentionally validated as **one large end-to-end runtime gate
 
 Production 0.4 is merged and accepted. Keep:
 - colored Quaternius Survivor/Infected art
-- artist-rigged SingleWeapon firearm path; never mount a second external rifle
+- artist-rigged embedded firearm path; never mount a second external rifle
 - muzzle/tracer derived from the embedded firearm
 - Dead City streets, vehicles, containers and props
 - extraction approach traversable
@@ -18,7 +18,9 @@ Production 0.4 is merged and accepted. Keep:
 2. Let Unity finish compilation/import.
 3. Require **0 red C# compiler errors**.
 4. Run **`DEADREACH > Build Production Slice 0.5` once**.
-   - this build also auto-prepares missing Quaternius Lis/Matt SingleWeapon operator art
+   - the build removes obsolete failed Lis/Matt-SingleWeapon 0.5 source files if present
+   - it auto-prepares the firearm-rigged operator sources: Shaun SingleWeapon/SMG and Matt Full/Rifle
+   - it repairs/downloads every non-embedded glTF image/buffer dependency before forcing glTFast reimport
    - required 0.4 environment asset gate must pass
    - extraction traversal gate must pass
    - Bunker_Hub must reopen at the end
@@ -65,12 +67,15 @@ Require:
 ### Operators — distinct visual gate
 
 Select each operator and observe the 3D preview:
-- **SAM / Ranger = Quaternius Sam**
-- **RAVEN / Scout = Quaternius Lis**
-- **BRIGGS / Warden = Quaternius Matt**
+- **SAM / Ranger = Quaternius Sam + artist-rigged Pistol**
+- **RAVEN / Scout = Quaternius Shaun + artist-rigged SMG**
+- **BRIGGS / Warden = Quaternius Matt + artist-rigged Rifle**
+
+Matt uses the full character export only because it contains the complete artist-rigged weapon set; the production wrapper must keep only Rifle visible and hide the other weapon renderers.
 
 Require:
 - the three operators are visibly different character models, not three recolored Sams
+- each has exactly one intended visible firearm
 - preview faces the camera rather than permanently showing only the back
 - selection persists when switching tabs
 
@@ -96,8 +101,8 @@ Select Level 1 and Deploy with the currently selected non-Sam operator.
 Require:
 - **the in-game character model matches the selected operator model**
 - operator profile changes real health/mobility/damage as designed
-- artist-authored SingleWeapon remains stable on the selected character
-- muzzle follows the embedded firearm; no external rifle/socket hack returns
+- artist-authored firearm remains stable on the selected character
+- muzzle follows the selected embedded firearm; no external rifle/socket hack returns
 - HUD shows Level 01 / Dead City
 - movement works
 - aim/fire works
@@ -143,7 +148,7 @@ Back in Bunker:
 1. switch to a different operator than the one used in Level 1
 2. Deploy again briefly
 3. confirm the newly selected **different model appears in gameplay**, with its own stats
-4. confirm embedded weapon/muzzle still works
+4. confirm its intended single embedded firearm/muzzle still works
 5. abandon/pause-return to Bunker
 
 Abandonment must still lose unsecured run loot and return cleanly to Bunker.
@@ -178,6 +183,7 @@ Before declaring 0.5 accepted, confirm the complete session contained no regress
 - menu interaction
 - operator persistence
 - distinct operator model selection
+- exactly one intended firearm per operator
 - Arsenal equip persistence
 - horizontal weapon preview
 - player movement
