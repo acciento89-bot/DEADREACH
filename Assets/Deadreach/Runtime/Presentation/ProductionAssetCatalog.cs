@@ -40,5 +40,28 @@ namespace Kamilunavo.Deadreach.Presentation
             var index = Mathf.Abs(variantIndex) % infectedPrefabs.Length;
             return infectedPrefabs[index];
         }
+
+        public void ConfigureAssets(GameObject survivor, GameObject[] infected, GameObject primaryWeapon)
+        {
+            survivorPrefab = survivor;
+            infectedPrefabs = infected;
+            primaryWeaponPrefab = primaryWeapon;
+        }
+
+        public void ConfigureVisualOffsets(
+            Vector3 survivorPosition,
+            Vector3 survivorEuler,
+            float newSurvivorScale,
+            Vector3 infectedPosition,
+            Vector3 infectedEuler,
+            float newInfectedScale)
+        {
+            survivorLocalPosition = survivorPosition;
+            survivorLocalEuler = survivorEuler;
+            survivorScale = Mathf.Max(0.01f, newSurvivorScale);
+            infectedLocalPosition = infectedPosition;
+            infectedLocalEuler = infectedEuler;
+            infectedScale = Mathf.Max(0.01f, newInfectedScale);
+        }
     }
 }
