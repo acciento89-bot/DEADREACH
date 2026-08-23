@@ -21,6 +21,18 @@ namespace Kamilunavo.Deadreach.Extraction
             // Extraction presentation is never allowed to become physical world geometry. Keep every
             // collider attached below this zone as a trigger so runtime/editor dressing cannot trap a
             // CharacterController inside a sealed extraction area.
+            EnsureTriggerOnlyColliders();
+        }
+
+        private void OnTransformChildrenChanged()
+        {
+            // Presentation passes may add children after Awake. Re-assert trigger-only collision
+            // without touching the player's CharacterController or any external world geometry.
+            EnsureTriggerOnlyColliders();
+        }
+
+        private void EnsureTriggerOnlyColliders()
+        {
             foreach (var collider in GetComponentsInChildren<Collider>(true))
             {
                 if (collider != null)
