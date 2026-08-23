@@ -26,7 +26,10 @@ namespace Kamilunavo.Deadreach.Presentation
 
             var bunker = Object.FindFirstObjectByType<BunkerCommandCenterUI>();
             if (bunker != null)
+            {
                 Ensure<BunkerMobileResponsiveUI>(bunker.gameObject);
+                Ensure<BunkerBossDebriefUI>(bunker.gameObject);
+            }
         }
 
         private static void Ensure<T>(GameObject root) where T : Component
