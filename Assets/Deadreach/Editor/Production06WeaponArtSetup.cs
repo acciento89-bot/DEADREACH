@@ -35,15 +35,15 @@ namespace Kamilunavo.Deadreach.Editor
                 Directory.CreateDirectory(ToAbsolute(SourceRoot));
                 Directory.CreateDirectory(ToAbsolute(PrefabRoot));
 
-                EnsureDownloaded(PistolSource, PistolUrl, 40000);
-                EnsureDownloaded(SmgSource, SmgUrl, 80000);
-                EnsureDownloaded(ShotgunSource, ShotgunUrl, 40000);
-
-                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
-
-                var pistolSource = AssetDatabase.LoadAssetAtPath<GameObject>(PistolSource);
-                var smgSource = AssetDatabase.LoadAssetAtPath<GameObject>(SmgSource);
-                var shotgunSource = AssetDatabase.LoadAssetAtPath<GameObject>(ShotgunSource);
+                // Import every newly downloaded ScriptedImporter asset explicitly. A global
+                // AssetDatabase.Refresh here used to make glTFast discover three files that
+                // had just been written directly into Assets, which was vulnerable to an
+                // asset-refresh/import race on Unity 6. Stage downloads outside Assets,
+                // validate them first, then replace the finished source and import only that
+                // exact asset synchronously.
+                var pistolSource = EnsureImportedSource(PistolSource, PistolUrl, 40000);
+                var smgSource = EnsureImportedSource(SmgSource, SmgUrl, 80000);
+                var shotgunSource = EnsureImportedSource(ShotgunSource, ShotgunUrl, 40000);
                 var riflePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RiflePrefabPath);
                 var atlasMaterial = AssetDatabase.LoadAssetAtPath<Material>(AtlasMaterialPath);
 
@@ -84,19 +84,95 @@ namespace Kamilunavo.Deadreach.Editor
             }
         }
 
-        private static void EnsureDownloaded(string assetPath, string url, long minimumBytes)
+        private static GameObject EnsureImportedSource(string assetPath, string url, long minimumBytes)
         {
-            var absolute = ToAbsolute(assetPath);
-            if (File.Exists(absolute) && new FileInfo(absolute).Length >= minimumBytes)
-                return;
+            var alreadyImported = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            if (alreadyImported != null && IsValidSelfContainedGltf(ToAbsolute(assetPath), minimumBytes))
+                return alreadyImported;
 
-            using var client = new WebClient();
-            client.Headers.Add(HttpRequestHeader.UserAgent, "DEADREACH-Unity-Editor");
-            client.DownloadFile(url, absolute);
+            // If a previous 0.6 attempt left a source behind after glTFast failed to import
+            // it, do not immediately re-import that same on-disk payload. Fetch a fresh,
+            // fully completed copy into Library first and only then expose it to Assets.
+            DownloadValidatedSource(assetPath, url, minimumBytes);
 
-            var file = new FileInfo(absolute);
-            if (!file.Exists || file.Length < minimumBytes)
-                throw new IOException($"Downloaded weapon glTF is unexpectedly small: {assetPath}");
+            AssetDatabase.ImportAsset(
+                assetPath,
+                ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+
+            var imported = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            if (imported == null)
+            {
+                throw new InvalidOperationException(
+                    $"glTFast did not produce a GameObject for '{assetPath}' after a validated staged download and explicit synchronous import. " +
+                    "Select the glTF asset in Unity and inspect the importer details for the underlying glTFast error.");
+            }
+
+            return imported;
+        }
+
+        private static void DownloadValidatedSource(string assetPath, string url, long minimumBytes)
+        {
+            var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+            var stagingRoot = Path.Combine(projectRoot, "Library", "Deadreach", "Production06Downloads");
+            Directory.CreateDirectory(stagingRoot);
+
+            var staged = Path.Combine(stagingRoot, Path.GetFileName(assetPath) + ".download");
+            if (File.Exists(staged))
+                File.Delete(staged);
+
+            try
+            {
+                using (var client = new WebClient())
+                {
+                    client.Headers.Add(HttpRequestHeader.UserAgent, "DEADREACH-Unity-Editor");
+                    client.DownloadFile(url, staged);
+                }
+
+                if (!IsValidSelfContainedGltf(staged, minimumBytes))
+                {
+                    var size = File.Exists(staged) ? new FileInfo(staged).Length : 0;
+                    throw new IOException(
+                        $"Downloaded weapon glTF failed validation: {assetPath} ({size} bytes). " +
+                        "Expected a self-contained glTF 2.0 payload with an embedded binary buffer.");
+                }
+
+                var absolute = ToAbsolute(assetPath);
+                Directory.CreateDirectory(Path.GetDirectoryName(absolute) ?? throw new InvalidOperationException("Weapon source directory could not be resolved."));
+
+                // Keep Unity's automatic watcher away from the destination while the complete
+                // staged file replaces it. The matching Allow call is guaranteed by finally.
+                AssetDatabase.DisallowAutoRefresh();
+                try
+                {
+                    File.Copy(staged, absolute, true);
+                }
+                finally
+                {
+                    AssetDatabase.AllowAutoRefresh();
+                }
+            }
+            finally
+            {
+                if (File.Exists(staged))
+                    File.Delete(staged);
+            }
+        }
+
+        private static bool IsValidSelfContainedGltf(string absolutePath, long minimumBytes)
+        {
+            if (!File.Exists(absolutePath))
+                return false;
+
+            var file = new FileInfo(absolutePath);
+            if (file.Length < minimumBytes)
+                return false;
+
+            var text = File.ReadAllText(absolutePath);
+            return text.IndexOf("\"asset\"", StringComparison.Ordinal) >= 0
+                   && text.IndexOf("\"version\"", StringComparison.Ordinal) >= 0
+                   && text.IndexOf("\"2.0\"", StringComparison.Ordinal) >= 0
+                   && text.IndexOf("\"buffers\"", StringComparison.Ordinal) >= 0
+                   && text.IndexOf("data:application/octet-stream;base64,", StringComparison.Ordinal) >= 0;
         }
 
         private static GameObject BuildPreviewPrefab(GameObject source, string prefabName, Material material)
