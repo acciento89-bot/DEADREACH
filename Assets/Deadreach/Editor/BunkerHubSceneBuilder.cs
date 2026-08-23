@@ -57,6 +57,7 @@ namespace Kamilunavo.Deadreach.Editor
             ProductionSliceEnhancer.EnhanceCurrentDeadCityScene();
             AttachProduction05RuntimeSystems();
             DeadCityEnvironmentPass.EnhanceCurrentDeadCityScene();
+            AddDeadCityWorldSafety();
 
             if (!DeadCityTraversalSafetyPass.Apply())
             {
@@ -71,7 +72,7 @@ namespace Kamilunavo.Deadreach.Editor
 
             DeadreachPlayModeStart.Configure();
             EditorSceneManager.OpenScene(DeadreachBuildSettings.BunkerScenePath, OpenSceneMode.Single);
-            Debug.Log("DEADREACH Production Slice 0.5 generated: post-apocalyptic Bunker + distinct Sam/Lis/Matt operators + Arsenal/Operators/Campaign/Store + 50-level progression + boss gates + Production 0.4 Dead City baseline.");
+            Debug.Log("DEADREACH Production Slice 0.5 generated: post-apocalyptic Bunker + distinct Sam/Shaun/Matt operators + Arsenal/Operators/Campaign/Store + 50-level progression + boss gates + sealed Dead City world bounds.");
         }
 
         private static void AttachProduction05RuntimeSystems()
@@ -81,8 +82,47 @@ namespace Kamilunavo.Deadreach.Editor
                 session.gameObject.AddComponent<RunDifficultyDirector>();
 
             var player = Object.FindFirstObjectByType<PlayerMotor>();
-            if (player != null && player.GetComponent<OperatorRuntimeApplier>() == null)
-                player.gameObject.AddComponent<OperatorRuntimeApplier>();
+            if (player != null)
+            {
+                if (player.GetComponent<OperatorRuntimeApplier>() == null)
+                    player.gameObject.AddComponent<OperatorRuntimeApplier>();
+                if (player.GetComponent<PlayerFallSafety>() == null)
+                    player.gameObject.AddComponent<PlayerFallSafety>();
+            }
+        }
+
+        private static void AddDeadCityWorldSafety()
+        {
+            var existing = GameObject.Find("DeadCity_WorldSafety_0_5");
+            if (existing != null)
+                Object.DestroyImmediate(existing);
+
+            var root = new GameObject("DeadCity_WorldSafety_0_5");
+
+            // The road/sidewalk dressing is visually open at its ends. These invisible colliders sit
+            // just outside the playable pavement so the player cannot walk into the void.
+            CreateInvisibleBoundary(root.transform, "Boundary_West", new Vector3(-8.75f, 1.5f, 5.45f), new Vector3(0.6f, 4f, 33f));
+            CreateInvisibleBoundary(root.transform, "Boundary_East", new Vector3(8.75f, 1.5f, 5.45f), new Vector3(0.6f, 4f, 33f));
+            CreateInvisibleBoundary(root.transform, "Boundary_South", new Vector3(0f, 1.5f, -11.1f), new Vector3(18f, 4f, 0.6f));
+            CreateInvisibleBoundary(root.transform, "Boundary_North", new Vector3(0f, 1.5f, 22.0f), new Vector3(18f, 4f, 0.6f));
+
+            // Deep catch floor is only a physics backstop. PlayerFallSafety returns the player before
+            // this can become a traversable lower level, but it also prevents rigidbody/physics tunneling.
+            CreateInvisibleBoundary(root.transform, "Emergency_CatchFloor", new Vector3(0f, -1.25f, 5.45f), new Vector3(18f, 0.25f, 33f));
+
+            Debug.Log("DEADREACH 0.5 world-safety gate installed: four sealed boundaries + fall recovery backstop.");
+        }
+
+        private static void CreateInvisibleBoundary(Transform parent, string name, Vector3 position, Vector3 size)
+        {
+            var boundary = new GameObject(name);
+            boundary.transform.SetParent(parent, false);
+            boundary.transform.position = position;
+            var box = boundary.AddComponent<BoxCollider>();
+            box.size = size;
+            GameObjectUtility.SetStaticEditorFlags(
+                boundary,
+                StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
         }
 
         private static void EnsureFolders()
