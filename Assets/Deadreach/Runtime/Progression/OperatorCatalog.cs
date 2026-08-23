@@ -63,14 +63,17 @@ namespace Kamilunavo.Deadreach.Progression
 
             var health = GetComponent<Damageable>();
             if (health != null)
-                health.Configure(CombatFaction.Survivor, 100f * definition.HealthMultiplier);
+            {
+                var bunkerHealthMultiplier = SaveService.GetPlayerHealthMultiplier();
+                health.Configure(CombatFaction.Survivor, 100f * definition.HealthMultiplier * bunkerHealthMultiplier);
+            }
 
             GetComponent<PlayerMotor>()?.SetMoveSpeedMultiplier(definition.MoveMultiplier);
             GetComponent<HitscanWeapon>()?.SetOperatorDamageMultiplier(definition.DamageMultiplier);
 
-            // The selected profile now maps to a distinct production character prefab through
+            // The selected profile maps to a distinct production character prefab through
             // ProductionVisualBinder. Do not recolor the body here; preserve the authored model.
-            Debug.Log($"DEADREACH operator active: {definition.Name} // {definition.Role}.");
+            Debug.Log($"DEADREACH operator active: {definition.Name} // {definition.Role} // Medbay {SaveService.Data.medbayLevel}.");
         }
     }
 }
