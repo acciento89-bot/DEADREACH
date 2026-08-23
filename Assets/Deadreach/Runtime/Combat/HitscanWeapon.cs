@@ -29,6 +29,7 @@ namespace Kamilunavo.Deadreach.Combat
         public WeaponDefinition Definition => definition;
         public WeaponInstanceData EquippedInstance => _equippedInstance;
         public WeaponRuntimeStats RuntimeStats => _runtimeStats;
+        public Transform Muzzle => muzzle;
 
         private float BaseDamage => definition != null ? definition.Damage : damage;
         private float BaseRoundsPerSecond => definition != null ? definition.RoundsPerSecond : roundsPerSecond;
@@ -69,6 +70,11 @@ namespace Kamilunavo.Deadreach.Combat
         {
             definition = newDefinition;
             RefreshRuntimeStats();
+        }
+
+        public void SetMuzzle(Transform newMuzzle)
+        {
+            muzzle = newMuzzle;
         }
 
         public void RefreshRuntimeStats()
