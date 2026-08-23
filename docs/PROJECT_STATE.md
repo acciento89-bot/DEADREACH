@@ -81,15 +81,15 @@ Physical-device touch/haptics and iOS/Android builds are still separate validati
 - `main` — contains validated 0.1 + validated 0.2
 - active branch: **`production/0.3-art-presentation`**
 - PR #3 — `production: art asset binding and presentation pipeline 0.3` — Draft
-- Production 0.3 **real Unity compile + generator gate PASSED** on 2026-08-23
-- Production 0.3 **empty-catalog fallback runtime gate PASSED** on 2026-08-23
+- Production 0.3 real Unity compile + generator gate **PASSED**
+- Production 0.3 empty-catalog fallback runtime gate **PASSED**
 - Quaternius Zombie Apocalypse Kit selected as first production-art source
-- Google Drive automated retrieval failed because at least one public file currently rejects gdown access
-- installer now uses a public mirror of the same pack for the selected glTF files
-- Unity glTFast `6.17.0` added for Editor import of those `.gltf` assets
-- actual production binaries still need the next local installer/import validation
+- six selected Quaternius glTF model files + license evidence are now committed on the 0.3 branch
+- first real-art Play Mode test proves Survivor/Infected visual replacement works
+- first real-art test exposed two content-prep defects: gray/untextured materials and multiple embedded Survivor weapon meshes
+- fixes are implemented in tooling but require one local asset refresh + Unity revalidation
 
-Do not claim 0.3 production-art complete until real Survivor/Infected/Weapon assets are imported, assigned and validated.
+Do not claim 0.3 production-art complete until the corrected textured Survivor/Infected/Rifle presentation is visually/runtime validated.
 
 ## 6. Production Art / Presentation 0.3 — current implementation
 
@@ -140,6 +140,21 @@ Main generator:
 
 `CombatFeedbackPresenter` uses a preallocated tracer pool (default 24) instead of per-shot GameObject creation/destruction.
 
+### Quaternius cleanup added after first real-art test
+
+The first imported models rendered and replaced the prototype visuals, but the screenshot/runtime test exposed:
+
+1. models were gray because the selected flattened glTF subset did not include a locally resolvable shared `Zombie_Atlas.png`
+2. full Survivor Sam export contained multiple built-in weapon presentation meshes while DEADREACH also mounted its own equipped Rifle
+
+Implemented correction:
+
+- installer now downloads `Zombie_Atlas.png`
+- every selected glTF `Zombie_Atlas.png` URI is normalized to the atlas beside the flattened DEADREACH glTF subset
+- Survivor source switched to Quaternius `Characters_Sam_SingleWeapon.gltf`
+- wrapper setup additionally disables separately named embedded weapon renderers
+- DEADREACH remains the sole owner of equipped-weapon presentation
+
 ## 7. Production 0.3 real Unity validation
 
 ### Compile / generator gate — PASSED
@@ -162,17 +177,21 @@ Confirmed by the user:
 - validator runs without exception/red error
 - only expected yellow missing-asset warnings occur
 
+### First real-art visual gate — PARTIAL PASS / CLEANUP REQUIRED
+
+Confirmed by user screenshots in Play Mode:
+
+- real Survivor model appears instead of Capsule
+- real Infected models appear instead of prototype enemies
+- production visual binder therefore works with actual imported glTF assets
+- models currently render gray/untextured
+- Survivor currently shows excessive/duplicate weapon visuals
+
+The gray/duplicate-weapon issues are now addressed in branch tooling but are **not yet revalidated in Unity**.
+
 ## 8. Selected first production-art source
 
 **Quaternius — Zombie Apocalypse Kit**
-
-Official creator page states:
-
-- 4 playable characters with animations
-- 4 infected/enemy characters
-- weapons + matching apocalypse props
-- FBX / OBJ / glTF / Blend formats
-- CC0 / commercial use
 
 Initial DEADREACH subset:
 
@@ -182,45 +201,44 @@ Initial DEADREACH subset:
 - Zombie Arm
 - Zombie Ribcage
 - Rifle
+- shared `Zombie_Atlas.png`
 
 License tracking:
 
 `docs/THIRD_PARTY_ASSETS.md`
 
-### Current import strategy
-
-Original creator Google Drive remains documented as the original distribution, but automated `gdown` failed with a public-link/permission response for file id `1iBNVZtY_mYqHMe81_cGaF85rkGjhkouk`.
-
-The installer now retrieves only the selected `.gltf` subset from:
+Original creator Google Drive remains documented as original distribution, but automated `gdown` access failed. Selected files are retrieved from:
 
 `agentkaerf/FreeModels/Zombie Apocalypse Kit - March 2024`
 
-The mirror contains a CC0 1.0 license marker; the official Quaternius page remains the license/source authority.
+The mirror contains a CC0 1.0 marker; the official Quaternius page remains the source/license authority.
 
-Unity package added:
+Unity package:
 
 `com.unity.cloud.gltfast` `6.17.0`
 
-Git LFS now tracks `.gltf` and `.glb` as well.
+Git LFS tracks `.gltf`, `.glb` and image/binary art assets.
 
 ## 9. Immediate next gate
 
-On the local `production/0.3-art-presentation` branch:
+On local `production/0.3-art-presentation`:
 
 1. `git pull`
-2. let Unity resolve/install glTFast if the Editor is open
-3. rerun `tools/install-quaternius-zombie-kit.ps1 -CommitAndPush`
-4. confirm all six selected `.gltf` files download and push successfully
-5. wait for Unity glTF import
-6. run `DEADREACH > Production > Setup Quaternius Starter Art`
-7. run `DEADREACH > Production > Validate Asset Catalog`
-8. regenerate with `DEADREACH > Build Production Slice 0.3`
-9. validate Survivor/Infected/Rifle visual replacement, scale/orientation, Animator hookup, weapon mount and muzzle origin
-10. require no blocking Console errors
+2. rerun `tools/install-quaternius-zombie-kit.ps1 -CommitAndPush`
+3. confirm `Zombie_Atlas.png` is downloaded and updated art is pushed
+4. wait for Unity/glTFast reimport
+5. run `DEADREACH > Production > Setup Quaternius Starter Art` again to overwrite wrappers/controllers
+6. run `DEADREACH > Production > Validate Asset Catalog`
+7. regenerate with `DEADREACH > Build Production Slice 0.3`
+8. Play → Deploy
+9. require textured/colored Survivor + Infected
+10. require only one DEADREACH-equipped Rifle presentation on Survivor
+11. validate scale/orientation/animations/weapon mount/muzzle origin
+12. require movement/combat/loot/extraction regression-free and no blocking Console errors
 
-## 10. After real starter-art validation
+## 10. After corrected real starter-art validation
 
-1. fix scale/orientation/socket offsets as required
+1. tune weapon socket/orientation if needed
 2. proper muzzle flash / impact production VFX
 3. first real combat audio-content pass
 4. extend Quaternius kit into Dead City environment props
@@ -236,8 +254,8 @@ When resuming:
 1. read this file first
 2. inspect active branch / PR #3
 3. note compile/generator + empty-catalog fallback gates passed
-4. note Google Drive retrieval failed and mirror/glTFast fallback is now implemented
-5. continue with actual six-file glTF download/import and wrapper validation
-6. update this file after the next major pass
+4. note first real-art rendering works but first pass was gray and had duplicate Survivor weapons
+5. note atlas + SingleWeapon/suppression fixes are implemented but require revalidation
+6. update this file after the corrected art test
 
 Do not rely on chat history alone.
