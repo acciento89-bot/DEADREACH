@@ -4,8 +4,8 @@ using UnityEngine.UI;
 namespace Kamilunavo.Deadreach.UI
 {
     /// <summary>
-    /// First production mobile-landscape pass for the generated Bunker Command Center.
-    /// Applies Screen.safeArea and aspect-ratio breakpoints without changing the accepted desktop layout source.
+    /// Production landscape layout for the generated Bunker Command Center.
+    /// Keeps header, navigation/content and deploy bar in non-overlapping safe-area zones.
     /// </summary>
     public sealed class BunkerMobileResponsiveUI : MonoBehaviour
     {
@@ -40,23 +40,14 @@ namespace Kamilunavo.Deadreach.UI
             if (scaler != null)
             {
                 scaler.referenceResolution = new Vector2(1600f, 900f);
-                scaler.matchWidthOrHeight = aspect >= 2.05f ? 0.72f : aspect <= 1.72f ? 0.42f : 0.55f;
+                scaler.matchWidthOrHeight = aspect >= 2.05f ? 0.68f : aspect <= 1.72f ? 0.40f : 0.53f;
             }
 
             var backdrop = FindNamedRect("Backdrop");
             if (backdrop == null)
                 return;
 
-            var safeMin = Screen.safeArea.position;
-            var safeMax = Screen.safeArea.position + Screen.safeArea.size;
-            safeMin.x /= Screen.width;
-            safeMin.y /= Screen.height;
-            safeMax.x /= Screen.width;
-            safeMax.y /= Screen.height;
-            backdrop.anchorMin = safeMin;
-            backdrop.anchorMax = safeMax;
-            backdrop.offsetMin = Vector2.zero;
-            backdrop.offsetMax = Vector2.zero;
+            ApplySafeArea(backdrop);
 
             var navigation = FindNamedRect("Navigation");
             var content = FindNamedRect("ContentFrame");
@@ -68,29 +59,45 @@ namespace Kamilunavo.Deadreach.UI
 
             if (aspect >= 2.05f)
             {
-                // Notched / ultrawide phones: reduce nav width and give the content more horizontal room.
-                SetAnchors(navigation, 0.010f, 0.095f, 0.175f, 0.845f);
-                SetAnchors(content, 0.185f, 0.095f, 0.990f, 0.845f);
-                SetAnchors(header, 0.010f, 0.858f, 0.990f, 0.989f);
-                SetAnchors(deploy, 0.010f, 0.014f, 0.990f, 0.078f);
+                // Ultrawide / notched phones: compact navigation, generous horizontal content,
+                // and explicit vertical gutters between header/content/deploy.
+                SetAnchors(header, 0.012f, 0.875f, 0.988f, 0.985f);
+                SetAnchors(navigation, 0.012f, 0.115f, 0.172f, 0.850f);
+                SetAnchors(content, 0.187f, 0.115f, 0.988f, 0.850f);
+                SetAnchors(deploy, 0.012f, 0.018f, 0.988f, 0.085f);
             }
             else if (aspect <= 1.72f)
             {
-                // Compact landscape / tablet: slightly wider navigation and taller deploy bar.
-                SetAnchors(navigation, 0.014f, 0.105f, 0.225f, 0.842f);
-                SetAnchors(content, 0.235f, 0.105f, 0.986f, 0.842f);
-                SetAnchors(header, 0.014f, 0.855f, 0.986f, 0.988f);
-                SetAnchors(deploy, 0.014f, 0.014f, 0.986f, 0.088f);
+                // Compact landscape / tablet: more vertical breathing room and a wider navigation rail.
+                SetAnchors(header, 0.016f, 0.860f, 0.984f, 0.985f);
+                SetAnchors(navigation, 0.016f, 0.135f, 0.225f, 0.830f);
+                SetAnchors(content, 0.240f, 0.135f, 0.984f, 0.830f);
+                SetAnchors(deploy, 0.016f, 0.020f, 0.984f, 0.105f);
             }
             else
             {
-                SetAnchors(navigation, 0.012f, 0.09f, 0.205f, 0.85f);
-                SetAnchors(content, 0.215f, 0.09f, 0.988f, 0.85f);
-                SetAnchors(header, 0.0f, 0.865f, 1.0f, 0.993f);
-                SetAnchors(deploy, 0.012f, 0.012f, 0.988f, 0.075f);
+                // Desktop / 16:9 production baseline.
+                SetAnchors(header, 0.014f, 0.872f, 0.986f, 0.985f);
+                SetAnchors(navigation, 0.014f, 0.118f, 0.205f, 0.848f);
+                SetAnchors(content, 0.220f, 0.118f, 0.986f, 0.848f);
+                SetAnchors(deploy, 0.014f, 0.020f, 0.986f, 0.090f);
             }
 
             EnforceTouchTargets(canvas.transform);
+        }
+
+        private static void ApplySafeArea(RectTransform rect)
+        {
+            var safeMin = Screen.safeArea.position;
+            var safeMax = Screen.safeArea.position + Screen.safeArea.size;
+            safeMin.x /= Mathf.Max(1f, Screen.width);
+            safeMin.y /= Mathf.Max(1f, Screen.height);
+            safeMax.x /= Mathf.Max(1f, Screen.width);
+            safeMax.y /= Mathf.Max(1f, Screen.height);
+            rect.anchorMin = safeMin;
+            rect.anchorMax = safeMax;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
         }
 
         private static void EnforceTouchTargets(Transform root)
