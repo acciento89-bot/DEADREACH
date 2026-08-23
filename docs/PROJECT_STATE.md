@@ -64,8 +64,9 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - stable production level: **0.9**
 - stable merge: `2f15df3b5ca7b15eeacea39928b63118700e2432`
 - active branch: **`production/0.10-combat-impact`**
-- Production 0.10 is implemented in code but **not yet real-Unity validated**
-- next gate: fresh Unity compile → Build Production Slice 0.10 → visual/runtime acceptance
+- PR #10: Draft, targets `main`
+- Production 0.10 compile gate passed in real Unity with **0 red compiler errors**
+- next gate: `DEADREACH > Build Production Slice 0.10` → visual/runtime/mobile acceptance
 
 ## 4. Stable Production 0.9 baseline that must remain green
 
@@ -135,8 +136,10 @@ Goal: make combat feel materially less prototype-like without destabilizing the 
 
 ## 6. Current 0.10 gate
 
-Required:
-1. Unity compile → **0 red compiler errors**
+Green:
+1. Unity compile → **0 red compiler errors** ✅
+
+Required next:
 2. `DEADREACH > Build Production Slice 0.10` completes
 3. SAM / RAVEN / BRIGGS VFX visible and readable
 4. Runner / Brute / Stalker impact VFX visible without obscuring gameplay
@@ -152,7 +155,7 @@ When resuming:
 1. read this file first
 2. stable baseline is Production 0.9 on `main`
 3. active work is Production 0.10 on `production/0.10-combat-impact`
-4. 0.10 code is not accepted until real Unity compile/build/runtime gates pass
+4. 0.10 compile gate is green; build/runtime/mobile gates remain
 5. preserve schema-v6 Workshop progression
 6. preserve fixed-zone mobile controls
 7. never reintroduce external gameplay hand-mounted Rifle transforms
