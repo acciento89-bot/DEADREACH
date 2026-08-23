@@ -108,7 +108,7 @@ Primary command:
 
 `DEADREACH > Build Complete Vertical Slice 0.1`
 
-Dev-only generators are now moved under:
+Dev-only generators are under:
 
 `DEADREACH > Dev > ...`
 
@@ -117,11 +117,11 @@ Generated scenes:
 - `Assets/Deadreach/Scenes/Bunker_Hub.unity`
 - `Assets/Deadreach/Scenes/DeadCity_VerticalSlice.unity`
 
-A centralized editor utility now owns scene registration:
+Central scene registration:
 
 `DeadreachBuildSettings.cs`
 
-It guarantees the complete slice Build Settings order:
+Guaranteed build order:
 
 1. `Bunker_Hub`
 2. `DeadCity_VerticalSlice`
@@ -144,31 +144,40 @@ The project was opened in Unity `6000.3.22f1` and reached **0 C# errors** after 
 Confirmed in the real Unity editor:
 
 - Dead City generated and entered Play Mode
-- gameplay actually started
-- player could be killed by the prototype enemies
-- failed-run logic triggered after death
+- gameplay started successfully
+- prototype enemies can chase/attack and kill the player
+- failed-run logic triggers after death
+- build-settings repair/complete-generator fix was applied
+- **death → automatic return to `Bunker_Hub` now works in the real editor**
 
-Runtime issue found:
+This confirms the core failed-run return loop is functional.
 
-- after death, `RunSession` attempted to return to `Bunker_Hub`
-- Unity reported that `Bunker_Hub` was not in Build Settings
-- root cause: the old menu exposed two similarly named generators; the Dead-City-only builder could create a playable expedition without generating/registering the Bunker
+### Newly implemented after the confirmed death-return test — NEEDS COMPILE/RUNTIME VERIFICATION
 
-Fix committed on `foundation/unity-6.3`:
+Extraction/HUD hardening was added immediately after the successful death-return test:
 
-- `DeadreachBuildSettings.cs` centralizes scene registration
-- complete generator explicitly writes Bunker at build index 0 and Dead City at index 1
-- complete generator reopens `Bunker_Hub` after generation
-- old single-scene menu entries moved to `DEADREACH > Dev`
-- repair command added for already-generated scenes
+- `RunSession` now exposes whether the player is inside the extraction zone
+- extraction can report when it is blocked because no loot is carried
+- `ExtractionZone` now updates that state explicitly
+- prototype HUD upgraded with:
+  - visual HP bar
+  - carried/secured Scrap readout
+  - extraction instructions
+  - explicit `EXTRACTION LOCKED` message when entering without loot
+  - visible extraction progress while holding the zone
+  - damage-screen flash
+  - clearer successful/failed run return messages
+
+These changes are committed but were **not yet compiled/tested in the local Unity editor at the time of this status update**.
 
 ### Still needs runtime verification
 
-- Bunker runtime/menu
-- Deploy Bunker → Dead City
-- death → automatic return to Bunker after the build-settings fix
-- successful extraction → return to Bunker
-- Scrap persistence
+- latest HUD/extraction hardening compiles with 0 errors
+- Bunker runtime/menu after latest pull
+- Deploy Bunker → Dead City after latest pull
+- successful extraction → automatic return to Bunker
+- secured Scrap increases and persists
+- successful extraction increments current/best streak correctly
 - failed/abandon persistence and streak reset
 - pause + abandon
 - graphics presets
@@ -180,15 +189,17 @@ Fix committed on `foundation/unity-6.3`:
 On the local machine:
 
 1. `git pull` on `foundation/unity-6.3`.
-2. Wait for Unity to compile; require **0 errors**.
-3. Run **`DEADREACH > Build Complete Vertical Slice 0.1`**.
-4. Confirm Unity leaves `Bunker_Hub` open.
-5. Press Play in the Bunker.
-6. Deploy to Dead City.
-7. Die once and verify automatic return to Bunker.
-8. Then complete one successful extraction and verify automatic return + banked Scrap.
-9. Test pause/abandon and persistence.
-10. Only after these pass should PR #1 be merged.
+2. Wait for Unity compilation; require **0 errors**.
+3. Re-run **`DEADREACH > Build Complete Vertical Slice 0.1`** because generated scenes must receive the latest runtime/setup changes.
+4. Start from `Bunker_Hub`.
+5. Deploy to Dead City.
+6. Collect at least one Scrap cache/drop.
+7. Enter the green extraction beacon and verify the extraction progress UI.
+8. Complete extraction and verify automatic return to Bunker.
+9. Confirm secured Scrap increased and extraction streak incremented.
+10. Exit Play Mode, re-enter and confirm persistence.
+11. Then test pause → abandon and graphics presets.
+12. Only after these pass should PR #1 be merged.
 
 ## 9. Test runbook
 
@@ -234,7 +245,7 @@ When resuming in another chat:
 
 1. Read this file first.
 2. Inspect latest commits and PR #1.
-3. Check whether the post-fix Bunker/death/extraction runtime gate has passed.
+3. Check whether successful extraction + persistence has passed.
 4. Continue from **Immediate next step**.
 5. Update this file before ending the next major pass.
 
