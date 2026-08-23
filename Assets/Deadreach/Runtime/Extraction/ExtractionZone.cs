@@ -82,7 +82,7 @@ namespace Kamilunavo.Deadreach.Extraction
 
         private static bool HasAnyLoot(RunSession session)
         {
-            if (session.CarriedScrap > 0)
+            if (session.CarriedScrap > 0 || session.PendingBossReward != null)
                 return true;
 
             return RunInventory.Current != null && RunInventory.Current.Weapons.Count > 0;
