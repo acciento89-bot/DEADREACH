@@ -6,6 +6,7 @@ using Kamilunavo.Deadreach.Extraction;
 using Kamilunavo.Deadreach.Input;
 using Kamilunavo.Deadreach.Loot;
 using Kamilunavo.Deadreach.Player;
+using Kamilunavo.Deadreach.Presentation;
 using Kamilunavo.Deadreach.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -141,6 +142,7 @@ namespace Kamilunavo.Deadreach.Editor
             damageable.Configure(CombatFaction.Survivor, 100f);
             player.AddComponent<PlayerMotor>();
             player.AddComponent<HitscanWeapon>();
+            player.AddComponent<PlayerAnimationDriver>();
             player.GetComponent<Renderer>().sharedMaterial = palette.Survivor;
             return player;
         }
@@ -239,6 +241,7 @@ namespace Kamilunavo.Deadreach.Editor
                 damageable.Configure(CombatFaction.Infected, 55f);
                 var ai = enemy.AddComponent<InfectedChaser>();
                 ai.Configure(2.6f + i * 0.08f, 55f + i * 4f, 10f + i, 3 + i);
+                enemy.AddComponent<InfectedAnimationDriver>();
                 enemy.GetComponent<Renderer>().sharedMaterial = palette.Infected;
             }
         }
