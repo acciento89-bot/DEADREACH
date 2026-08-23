@@ -18,12 +18,6 @@ namespace Kamilunavo.Deadreach.Presentation
         [SerializeField] private Transform visualAnchor;
         [SerializeField] private bool hidePrototypeRenderers = true;
 
-        // Validated locally in Unity against Quaternius Survivor Sam.
-        // Keep this as a local hand-socket offset: do not overwrite it with a world-space
-        // LookRotation every frame, otherwise manual/prefab alignment becomes ineffective.
-        private static readonly Vector3 QuaterniusRifleLocalPosition = new(0f, -0.02084f, -0.00481f);
-        private static readonly Quaternion QuaterniusRifleLocalRotation = Quaternion.Euler(0f, 0f, 180f);
-
         private GameObject _instance;
         private GameObject _weaponInstance;
 
@@ -107,11 +101,7 @@ namespace Kamilunavo.Deadreach.Presentation
                     _weaponInstance = Instantiate(catalog.PrimaryWeaponPrefab, weaponSocket, false);
                     _weaponInstance.name = "ProductionPrimaryWeapon";
 
-                    // Exact hand mount validated by the real Unity visual test.
-                    // Rotation 0/0/180 is intentionally LOCAL to the animated hand socket.
-                    _weaponInstance.transform.localPosition = QuaterniusRifleLocalPosition;
-                    _weaponInstance.transform.localRotation = QuaterniusRifleLocalRotation;
-                    _weaponInstance.transform.localScale = Vector3.one;
+                    ApplyQuaterniusRifleMountFix(_weaponInstance);
 
                     muzzle = FindNamedTransform(_weaponInstance.transform, "MuzzleSocket")
                              ?? FindNamedTransform(_weaponInstance.transform, "Muzzle");
@@ -126,6 +116,37 @@ namespace Kamilunavo.Deadreach.Presentation
             else
             {
                 GetComponent<InfectedAnimationDriver>()?.SetAnimator(animator);
+            }
+        }
+
+        private static void ApplyQuaterniusRifleMountFix(GameObject weaponInstance)
+        {
+            // IMPORTANT: The successful Unity Inspector correction was made on the generated
+            // rifle MODEL child, not on the weapon root attached to the hand. The wrapper already
+            // calculated the correct grip offset on Model (about Y -0.02084 / Z -0.00481).
+            // Preserve that position exactly and apply only the validated 180° local Z roll.
+            // Do not add a LateUpdate/world rotation here; that was the source of the previous
+            // regressions and made Inspector edits appear to have no effect.
+            weaponInstance.transform.localPosition = Vector3.zero;
+            weaponInstance.transform.localRotation = Quaternion.identity;
+            weaponInstance.transform.localScale = Vector3.one;
+
+            var model = FindNamedTransform(weaponInstance.transform, "Model");
+            if (model != null)
+            {
+                var preservedPosition = model.localPosition;
+                model.localRotation = Quaternion.Euler(0f, 0f, 180f);
+                model.localPosition = preservedPosition;
+            }
+
+            // MuzzleSocket was generated before the visual 180° roll. Mirror its grip-plane X/Y
+            // offset around the weapon root so it follows the same roll while retaining barrel Z.
+            var muzzle = FindNamedTransform(weaponInstance.transform, "MuzzleSocket")
+                         ?? FindNamedTransform(weaponInstance.transform, "Muzzle");
+            if (muzzle != null && muzzle.parent == weaponInstance.transform)
+            {
+                var p = muzzle.localPosition;
+                muzzle.localPosition = new Vector3(-p.x, -p.y, p.z);
             }
         }
 
