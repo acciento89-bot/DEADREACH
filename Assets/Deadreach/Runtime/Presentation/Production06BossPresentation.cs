@@ -100,8 +100,10 @@ namespace Kamilunavo.Deadreach.Presentation
             var panel = new GameObject("BossIdentityPanel", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
             panel.transform.SetParent(canvasObject.transform, false);
             var rect = panel.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.34f, 0.84f);
-            rect.anchorMax = new Vector2(0.66f, 0.975f);
+            // The existing PrototypeHud owns the centered boss HP bar at the very top. Keep the
+            // identity card directly below it so both remain readable on desktop and phone landscape.
+            rect.anchorMin = new Vector2(0.37f, 0.745f);
+            rect.anchorMax = new Vector2(0.63f, 0.835f);
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
             panel.GetComponent<Image>().color = new Color(0.015f, 0.015f, 0.018f, 0.88f);
@@ -109,13 +111,13 @@ namespace Kamilunavo.Deadreach.Presentation
             _overlayGroup.blocksRaycasts = false;
             _overlayGroup.interactable = false;
 
-            _nameText = CreateText(panel.transform, "BossName", 24, FontStyle.Bold, TextAnchor.MiddleCenter,
-                new Vector2(0.03f, 0.42f), new Vector2(0.97f, 0.92f));
+            _nameText = CreateText(panel.transform, "BossName", 21, FontStyle.Bold, TextAnchor.MiddleCenter,
+                new Vector2(0.03f, 0.43f), new Vector2(0.97f, 0.92f));
             _nameText.color = _accent;
             _nameText.text = $"TIER {tier} // {GetBossName(tier)}";
 
-            _phaseText = CreateText(panel.transform, "BossPhase", 13, FontStyle.Bold, TextAnchor.MiddleCenter,
-                new Vector2(0.03f, 0.08f), new Vector2(0.97f, 0.43f));
+            _phaseText = CreateText(panel.transform, "BossPhase", 12, FontStyle.Bold, TextAnchor.MiddleCenter,
+                new Vector2(0.03f, 0.08f), new Vector2(0.97f, 0.44f));
             _phaseText.color = Color.white;
             _phaseText.text = "MUTATION STATE // STABLE";
         }
