@@ -164,8 +164,14 @@ namespace Kamilunavo.Deadreach.Editor
 
         private static void CreateEnvironment(Palette palette)
         {
-            CreateCube("World_Ground", new Vector3(0f, -0.5f, 0f), new Vector3(34f, 1f, 38f), palette.Ground);
-            CreateCube("Road_Main", new Vector3(0f, 0.015f, 1f), new Vector3(8f, 0.03f, 36f), palette.Road);
+            // Keep the complete extraction trigger on solid, walkable geometry. The original dev
+            // floor/road stopped around z=19 while ExtractionZone_Alpha is centered at z=20. That
+            // was mostly invisible while extraction completed immediately, but mission-gated 0.11
+            // allows the player to linger there and exposed the unsupported edge. Extend the base
+            // surfaces beyond the north world boundary so entering a sealed extraction can always
+            // be reversed without dropping off the street lip.
+            CreateCube("World_Ground", new Vector3(0f, -0.5f, 0f), new Vector3(34f, 1f, 44f), palette.Ground);
+            CreateCube("Road_Main", new Vector3(0f, 0.015f, 1f), new Vector3(8f, 0.03f, 42f), palette.Road);
             CreateCube("Road_Cross", new Vector3(0f, 0.02f, 3f), new Vector3(30f, 0.035f, 7f), palette.Road);
 
             var buildings = new[]
