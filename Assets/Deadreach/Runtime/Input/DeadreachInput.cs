@@ -16,9 +16,16 @@ namespace Kamilunavo.Deadreach.Input
         public bool HasAim { get; private set; }
         public bool FireHeld { get; private set; }
 
+        public bool HasMoveTouch => _moveTouchId >= 0;
+        public bool HasAimTouch => _aimTouchId >= 0;
+        public Vector2 MoveTouchOrigin => _moveOrigin;
+        public Vector2 MoveTouchPosition => _movePosition;
+        public float VirtualStickRadius => virtualStickRadius;
+
         private int _moveTouchId = -1;
         private int _aimTouchId = -1;
         private Vector2 _moveOrigin;
+        private Vector2 _movePosition;
 
         private void Awake()
         {
@@ -91,6 +98,7 @@ namespace Kamilunavo.Deadreach.Input
                     {
                         _moveTouchId = id;
                         _moveOrigin = position;
+                        _movePosition = position;
                     }
                     else if (_aimTouchId < 0)
                     {
@@ -100,6 +108,7 @@ namespace Kamilunavo.Deadreach.Input
 
                 if (id == _moveTouchId)
                 {
+                    _movePosition = position;
                     Move = Vector2.ClampMagnitude((position - _moveOrigin) / virtualStickRadius, 1f);
                     if (touch.phase is UnityEngine.InputSystem.TouchPhase.Ended or UnityEngine.InputSystem.TouchPhase.Canceled)
                     {
