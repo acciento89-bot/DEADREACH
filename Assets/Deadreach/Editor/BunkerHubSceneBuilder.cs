@@ -34,6 +34,14 @@ namespace Kamilunavo.Deadreach.Editor
         [MenuItem("DEADREACH/Build Production Slice 0.4", priority = 1)]
         public static void BuildCompleteSlice()
         {
+            // Hard gate: never generate a visually incomplete 0.4 scene. Earlier builds could
+            // silently skip failed glTF imports, which made vehicles/containers disappear.
+            if (!DeadCityAssetRepair.EnsureRequiredAssetsReady())
+            {
+                Debug.LogError("DEADREACH Production Slice 0.4 aborted: required environment imports are not healthy. No partial scene was generated.");
+                return;
+            }
+
             VerticalSliceSceneBuilder.Build();
             ProductionSliceEnhancer.EnhanceCurrentDeadCityScene();
             DeadCityEnvironmentPass.EnhanceCurrentDeadCityScene();
@@ -42,8 +50,9 @@ namespace Kamilunavo.Deadreach.Editor
             if (!DeadreachBuildSettings.ConfigureCompleteSlice())
                 return;
 
+            DeadreachPlayModeStart.Configure();
             EditorSceneManager.OpenScene(DeadreachBuildSettings.BunkerScenePath, OpenSceneMode.Single);
-            Debug.Log("DEADREACH Production Slice 0.4 generated. Build Settings verified: Bunker first, Dead City second. Validated 0.3 character/combat path + Quaternius environment dressing + URP atmosphere included.");
+            Debug.Log("DEADREACH Production Slice 0.4 generated. Build Settings verified: Bunker first, Dead City second. Required streets/containers/vehicles validated before generation; Editor Play Mode starts from Bunker_Hub.");
         }
 
         private static void EnsureFolders()
