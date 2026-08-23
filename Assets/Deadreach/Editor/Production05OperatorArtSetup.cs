@@ -79,13 +79,11 @@ namespace Kamilunavo.Deadreach.Editor
             try
             {
                 Debug.Log($"DEADREACH downloading missing Quaternius operator art: {Path.GetFileName(assetPath)}");
-#pragma warning disable SYSLIB0014
                 using (var client = new WebClient())
                 {
                     client.Headers[HttpRequestHeader.UserAgent] = "DEADREACH-Unity-Operator-Art-Bootstrap";
                     client.DownloadFile(url, absolutePath);
                 }
-#pragma warning restore SYSLIB0014
 
                 var file = new FileInfo(absolutePath);
                 if (!file.Exists || file.Length < minimumBytes)
