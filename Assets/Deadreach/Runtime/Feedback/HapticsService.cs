@@ -8,7 +8,9 @@ namespace Kamilunavo.Deadreach.Feedback
     {
         private static HapticsService _instance;
         private Coroutine _gamepadRoutine;
+#if UNITY_IOS || UNITY_ANDROID
         private float _lastMobileVibrationTime = -10f;
+#endif
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureInstance()
