@@ -72,6 +72,14 @@ namespace Kamilunavo.Deadreach.Weapons
                 critMultiplier);
         }
 
+        public static float GetItemPowerDamageMultiplier(WeaponInstanceData instance)
+        {
+            if (instance == null)
+                return 1f;
+
+            return Mathf.Clamp(1f + (instance.itemPower - 100) * 0.0024f, 0.86f, 1.65f);
+        }
+
         private static void ApplyItemPower(
             WeaponInstanceData instance,
             ref float damageMultiplier,
@@ -80,8 +88,7 @@ namespace Kamilunavo.Deadreach.Weapons
         {
             // Production 0.8 turns Item Power from presentation-only metadata into real progression.
             // 100 power is the field baseline. The cap keeps old/high-tier saves from exploding balance.
-            var powerMultiplier = Mathf.Clamp(1f + (instance.itemPower - 100) * 0.0024f, 0.86f, 1.65f);
-            damageMultiplier *= powerMultiplier;
+            damageMultiplier *= GetItemPowerDamageMultiplier(instance);
 
             // Calibration is intentionally secondary to the weapon's rolled affixes/family identity.
             // Each workshop rank adds a small handling/precision gain in addition to its Item Power bump.
