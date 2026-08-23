@@ -18,6 +18,8 @@ namespace Kamilunavo.Deadreach.World
     [DisallowMultipleComponent]
     public sealed class SectorDirector : MonoBehaviour
     {
+        public const string EditorSectorOverrideKey = "DEADREACH_DEV_SECTOR_012";
+
         private static readonly Vector3[] FallbackObjectives =
         {
             new(-4f, 0.12f, 2.2f),
@@ -150,6 +152,11 @@ namespace Kamilunavo.Deadreach.World
             var profile = SaveService.Data;
             var seed = unchecked(_session.RunLevel * 17 + profile.successfulExtractions * 7 + profile.failedRuns * 11);
             var selectedIndex = Mathf.Abs(seed) % layouts.Length;
+#if UNITY_EDITOR
+            var forcedIndex = PlayerPrefs.GetInt(EditorSectorOverrideKey, -1);
+            if (forcedIndex >= 0 && forcedIndex < layouts.Length)
+                selectedIndex = forcedIndex;
+#endif
             ActiveLayout = layouts[selectedIndex];
 
             for (var i = 0; i < layouts.Length; i++)
@@ -295,7 +302,7 @@ namespace Kamilunavo.Deadreach.World
                 return;
 
             var reinforcements = FindObjectsByType<InfectedChaser>(FindObjectsSortMode.None)
-                .Where(item => item != null && item.name.Contains("_R", StringComparison.Ordinal))
+                .Where(item => item != null && IsRuntimeReinforcementName(item.name))
                 .OrderBy(item => item.GetInstanceID())
                 .ToArray();
 
@@ -316,6 +323,24 @@ namespace Kamilunavo.Deadreach.World
 
             if (reinforcements.Length > 0)
                 Physics.SyncTransforms();
+        }
+
+        private static bool IsRuntimeReinforcementName(string objectName)
+        {
+            if (string.IsNullOrWhiteSpace(objectName))
+                return false;
+
+            var marker = objectName.LastIndexOf("_R", StringComparison.Ordinal);
+            if (marker < 0 || marker + 2 >= objectName.Length)
+                return false;
+
+            for (var i = marker + 2; i < objectName.Length; i++)
+            {
+                if (!char.IsDigit(objectName[i]))
+                    return false;
+            }
+
+            return true;
         }
 
         private void DisableLegacyRouteBlockers()
