@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Kamilunavo.Deadreach.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -13,7 +12,7 @@ namespace Kamilunavo.Deadreach.Editor
         private const string MaterialFolder = "Assets/Deadreach/Art/DevPalette";
         private const string ScenePath = SceneFolder + "/Bunker_Hub.unity";
 
-        [MenuItem("DEADREACH/Build Bunker Hub 0.1")]
+        [MenuItem("DEADREACH/Dev/Build Bunker Hub Only")]
         public static void Build()
         {
             EnsureFolders();
@@ -28,16 +27,21 @@ namespace Kamilunavo.Deadreach.Editor
             new GameObject("Bunker_Menu").AddComponent<BunkerPrototypeMenu>();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            PutBunkerFirstInBuildSettings();
+            DeadreachBuildSettings.Repair();
             Debug.Log($"DEADREACH Bunker Hub generated at {ScenePath}");
         }
 
-        [MenuItem("DEADREACH/Build Complete Vertical Slice 0.1")]
+        [MenuItem("DEADREACH/Build Complete Vertical Slice 0.1", priority = 1)]
         public static void BuildCompleteSlice()
         {
             VerticalSliceSceneBuilder.Build();
             Build();
-            Debug.Log("DEADREACH complete Vertical Slice 0.1 generated. Press Play from Bunker_Hub.");
+
+            if (!DeadreachBuildSettings.ConfigureCompleteSlice())
+                return;
+
+            EditorSceneManager.OpenScene(DeadreachBuildSettings.BunkerScenePath, OpenSceneMode.Single);
+            Debug.Log("DEADREACH complete Vertical Slice 0.1 generated. Build Settings verified: Bunker first, Dead City second. Press Play from Bunker_Hub.");
         }
 
         private static void EnsureFolders()
@@ -133,14 +137,6 @@ namespace Kamilunavo.Deadreach.Editor
             light.intensity = intensity;
             light.range = range;
             light.shadows = LightShadows.Soft;
-        }
-
-        private static void PutBunkerFirstInBuildSettings()
-        {
-            var existing = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-            existing.RemoveAll(scene => scene.path == ScenePath);
-            existing.Insert(0, new EditorBuildSettingsScene(ScenePath, true));
-            EditorBuildSettings.scenes = existing.ToArray();
         }
     }
 }
