@@ -31,196 +31,184 @@ Merge `fd0dca0ece7d18ca005f2f4b52d65039904fad27`.
 ### Production 0.3 — MERGED / REAL UNITY VALIDATED
 PR #3 merge `924e8ff4ae250da13fd0d198b121802cf80131b0`.
 
-Weapon lock from 0.3:
-- use artist-authored weapon geometry already parented to the Quaternius character rig
+Permanent weapon rule:
+- use artist-authored firearm geometry already parented to the Quaternius survivor rig for gameplay
 - derive muzzle from that embedded firearm
-- **never reintroduce the failed external Rifle hand-socket transform path**
-- validated Sam weapon sits on the left hand and is accepted
+- **never reintroduce the failed external hand-mounted Rifle transform path**
 
 ### Production 0.4 — MERGED / REAL UNITY VALIDATED
 PR #4 squash merge `e86c067720f8f6badc6c8a29e41bcd856c29ffe6`.
 
-Validated:
-- 0 compiler errors
-- Dead City streets / containers / vehicles / barriers / props
-- lighting / fog / post-processing / extraction beacon
-- environment collision bounds
-- Bunker-first Play Mode flow
-- extraction traversal safety
-- movement / aim / fire / loot / extraction / Bunker return regression
+Validated Dead City streets / vehicles / containers / props / atmosphere / collision / Bunker-first flow / extraction traversal.
 
-`main` remains the stable 0.4 baseline.
+### Production 0.5 — MERGED / REAL UNITY VALIDATED
+PR #5 squash merge **`a066386f05c6593f1840ef6902f62c808cbdf319`**.
+
+Real Unity acceptance included:
+- post-apocalyptic Bunker Command Center
+- Overview / Arsenal / Operators / Campaign / Store
+- three distinct operator models and runtime swapping
+- persistent 50-level campaign / five sectors
+- Walker / Runner / Brute / Stalker combat profiles
+- Level 10 mutation boss, boss HUD and extraction seal
+- upgraded tracer / muzzle / impact feedback
+- weapon finishes
+- automatic next-level selection after extraction
+- boss no longer drops ordinary Scrap; dedicated Mutation Relic is actually granted
+- Arsenal weapon preview is upright
+- Dead City world boundaries / fall safety prevent void-running
+
+Known UX carry-over accepted into 0.6:
+- boss reward was functionally granted and visible in Console, but 0.5 did not visibly celebrate/confirm it to the player.
+
+`main` stable baseline is now Production 0.5.
 
 ## 3. Current Git state
 
-- active branch: **`production/0.5-bunker-progression-boss-ui`**
-- PR #5 remains **Draft**
-- Atomic operator importer V2 passed real Unity `Build Production Slice 0.5` with no blocking error
-- Bunker desktop/editor visual direction is accepted
-- the 0.5 MEGA Runtime Gate was executed in real Unity and **most core systems passed**
-- user screenshots confirm distinct Sam/Raven/Briggs previews and runtime switching, Level 1 gameplay, upgraded tracer/combat presentation, Level 10 mutation boss, boss HUD/extraction gate, successful boss clear and campaign progression through Level 11
-- five finalization issues were found during that gate and are now fixed in branch but **not yet revalidated**:
-  1. successful extraction unlocked the next level but did not automatically select it
-  2. boss still used ordinary Scrap as its configured drop instead of a dedicated reward
-  3. Arsenal weapon preview was horizontal but still upside-down
-  4. stash weapons all looked like the same finish
-  5. player could leave the authored road at the map end, fall into the void and continue running below the level
+- active branch: **`production/0.6-content-rewards-mobile`**
+- base: Production 0.5 merge `a066386f05c6593f1840ef6902f62c808cbdf319`
+- Production 0.6 implementation is in progress / not yet real-Unity validated
+- next PR should remain Draft until 0.6 compile/build/runtime acceptance
 
-## 4. Production 0.5 scope on branch
+## 4. Production 0.6 implemented scope
 
-### 4.1 Persistence / campaign
+### 4.1 Boss reward presentation — two-stage confirmation
 
-Save schema v4 persists:
-- secured Scrap / extractions / streaks
-- stash + equipped primary
-- highest unlocked / selected / highest cleared level
-- boss kills
-- selected operator
-- unlocked operators
-- owned-content entitlement IDs
+The 0.5 functional reward path is preserved.
 
-Campaign cap: **50 levels** across five 10-level sectors.
-Every tenth level is a boss operation.
+0.6 adds:
+1. **immediate combat popup** on `RunSession.BossRewardGranted`
+   - `MUTATION RELIC SECURED`
+   - reward name
+   - rarity / family / item power
+   - finish
+   - affixes
+2. **persistent Bunker recovery debrief** after successful extraction
+   - save schema v5 stores `lastBossReward` + `bossRewardDebriefPending`
+   - the debrief appears after returning to Bunker
+   - `TRANSFER TO ARSENAL` acknowledges it
+   - reward remains risk-based: death/abandon before extraction does not persist the debrief/reward
 
-**Finalization change:** successful extraction now automatically moves `selectedLevel` to `completedLevel + 1` whenever that next level is unlocked. Replaying an older level advances to its next already-unlocked mission; Level 50 remains selected at campaign end.
+### 4.2 True weapon families
 
-### 4.2 Bunker Command Center
+Persistent weapon family enum:
+- Rifle
+- SMG
+- Pistol
+- Shotgun
 
-Tabs:
-- OVERVIEW
-- ARSENAL
-- OPERATORS
-- CAMPAIGN
-- STORE
+Legacy 0.5 weapon JSON naturally migrates to Rifle because Rifle is enum value 0.
 
-Accepted Editor/Desktop direction:
-- DEADREACH header visible
-- Overview no overlap
-- Arsenal list + dedicated 3D inspector
-- Operator roster + dedicated 3D preview
-- Campaign shows one 10-level sector at a time
-- coherent navigation + deploy framing
+Loot now rolls multiple families instead of always generating `dr7-rifle`.
 
-This is **not mobile acceptance**.
+Family identities:
+- **DR-7 Rifle** — balanced baseline
+- **RV-9 SMG** — lower damage / much higher fire rate / shorter range
+- **PX-4 Sidearm** — lower sustained output / higher crit identity
+- **SG-12 Shotgun** — heavy slow short-range slug profile in 0.6; pellet spread is a later combat feature
 
-### 4.3 Arsenal / weapon finishes
+Boss relic family varies by boss tier.
 
-Arsenal shows persistent stash, rarity, item power, affix rolls, equipped state and Equip action.
+### 4.3 Real Arsenal family models
 
-Finalization adds persistent `visualSkinId` support and `WeaponVisualStyle`:
-- Factory Issue
-- Rustwalker
-- Hazard Stripe
-- Nightwatch
-- Toxic Salvage
-- Bloodline
-- unique Mutation Core finishes for boss tiers 1–5
+`ProductionAssetCatalog` now supports standalone Rifle / SMG / Pistol / Shotgun production prefabs.
 
-Old stash entries without a stored finish derive a deterministic finish from their existing instance ID/item power, so the current save also gains visible variety without reset.
+`Production06WeaponArtSetup` automatically downloads the self-contained Quaternius standalone Pistol / SMG / Shotgun glTFs, builds unpacked production preview prefabs and configures them into the catalog. Existing validated Rifle prefab remains the Rifle source.
 
-The selected finish is applied:
-- to the rotating Arsenal production-weapon preview
-- to the artist-rigged embedded firearm used by the selected runtime operator
+`BunkerWeaponPreviewUI` now chooses the actual model from `WeaponInstanceData.family` and still applies the validated upright preview normalization + finish styling.
 
-No gameplay hand/muzzle transform is modified by finish styling.
+Important gameplay rule remains unchanged: runtime survivor gameplay continues to use the stable artist-rigged operator firearm. 0.6 does **not** reintroduce an external hand-mounted weapon just to force family visuals onto every operator.
 
-`BunkerWeaponPreviewUI` keeps automatic horizontal axis normalization, then applies the observed Quaternius-specific preview-only **180° X correction** so the grip/magazine should render below the receiver instead of above it. The inspector also displays `FINISH // <name>`.
+### 4.4 Five stronger sector identities
 
-### 4.4 Distinct operators — REAL UNITY PARTIAL ACCEPTANCE
+`Production06SectorIdentity` layers runtime presentation over the validated 0.5 Dead City geometry:
+- **Sector 01 / Dead City** — cold emergency blue/red lights
+- **Sector 02 / Flooded Industrial** — teal flood patches / cyan industrial lighting / wet mist
+- **Sector 03 / Ash District** — scorch zones / warm fire lighting / ash fall
+- **Sector 04 / Blackout Sector** — global light reduction / purple-blue flicker lights / sparse particles
+- **Sector 05 / Ground Zero** — mutation pools / aggressive red lighting / contamination atmosphere
 
-Profiles:
-- **SAM / Ranger** — balanced
-- **RAVEN / Scout** — faster / less durable
-- **BRIGGS / Warden** — slower / tougher / harder hitting
+The validated streets, collision and extraction layout remain untouched.
 
-Production mapping:
-- **SAM → Quaternius Sam SingleWeapon / artist-rigged Pistol**
-- **RAVEN → Quaternius Shaun SingleWeapon / artist-rigged SMG**
-- **BRIGGS → Quaternius Matt full export / artist-rigged Rifle only**
+### 4.5 Boss identity presentation
 
-Real Unity screenshots confirm:
-- three visibly distinct operator models
-- selection changes correctly in Bunker
-- selected operator changes in gameplay
-- operator stats display different profiles
+Each mutation tier receives a distinct identity:
+- Tier 1 — **THE BREAKER**
+- Tier 2 — **FLOOD MAW**
+- Tier 3 — **ASH TITAN**
+- Tier 4 — **BLACKOUT WRAITH**
+- Tier 5 — **GROUND ZERO PRIME**
 
-Do not reintroduce external weapon hand sockets.
+0.6 adds:
+- tier color tint via `MaterialPropertyBlock`
+- mutation aura light
+- mutation particles
+- dedicated boss-name overlay
+- phase text updates on the existing ~66% / ~33% mutation phases
+- target-eliminated state
 
-### 4.5 Atomic operator glTF import V2 — REAL UNITY VALIDATED
+### 4.6 First serious mobile-landscape responsive pass
 
-`Production05OperatorArtSetupV2` prepares the full filesystem/dependency graph before Unity import, performs one synchronous import pass, fully unpacks generated wrappers and preserves Shaun/SMG + Matt/Rifle.
+`BunkerMobileResponsiveUI` applies runtime layout adaptation without destroying the accepted desktop source layout:
+- `Screen.safeArea` applied to the Bunker backdrop
+- ultrawide/notched phone breakpoint
+- compact landscape/tablet breakpoint
+- CanvasScaler changes by aspect ratio
+- navigation/content/header/deploy proportions reflow per breakpoint
+- minimum touch-target hints via `LayoutElement`
 
-Real Unity result: `DEADREACH > Build Production Slice 0.5` completed with no blocking error after Atomic V2.
+Gameplay HUD already uses `Screen.safeArea` from 0.5.
 
-### 4.6 Enemies / boss / dedicated boss reward
+**This is not final mobile acceptance.** Real-device iPhone + Android validation remains mandatory before release.
 
-Runtime infected archetypes: Walker, Runner, Brute, Stalker.
+### 4.7 Runtime bootstrap
 
-Boss operations: 10 / 20 / 30 / 40 / 50, with tier scaling, mutation phases around 66% and 33% HP, boss HUD and extraction lock until death.
+`Production06RuntimeBootstrap` attaches 0.6 presentation systems on scene load:
+- expedition: SectorIdentity / BossPresentation / BossRewardPresentationUI
+- Bunker: MobileResponsiveUI / BossRewardDebriefUI
 
-Real Unity screenshots confirm Level 10 mutation boss, boss HP UI and successful progression through Level 10 into Sector 02 / Level 11.
+No manual scene-component wiring is required.
 
-**Finalization change:** boss `scrapDrop` is now configured to **0**. On boss death `WeaponLootFactory.CreateBossReward()` grants a guaranteed Epic/Legendary `MUTATION T# // DR-7 RELIC` with tier-specific Mutation Core finish and strong affixes. The reward enters run weapon inventory immediately when capacity is available; otherwise it is reserved by `RunSession` and guaranteed into the extraction snapshot. It remains unsecured until successful extraction, preserving the extraction-risk loop.
+### 4.8 Production 0.6 build entry
 
-A reserved boss reward counts as extraction loot, so a boss run cannot become stuck on the normal `requireLoot` gate after the boss dies.
+Use:
 
-### 4.7 Combat presentation — REAL UNITY PARTIAL ACCEPTANCE
+`DEADREACH > Build Production Slice 0.6`
 
-0.5 combat FX:
-- pooled tracer core + glow
-- muzzle flash
-- environment sparks
-- infected gore/spark streaks
-- stronger critical feedback
-- old large red square/billboard impact marker removed
+It:
+1. prepares standalone weapon-family art
+2. reuses the real-Unity-validated Production 0.5 scene generation pipeline
+3. relies on 0.6 runtime bootstrap for the new presentation systems
 
-User runtime screenshots show the upgraded blue tracer path in live combat. Artist-rigged embedded firearm remains the muzzle source.
+## 5. Mandatory mobile release gate
 
-### 4.8 Dead City world/fall safety
+Production 0.6 introduces the first responsive implementation, but release still requires:
+- representative notched iPhone landscape
+- representative Android landscape
+- safe-area verification
+- readable Bunker tabs / Arsenal / Operators / Campaign / Store
+- touch targets usable with fingers
+- gameplay twin-stick + HUD safe-area verification
+- no clipping at ultrawide and compact landscape ratios
 
-Finalization adds two layers of protection:
-1. generated `DeadCity_WorldSafety_0_5` with invisible West/East/South/North BoxCollider boundaries just outside the authored pavement plus a deep emergency catch floor
-2. `PlayerFallSafety` runtime backstop on the player, storing the last valid in-bounds position and recovering if physics/spawn ever gets below the map or outside the playable rectangle
+Do **not** call mobile UI final until real-device checks pass.
 
-Goal: the player cannot simply walk off the road into the void, and even a physics edge case cannot leave the game running below the level.
+## 6. Next action — Production 0.6 acceptance
 
-This requires rebuilding Production Slice 0.5 once so the new scene colliders/component are authored into Dead City.
-
-### 4.9 Store
-
-Store surface includes cosmetics, Bunker themes, weapon finishes and season content. No fake purchases. StoreKit / Google Play verification remains a later integration gate.
-
-## 5. Mandatory mobile UI release gate
-
-Current accepted UI screenshots are **Unity Editor/Desktop preview only**. Before release, landscape mobile validation must cover safe areas/notches, representative iPhone + Android aspect ratios, touch targets, responsive reflow, gameplay HUD/twin-stick layout, and at least one real notched iPhone plus representative Android phone.
-
-Do **not** mark UI/release final until this gate passes.
-
-## 6. Next action — targeted 0.5 finalization re-test
-
-Do **not** rerun the entire MEGA gate. The already-passed sections remain accepted.
-
-After pulling latest branch:
-1. require 0 compiler errors
-2. run **`DEADREACH > Build Production Slice 0.5`** once to author new world-safety colliders/guard
-3. Arsenal: equip two or three existing stash weapons and verify different `FINISH // ...` colors plus upright weapon preview
-4. clear a standard mission and verify Bunker returns with the next level automatically selected
-5. run Level 10 boss shortcut, kill boss and confirm boss itself drops no Scrap and a `MUTATION T# // DR-7 RELIC` weapon reward is carried/secured after extraction
-6. walk deliberately into all four map edges/end of the road and verify player cannot fall into the void; if an edge case gets below bounds, recovery must occur immediately
-7. final Console: 0 blocking red errors
-
-The detailed targeted checklist is in `docs/PRODUCTION_05_TEST.md`.
-
-If these five targeted fixes pass, mark PR #5 Ready and merge to `main`.
+1. switch/pull `production/0.6-content-rewards-mobile`
+2. require 0 red compiler errors
+3. run `DEADREACH > Build Production Slice 0.6`
+4. verify weapon-family import gate passes
+5. run `docs/PRODUCTION_06_TEST.md`
+6. keep PR Draft until real Unity acceptance
 
 ## 7. Handoff protocol
 
 When resuming:
 1. read this file first
-2. treat 0.1–0.4 as merged/validated
-3. never reintroduce an external hand-mounted Rifle path
-4. active branch is `production/0.5-bunker-progression-boss-ui`
-5. operator import blocker is real-Unity validated fixed
-6. most of the 0.5 MEGA runtime gate is already real-Unity accepted from screenshots
-7. only the five finalization fixes in section 6 require targeted revalidation
-8. keep PR #5 Draft until those targeted checks pass
+2. treat 0.1–0.5 as merged / real-Unity validated baseline
+3. never reintroduce external gameplay hand-mounted Rifle transforms
+4. active branch is `production/0.6-content-rewards-mobile`
+5. 0.6 is not yet real-Unity validated
+6. use `DEADREACH > Build Production Slice 0.6`
+7. mobile responsive work is implementation-only until real-device validation passes
