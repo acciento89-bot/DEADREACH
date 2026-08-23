@@ -1,13 +1,17 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Kamilunavo.Deadreach.AI;
 using Kamilunavo.Deadreach.Core;
 using Kamilunavo.Deadreach.Extraction;
 using Kamilunavo.Deadreach.Loot;
+using Kamilunavo.Deadreach.Missions;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Player;
+using Kamilunavo.Deadreach.Weapons;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Kamilunavo.Deadreach.World
 {
@@ -69,9 +73,15 @@ namespace Kamilunavo.Deadreach.World
         };
 
         private readonly HashSet<SectorHazardZone> _activeHazards = new();
+        private readonly HashSet<int> _positionedReinforcements = new();
         private bool _initialized;
+        private bool _primaryRiskBonusGranted;
+        private bool _secondaryAnchored;
+        private float _nextWorldSync;
+        private int _reinforcementSerial;
         private RunSession _session;
         private PlayerMotor _player;
+        private ExpeditionDirector _mission;
 
         private void Awake()
         {
@@ -87,6 +97,32 @@ namespace Kamilunavo.Deadreach.World
         private void Start()
         {
             EnsureInitialized();
+        }
+
+        private void Update()
+        {
+            if (!_initialized)
+            {
+                EnsureInitialized();
+                return;
+            }
+
+            TryBindMission();
+
+            if (_mission != null && _mission.PrimaryComplete && !_primaryRiskBonusGranted)
+                GrantPrimaryRiskBonus();
+
+            if (Time.time >= _nextWorldSync)
+            {
+                _nextWorldSync = Time.time + 0.2f;
+                RelocateNewReinforcements();
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (_initialized)
+                ApplyMissionAnchors();
         }
 
         public void EnsureInitialized()
@@ -126,7 +162,9 @@ namespace Kamilunavo.Deadreach.World
             ApplyEnemyAnchors();
             ApplyLootAnchors();
 
+            _session.MissionRewardGranted += HandleMissionRewardGranted;
             _initialized = true;
+            TryBindMission();
             SectorChanged?.Invoke();
             Debug.Log($"DEADREACH 0.12 sector online // {SectorName} // hazard={HazardProfile} // risk +{RiskBonusScrap} scrap // reward +{RewardPowerBonus} power.");
         }
@@ -166,6 +204,118 @@ namespace Kamilunavo.Deadreach.World
                 return;
 
             HazardStateChanged?.Invoke();
+        }
+
+        private void TryBindMission()
+        {
+            if (_mission != null || ExpeditionDirector.Current == null)
+                return;
+
+            _mission = ExpeditionDirector.Current;
+            _mission.PrimaryCompleted += HandlePrimaryCompleted;
+            ApplyMissionAnchors();
+        }
+
+        private void HandlePrimaryCompleted()
+        {
+            GrantPrimaryRiskBonus();
+        }
+
+        private void GrantPrimaryRiskBonus()
+        {
+            if (_primaryRiskBonusGranted || _session == null || RiskBonusScrap <= 0)
+                return;
+
+            _primaryRiskBonusGranted = true;
+            _session.CollectScrap(RiskBonusScrap);
+            Debug.Log($"DEADREACH 0.12 sector risk bonus // {SectorName} // +{RiskBonusScrap} unsecured Scrap.");
+        }
+
+        private void HandleMissionRewardGranted(WeaponInstanceData reward)
+        {
+            if (reward == null || RewardPowerBonus <= 0)
+                return;
+
+            reward.itemPower += RewardPowerBonus;
+            Debug.Log($"DEADREACH 0.12 sector cache bonus // {SectorName} // +{RewardPowerBonus} Item Power.");
+        }
+
+        private void ApplyMissionAnchors()
+        {
+            if (_mission == null || ActiveLayout == null)
+                return;
+
+            var primaryName = _mission.MissionType switch
+            {
+                ExpeditionMissionType.Recovery => "Mission_RecoveryCore",
+                ExpeditionMissionType.Purge => "Mission_PurgeBeacon",
+                ExpeditionMissionType.Holdout => "Mission_Uplink",
+                _ => "Mission_BlacksiteTerminal"
+            };
+
+            var primaryObject = GameObject.Find(primaryName);
+            var primaryMarker = primaryObject != null ? primaryObject.GetComponent<ExpeditionObjectiveMarker>() : null;
+            if (primaryMarker != null && !_mission.PrimaryComplete)
+            {
+                var objectiveIndex = _mission.MissionType switch
+                {
+                    ExpeditionMissionType.Recovery => 2,
+                    ExpeditionMissionType.Purge => 4,
+                    ExpeditionMissionType.Holdout => 1,
+                    ExpeditionMissionType.Blacksite when _mission.Stage == ExpeditionMissionStage.Recover => 3,
+                    _ => 0
+                };
+                primaryMarker.SetWorldPosition(GetObjectivePoint(objectiveIndex));
+            }
+
+            if (!_mission.PrimaryComplete || _secondaryAnchored)
+                return;
+
+            var secondaryObject = GameObject.Find("Mission_OptionalBlackCache");
+            var secondaryMarker = secondaryObject != null ? secondaryObject.GetComponent<ExpeditionObjectiveMarker>() : null;
+            if (secondaryMarker == null)
+                return;
+
+            var primaryPosition = primaryMarker != null ? primaryMarker.WorldPosition : _player.transform.position;
+            var extractionPosition = ActiveLayout.ExtractionAnchor;
+            var candidates = GetObjectivePoints();
+            if (candidates.Length == 0)
+                return;
+
+            var selected = candidates
+                .OrderByDescending(point => HorizontalDistance(point, primaryPosition) + HorizontalDistance(point, extractionPosition) * 0.45f)
+                .First();
+            secondaryMarker.SetWorldPosition(selected);
+            _secondaryAnchored = true;
+        }
+
+        private void RelocateNewReinforcements()
+        {
+            if (ActiveLayout == null)
+                return;
+
+            var reinforcements = FindObjectsByType<InfectedChaser>(FindObjectsSortMode.None)
+                .Where(item => item != null && item.name.Contains("_R", StringComparison.Ordinal))
+                .OrderBy(item => item.GetInstanceID())
+                .ToArray();
+
+            foreach (var reinforcement in reinforcements)
+            {
+                var id = reinforcement.GetInstanceID();
+                if (!_positionedReinforcements.Add(id))
+                    continue;
+
+                var point = GetReinforcementPoint(_reinforcementSerial++);
+                var controller = reinforcement.GetComponent<CharacterController>();
+                if (controller != null)
+                    controller.enabled = false;
+                reinforcement.transform.position = point;
+                if (controller != null)
+                    controller.enabled = true;
+            }
+
+            if (reinforcements.Length > 0)
+                Physics.SyncTransforms();
         }
 
         private void DisableLegacyRouteBlockers()
@@ -285,11 +435,92 @@ namespace Kamilunavo.Deadreach.World
                 camera.backgroundColor = Color.Lerp(Color.black, ActiveLayout.FogColor, 0.58f);
         }
 
+        private static float HorizontalDistance(Vector3 a, Vector3 b)
+        {
+            a.y = 0f;
+            b.y = 0f;
+            return Vector3.Distance(a, b);
+        }
+
         private void OnDestroy()
         {
+            if (_mission != null)
+                _mission.PrimaryCompleted -= HandlePrimaryCompleted;
+            if (_session != null)
+                _session.MissionRewardGranted -= HandleMissionRewardGranted;
+
             _activeHazards.Clear();
+            _positionedReinforcements.Clear();
             if (Current == this)
                 Current = null;
+        }
+    }
+
+    public sealed class Production12SectorBootstrap : MonoBehaviour
+    {
+        private static Production12SectorBootstrap _instance;
+        private Coroutine _bindRoutine;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void EnsureInstalled()
+        {
+            if (_instance != null)
+                return;
+
+            var root = new GameObject("Systems_SectorDirector_012_Bootstrap");
+            _instance = root.AddComponent<Production12SectorBootstrap>();
+            DontDestroyOnLoad(root);
+        }
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
+        private void Start()
+        {
+            ScheduleBind();
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+        }
+
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ScheduleBind();
+        }
+
+        private void ScheduleBind()
+        {
+            if (_bindRoutine != null)
+                StopCoroutine(_bindRoutine);
+            _bindRoutine = StartCoroutine(BindDelayed());
+        }
+
+        private IEnumerator BindDelayed()
+        {
+            yield return null;
+
+            var session = FindFirstObjectByType<RunSession>();
+            var player = FindFirstObjectByType<PlayerMotor>();
+            if (session == null || player == null || SectorDirector.Current != null)
+            {
+                _bindRoutine = null;
+                yield break;
+            }
+
+            var root = new GameObject("Systems_SectorDirector_012");
+            var director = root.AddComponent<SectorDirector>();
+            director.EnsureInitialized();
+            _bindRoutine = null;
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance == this)
+                _instance = null;
         }
     }
 }
