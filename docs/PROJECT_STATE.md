@@ -71,9 +71,9 @@ Current accepted Sam strategy:
 - `main` contains validated 0.1 + 0.2 + 0.3
 - active branch: **`production/0.4-environment-atmosphere`**
 - PR #4 remains **Draft**
-- Production 0.4 implementation + downloaded environment/vehicle subset now **COMPILE CLEAN IN REAL UNITY**
-- Production 0.4 generator/runtime/visual gate is **NOT YET VALIDATED**
-- merge is forbidden until `docs/PRODUCTION_04_TEST.md` passes
+- Production 0.4 compile gate: **PASSED in real Unity**
+- Production 0.4 environment visual gate: **PASSED in real Unity**
+- final gameplay/start-flow regression gate is still pending before merge
 
 ## 6. Production 0.4 — implemented on branch
 
@@ -94,92 +94,79 @@ Curated CC0 subset from the same Quaternius Zombie Apocalypse Kit visual family:
 - pickup / sports car / truck
 - shared `Zombie_Atlas.png`
 
-The script requires branch `production/0.4-environment-atmosphere`, supports `-CommitAndPush`, normalizes glTF atlas URIs and verifies the CC0 marker before accepting the import.
-
 ### Dead City Environment Pass
 
 `Assets/Deadreach/Editor/DeadCityEnvironmentPass.cs`
 
 Current implementation:
 - deterministic environment root `Production_DeadCity_Environment_0_4`
-- modular real street surfaces layered over the retained prototype road collider/underlay
+- modular real street surfaces over retained prototype collision underlay
 - containers / barriers / landmark / wrecked vehicles / street clutter
-- bounds colliders on major blockers/vehicles
+- DEADREACH-owned `CollisionBounds` child colliders on major blockers/vehicles
 - explicit Quaternius environment atlas material
-- stronger cold moon / warmer street-light contrast
-- denser but gameplay-targeted exponential fog
+- cold moon / warm street-light contrast
+- gameplay-targeted exponential fog
 - global URP post-processing profile
   - ACES tonemapping
   - modest Bloom
-  - contrast/saturation/color filter pass
+  - contrast/saturation/color filter
   - modest vignette
-- camera post-processing enabled through `UniversalAdditionalCameraData`
 - stronger extraction beacon column + green local light
-- pass can run without optional assets and will warn instead of destroying gameplay
 
-### 0.4 compile/import repair
+### Import / collider hardening
 
-First real-Unity pull exposed a missing `Unity.RenderPipelines.Core.Runtime` reference in `Deadreach.Editor.asmdef`, causing `VolumeProfile`, `Volume`, Bloom, ColorAdjustments, Tonemapping and Vignette compiler failures while glTF imports were also reporting failures.
+First real-Unity 0.4 validation exposed:
+- missing `Unity.RenderPipelines.Core.Runtime` reference in `Deadreach.Editor.asmdef`
+- glTF reimport state not retrying after the compile fix
+- imported glTF prefab roots rejecting/invalidating direct `BoxCollider` authoring
 
 Fixes now on branch:
-- `Unity.RenderPipelines.Core.Runtime` added to `Deadreach.Editor.asmdef`
-- `DeadCityAssetRepair` added to force-reimport failed 0.4 environment/vehicle glTFs after scripts compile
-- manual repair menu available at `DEADREACH > Production > Repair Dead City 0.4 Imports`
+- Core Runtime assembly reference added
+- required environment gate + forced synchronous glTF reimport added
+- Production Slice 0.4 refuses to build if required streets/containers/vehicles are unavailable
+- Play Mode start locked to `Bunker_Hub`
+- bounds colliders moved onto plain DEADREACH-owned `CollisionBounds` child objects
 
-**Real Unity compile gate after these fixes: PASSED — user confirmed 0 errors on 2026-08-23.**
+## 7. Real Unity 0.4 validation status
 
-### Main generator
+### Compile gate — PASSED
+User confirmed **0 C# compiler errors** after Core Runtime/import-repair fixes.
 
-Main command on this branch:
+### Generator / visual environment gate — PASSED
+After the required-asset and collider fixes, the real Unity screenshot/user acceptance confirmed:
+- Production Slice 0.4 generates and runs
+- real street surfaces are visible
+- green/red containers are visible
+- multiple vehicles/wrecks are visible, including colored car/truck silhouettes
+- traffic barriers / road furniture / barrels / street props are visible
+- extraction beacon is visible
+- environment scale and overall dressing are acceptable for this pass
+- user response: **“sehr gut”**
 
-**`DEADREACH > Build Production Slice 0.4`**
+This is a real visual acceptance, not an inferred pass.
 
-Order:
-1. build validated Dead City base
-2. apply Production 0.3 gameplay/art binders
-3. apply Production 0.4 environment/atmosphere
-4. build Bunker
-5. repair complete Build Settings
-6. reopen Bunker
+### Final merge gate — PENDING
+Before merging PR #4, confirm in one short regression run:
+1. pressing Play starts at **Bunker_Hub / main menu**
+2. Deploy loads Dead City
+3. movement / aim / firing work
+4. embedded left-hand weapon remains stable and tracer/muzzle remain aligned
+5. loot pickup works
+6. extraction returns to Bunker
+7. no blocking Console errors
 
-### Acceptance runbook
+## 8. After 0.4 merge
 
-`docs/PRODUCTION_04_TEST.md`
-
-Critical regression lock:
-- 0.3 colored Survivor/Infected must remain
-- current embedded left-hand weapon mount must remain untouched
-- weapon/muzzle/tracer alignment must remain correct
-- movement/combat/loot/extraction/Bunker return must remain functional
-
-## 7. Immediate next local gate
-
-Compile gate is complete.
-
-Required next:
-1. run **`DEADREACH > Build Production Slice 0.4`**
-2. require generator to complete with no red errors
-3. Play → Deploy
-4. visually validate environment scale/orientation/colors/lighting/fog/post-processing
-5. validate environment blockers do not trap spawn or block extraction
-6. revalidate the locked 0.3 character/weapon/muzzle path
-7. run the gameplay regression gate from `docs/PRODUCTION_04_TEST.md`
-
-Do not claim 0.4 works until this real Unity runtime/visual gate passes.
-
-## 8. After 0.4 environment validation
-
-Next likely priorities:
-1. correct any scale/orientation/dressing problems found in screenshots
-2. production muzzle flash + impact VFX
-3. first real combat audio-content pass
-4. replace prototype IMGUI with production HUD/loadout UI
-5. production NavMesh navigation
-6. Addressables/content organization
-7. physical-device mobile validation + iOS/Android profiling
-8. proper authored rifle-hold character/animation path later
-9. backend/accounts/leaderboards/events
-10. IAP cosmetics / season structure
+Next priorities:
+1. production muzzle flash + impact VFX
+2. first real combat audio-content pass
+3. replace prototype IMGUI with production HUD/loadout UI
+4. production NavMesh navigation
+5. Addressables/content organization
+6. physical-device mobile validation + iOS/Android profiling
+7. proper authored rifle-hold character/animation path later
+8. backend/accounts/leaderboards/events
+9. IAP cosmetics / season structure
 
 ## 9. Handoff protocol
 
@@ -189,8 +176,8 @@ When resuming:
 3. never reintroduce external Rifle transform/socket hacks onto Sam
 4. current left-hand embedded weapon is accepted
 5. active work is `production/0.4-environment-atmosphere`
-6. 0.4 compile gate has passed in real Unity with 0 errors
-7. next action is `DEADREACH > Build Production Slice 0.4` followed by Play → Deploy visual/gameplay acceptance
-8. update this file after each major validation/fix
+6. 0.4 compile + environment visual gates have passed in real Unity
+7. only the short gameplay/start-flow regression gate remains before PR #4 can be marked ready and merged
+8. update this file after final validation/merge
 
 Do not rely on chat history alone.
