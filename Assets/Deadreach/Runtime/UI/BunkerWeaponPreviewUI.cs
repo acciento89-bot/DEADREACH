@@ -6,8 +6,8 @@ using UnityEngine.UI;
 namespace Kamilunavo.Deadreach.UI
 {
     /// <summary>
-    /// Dedicated RenderTexture-backed weapon inspector. It activates only while the Arsenal tab
-    /// exists, so the 3D preview does not cost render time on the other Bunker screens.
+    /// RenderTexture-backed weapon inspector docked inside the Arsenal's right-hand inspector column.
+    /// It renders only while the Arsenal tab exists.
     /// </summary>
     public sealed class BunkerWeaponPreviewUI : MonoBehaviour
     {
@@ -56,7 +56,6 @@ namespace Kamilunavo.Deadreach.UI
             var canvas = canvasObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 48;
-            canvasObject.AddComponent<GraphicRaycaster>();
 
             var scaler = canvasObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -66,33 +65,33 @@ namespace Kamilunavo.Deadreach.UI
             var frameObject = new GameObject("Arsenal_WeaponInspector_Frame", typeof(RectTransform), typeof(Image));
             frameObject.transform.SetParent(canvasObject.transform, false);
             var frame = frameObject.GetComponent<RectTransform>();
-            frame.anchorMin = new Vector2(0.72f, 0.57f);
-            frame.anchorMax = new Vector2(0.975f, 0.82f);
+            frame.anchorMin = new Vector2(0.735f, 0.285f);
+            frame.anchorMax = new Vector2(0.968f, 0.695f);
             frame.offsetMin = Vector2.zero;
             frame.offsetMax = Vector2.zero;
-            frameObject.GetComponent<Image>().color = new Color(0.025f, 0.028f, 0.028f, 0.96f);
+            frameObject.GetComponent<Image>().color = new Color(0.005f, 0.018f, 0.017f, 0.92f);
 
             var stripeObject = new GameObject("Inspector_Stripe", typeof(RectTransform), typeof(Image));
             stripeObject.transform.SetParent(frameObject.transform, false);
             var stripe = stripeObject.GetComponent<RectTransform>();
-            stripe.anchorMin = new Vector2(0f, 1f);
-            stripe.anchorMax = new Vector2(1f, 1f);
-            stripe.offsetMin = new Vector2(0f, -5f);
+            stripe.anchorMin = new Vector2(0f, 0.985f);
+            stripe.anchorMax = Vector2.one;
+            stripe.offsetMin = Vector2.zero;
             stripe.offsetMax = Vector2.zero;
-            stripeObject.GetComponent<Image>().color = new Color(0.78f, 0.34f, 0.11f, 1f);
+            stripeObject.GetComponent<Image>().color = new Color(0.78f, 0.27f, 0.07f, 1f);
 
             var rawObject = new GameObject("Weapon_Render", typeof(RectTransform), typeof(RawImage));
             rawObject.transform.SetParent(frameObject.transform, false);
             var rawRect = rawObject.GetComponent<RectTransform>();
-            rawRect.anchorMin = new Vector2(0.035f, 0.08f);
-            rawRect.anchorMax = new Vector2(0.965f, 0.92f);
+            rawRect.anchorMin = new Vector2(0.025f, 0.035f);
+            rawRect.anchorMax = new Vector2(0.975f, 0.955f);
             rawRect.offsetMin = Vector2.zero;
             rawRect.offsetMax = Vector2.zero;
             _previewImage = rawObject.GetComponent<RawImage>();
             _previewImage.color = Color.white;
             _previewImage.raycastTarget = false;
 
-            _renderTexture = new RenderTexture(512, 320, 16, RenderTextureFormat.ARGB32)
+            _renderTexture = new RenderTexture(640, 480, 16, RenderTextureFormat.ARGB32)
             {
                 name = "Runtime_BunkerWeaponPreview",
                 antiAliasing = 2,
@@ -113,7 +112,7 @@ namespace Kamilunavo.Deadreach.UI
             _previewCamera.backgroundColor = new Color(0f, 0f, 0f, 0f);
             _previewCamera.cullingMask = 1 << PreviewLayer;
             _previewCamera.targetTexture = _renderTexture;
-            _previewCamera.fieldOfView = 32f;
+            _previewCamera.fieldOfView = 31f;
             _previewCamera.nearClipPlane = 0.05f;
             _previewCamera.farClipPlane = 20f;
             _previewCamera.allowHDR = true;
@@ -123,8 +122,8 @@ namespace Kamilunavo.Deadreach.UI
             keyObject.transform.localPosition = new Vector3(-1.2f, 1.4f, 0.8f);
             var key = keyObject.AddComponent<Light>();
             key.type = LightType.Point;
-            key.color = new Color(1f, 0.52f, 0.22f);
-            key.intensity = 4.5f;
+            key.color = new Color(1f, 0.48f, 0.18f);
+            key.intensity = 4.8f;
             key.range = 8f;
             key.cullingMask = 1 << PreviewLayer;
 
@@ -133,8 +132,8 @@ namespace Kamilunavo.Deadreach.UI
             fillObject.transform.localPosition = new Vector3(1.4f, 0.6f, 1.1f);
             var fill = fillObject.AddComponent<Light>();
             fill.type = LightType.Point;
-            fill.color = new Color(0.24f, 0.58f, 0.78f);
-            fill.intensity = 2.2f;
+            fill.color = new Color(0.18f, 0.52f, 0.74f);
+            fill.intensity = 2.4f;
             fill.range = 7f;
             fill.cullingMask = 1 << PreviewLayer;
         }
@@ -154,15 +153,10 @@ namespace Kamilunavo.Deadreach.UI
 
             var catalog = Resources.Load<ProductionAssetCatalog>("Deadreach/ProductionAssetCatalog");
             var source = catalog != null ? catalog.PrimaryWeaponPrefab : null;
-            if (source != null)
-            {
-                _weaponVisual = Instantiate(source, _previewRoot.transform, false);
-                _weaponVisual.name = "Preview_ProductionWeapon";
-            }
-            else
-            {
-                _weaponVisual = BuildFallbackWeapon(_previewRoot.transform);
-            }
+            _weaponVisual = source != null
+                ? Instantiate(source, _previewRoot.transform, false)
+                : BuildFallbackWeapon(_previewRoot.transform);
+            _weaponVisual.name = source != null ? "Preview_ProductionWeapon" : "Preview_FallbackWeapon";
 
             SetLayerRecursive(_weaponVisual, PreviewLayer);
             NormalizeWeapon(_weaponVisual);
@@ -180,7 +174,7 @@ namespace Kamilunavo.Deadreach.UI
 
             var longest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
             if (longest > 0.001f)
-                visual.transform.localScale *= 2.1f / longest;
+                visual.transform.localScale *= 2.35f / longest;
 
             renderers = visual.GetComponentsInChildren<Renderer>(true);
             bounds = renderers[0].bounds;
@@ -188,7 +182,7 @@ namespace Kamilunavo.Deadreach.UI
                 bounds.Encapsulate(renderers[i].bounds);
 
             visual.transform.position -= bounds.center;
-            visual.transform.position += Vector3.up * 0.12f;
+            visual.transform.position += Vector3.up * 0.10f;
             visual.transform.rotation = Quaternion.Euler(8f, -28f, -4f);
         }
 
@@ -200,13 +194,13 @@ namespace Kamilunavo.Deadreach.UI
             var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
             body.transform.SetParent(root.transform, false);
             body.transform.localScale = new Vector3(1.35f, 0.16f, 0.22f);
-            Object.Destroy(body.GetComponent<Collider>());
+            Destroy(body.GetComponent<Collider>());
 
             var barrel = GameObject.CreatePrimitive(PrimitiveType.Cube);
             barrel.transform.SetParent(root.transform, false);
             barrel.transform.localPosition = new Vector3(0.98f, 0.03f, 0f);
             barrel.transform.localScale = new Vector3(0.62f, 0.07f, 0.08f);
-            Object.Destroy(barrel.GetComponent<Collider>());
+            Destroy(barrel.GetComponent<Collider>());
             return root;
         }
 
