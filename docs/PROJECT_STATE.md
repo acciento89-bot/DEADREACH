@@ -53,7 +53,9 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - stable branch: `main`
 - stable production level: **0.7**
 - active branch: **`production/0.8-workshop-progression`**
-- Production 0.8 Phase A progression engine is implemented and awaiting first real-Unity compile/build gate
+- PR #8: Draft, targets `main`
+- Production 0.8 Phase A compile gate passed with **0 red compiler errors** on 2026-08-23
+- Production 0.8 Phase B Workshop UI is now implemented and requires the next real-Unity compile/build/runtime gate
 - all new work must preserve the accepted 0.7 presentation/regression baseline
 
 ## 4. Production 0.8 goal
@@ -82,13 +84,19 @@ Close the missing **Equip / Upgrade** half of the core loop with real persistent
 - new `DEADREACH > Build Production Slice 0.8` gate
 - new 0.8 dev helpers for Scrap / weapon-family seeding / test profile setup
 
-### Phase B — next after Phase A gate
-- dedicated Bunker Workshop UI
-- equipped weapon calibration controls and before/after power feedback
-- weapon salvage controls with displayed return value
-- Workbench / Medbay / Cargo Rig / Scavenger Network cards, ranks, effects and purchase controls
-- profile Scrap refresh after purchases
-- responsive landscape validation
+### Phase B — Workshop UI implemented
+- new **WORKSHOP** entry is injected into the existing Bunker navigation without rewriting the validated 0.7 Bunker command-center implementation
+- Store navigation is shifted down and Bunker status is compacted to make room for the sixth navigation item
+- Workshop renders inside the validated Bunker content viewport so existing landscape/safe-area behavior is inherited
+- permanent-system cards show Workbench / Medbay / Cargo Rig / Scavenger Network rank, live effect, next purchase cost and affordability
+- weapon list prioritizes the active loadout, then sorts by Item Power
+- every weapon card shows family / rarity / Item Power / calibration / affixes and real Item-Power damage contribution
+- Calibration spends secured Scrap, adds one calibration level and +8 Item Power, then refreshes immediately
+- Workshop exposes the actual Workbench calibration ceiling; weapons at the cap show `WORKBENCH REQUIRED`
+- Salvage is two-step confirmed to prevent accidental destruction
+- active equipped weapon shows `ACTIVE LOADOUT` and remains unsalvageable
+- Scrap summary refreshes after calibration, salvage and Bunker upgrades
+- Item-Power damage multiplier is now exposed by `WeaponStatResolver` so Workshop presentation uses the same source of truth as combat
 
 ## 5. Production 0.7 regression baseline that must stay green
 
@@ -107,10 +115,14 @@ Close the missing **Equip / Upgrade** half of the core loop with real persistent
 Run `docs/PRODUCTION_08_TEST.md`.
 
 Immediate next validation:
-1. switch/pull `production/0.8-workshop-progression`
-2. Unity compile → **0 red compiler errors**
+1. pull latest `production/0.8-workshop-progression`
+2. Unity compile after Workshop UI → **0 red compiler errors**
 3. `DEADREACH > Build Production Slice 0.8`
-4. if Phase A is green, implement the Workshop UI on the same branch
+4. `DEADREACH > Dev > 0.8 Set Workshop Test Profile`
+5. Play → Bunker → WORKSHOP
+6. validate calibration / two-step salvage / four Bunker-system purchases
+7. validate actual Medbay / Cargo / Scavenger runtime effects
+8. final 0.7 regression + **0 red runtime errors**
 
 ## 7. Handoff protocol
 
@@ -118,7 +130,7 @@ When resuming:
 1. read this file first
 2. treat Production 0.7 on `main` as the stable real-Unity-validated baseline
 3. active work is Production 0.8 on `production/0.8-workshop-progression`
-4. Phase A progression engine is implemented; first real-Unity compile/build gate is pending
-5. after Phase A goes green, continue directly with Workshop UI / economy Phase B
+4. Phase A compile gate already passed; Phase B Workshop UI is implemented
+5. next required gate is fresh Unity compile + Build Production Slice 0.8
 6. never reintroduce external gameplay hand-mounted Rifle transforms
 7. keep mobile landscape-only
