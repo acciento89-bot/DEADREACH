@@ -10,20 +10,20 @@ namespace Kamilunavo.Deadreach.Editor
 {
     public static class QuaterniusStarterArtSetup
     {
-        private const string SourceRoot = "Assets/Deadreach/ThirdParty/Quaternius/ZombieApocalypseKit/FBX";
+        private const string SourceRoot = "Assets/Deadreach/ThirdParty/Quaternius/ZombieApocalypseKit/glTF";
         private const string ProductionRoot = "Assets/Deadreach/Art/Production";
         private const string PrefabRoot = ProductionRoot + "/Prefabs";
         private const string ControllerRoot = ProductionRoot + "/Controllers";
 
-        private static readonly string SurvivorSource = SourceRoot + "/Survivor_Sam.fbx";
-        private static readonly string RifleSource = SourceRoot + "/Weapon_Rifle.fbx";
+        private static readonly string SurvivorSource = SourceRoot + "/Survivor_Sam.gltf";
+        private static readonly string RifleSource = SourceRoot + "/Weapon_Rifle.gltf";
 
         private static readonly string[] InfectedSources =
         {
-            SourceRoot + "/Infected_Basic.fbx",
-            SourceRoot + "/Infected_Chubby.fbx",
-            SourceRoot + "/Infected_Arm.fbx",
-            SourceRoot + "/Infected_Ribcage.fbx"
+            SourceRoot + "/Infected_Basic.gltf",
+            SourceRoot + "/Infected_Chubby.gltf",
+            SourceRoot + "/Infected_Arm.gltf",
+            SourceRoot + "/Infected_Ribcage.gltf"
         };
 
         [MenuItem("DEADREACH/Production/Setup Quaternius Starter Art", priority = 20)]
@@ -33,6 +33,8 @@ namespace Kamilunavo.Deadreach.Editor
             EnsureFolder(ProductionRoot, "Prefabs");
             EnsureFolder(ProductionRoot, "Controllers");
 
+            AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+
             var missing = new[] { SurvivorSource, RifleSource }
                 .Concat(InfectedSources)
                 .Where(path => AssetDatabase.LoadAssetAtPath<GameObject>(path) == null)
@@ -41,7 +43,8 @@ namespace Kamilunavo.Deadreach.Editor
             if (missing.Length > 0)
             {
                 Debug.LogError(
-                    "DEADREACH Quaternius starter FBX files are missing. Run tools/install-quaternius-zombie-kit.ps1 first. Missing:\n" +
+                    "DEADREACH Quaternius starter glTF files are missing or have not finished importing. " +
+                    "Run tools/install-quaternius-zombie-kit.ps1, wait for Unity glTFast import to finish, then retry. Missing:\n" +
                     string.Join("\n", missing));
                 return;
             }
@@ -64,7 +67,7 @@ namespace Kamilunavo.Deadreach.Editor
             Selection.activeObject = catalog;
             EditorGUIUtility.PingObject(catalog);
 
-            Debug.Log("DEADREACH Quaternius starter art setup complete. Regenerate with DEADREACH > Build Production Slice 0.3 and test visual scale/orientation in Play Mode.");
+            Debug.Log("DEADREACH Quaternius glTF starter art setup complete. Regenerate with DEADREACH > Build Production Slice 0.3 and test visual scale/orientation in Play Mode.");
         }
 
         private static GameObject BuildCharacterWrapper(string sourcePath, string prefabName, bool survivor, int variantIndex)
@@ -129,6 +132,8 @@ namespace Kamilunavo.Deadreach.Editor
 
         private static void ConfigureModelImporter(string sourcePath)
         {
+            // FBX uses ModelImporter; glTFast uses its own scripted importer.
+            // Keep the old ModelImporter tuning path so the setup remains format-tolerant.
             if (AssetImporter.GetAtPath(sourcePath) is not ModelImporter importer)
                 return;
 
@@ -163,6 +168,11 @@ namespace Kamilunavo.Deadreach.Editor
                 .OfType<AnimationClip>()
                 .Where(clip => !clip.name.StartsWith("__preview__", StringComparison.OrdinalIgnoreCase))
                 .ToArray();
+
+            if (clips.Length == 0)
+            {
+                Debug.LogWarning($"DEADREACH found no AnimationClip subassets in '{sourcePath}'. The model will still render, but animation setup may need a dedicated Quaternius animation import/retarget pass.");
+            }
 
             var stateMachine = controller.layers[0].stateMachine;
             var idleClip = FindClip(clips, "idle") ?? clips.FirstOrDefault();
