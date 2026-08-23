@@ -1,5 +1,6 @@
 using Kamilunavo.Deadreach.Core;
 using Kamilunavo.Deadreach.Inventory;
+using Kamilunavo.Deadreach.Missions;
 using Kamilunavo.Deadreach.Player;
 using Kamilunavo.Deadreach.Progression;
 using UnityEngine;
@@ -28,9 +29,10 @@ namespace Kamilunavo.Deadreach.Extraction
 
             var blockedByNoLoot = requireLoot && !HasAnyLoot(session);
             var blockedByBoss = IsBossGateBlocked();
-            session.SetExtractionPresence(true, blockedByNoLoot, blockedByBoss);
+            var blockedByMission = IsMissionGateBlocked();
+            session.SetExtractionPresence(true, blockedByNoLoot, blockedByBoss, blockedByMission);
 
-            if (blockedByNoLoot || blockedByBoss)
+            if (blockedByNoLoot || blockedByBoss || blockedByMission)
             {
                 _elapsed = 0f;
                 session.SetExtractionProgress(0f);
@@ -54,7 +56,7 @@ namespace Kamilunavo.Deadreach.Extraction
             _occupant = player;
             var session = RunSession.Current;
             if (session != null)
-                session.SetExtractionPresence(true, requireLoot && !HasAnyLoot(session), IsBossGateBlocked());
+                session.SetExtractionPresence(true, requireLoot && !HasAnyLoot(session), IsBossGateBlocked(), IsMissionGateBlocked());
         }
 
         private void OnTriggerExit(Collider other)
@@ -65,13 +67,13 @@ namespace Kamilunavo.Deadreach.Extraction
 
             _occupant = null;
             _elapsed = 0f;
-            RunSession.Current?.SetExtractionPresence(false, false, false);
+            RunSession.Current?.SetExtractionPresence(false, false, false, false);
         }
 
         private void OnDisable()
         {
             if (_occupant != null)
-                RunSession.Current?.SetExtractionPresence(false, false, false);
+                RunSession.Current?.SetExtractionPresence(false, false, false, false);
         }
 
         private static bool IsBossGateBlocked()
@@ -80,9 +82,15 @@ namespace Kamilunavo.Deadreach.Extraction
             return director != null && director.IsBossLevel && !director.BossGateCleared;
         }
 
+        private static bool IsMissionGateBlocked()
+        {
+            var director = ExpeditionDirector.Current;
+            return director != null && !director.PrimaryComplete;
+        }
+
         private static bool HasAnyLoot(RunSession session)
         {
-            if (session.CarriedScrap > 0 || session.PendingBossReward != null)
+            if (session.CarriedScrap > 0 || session.PendingBossReward != null || session.PendingMissionRewards.Count > 0)
                 return true;
 
             return RunInventory.Current != null && RunInventory.Current.Weapons.Count > 0;
