@@ -1,4 +1,5 @@
 using Kamilunavo.Deadreach.Core;
+using Kamilunavo.Deadreach.Inventory;
 using Kamilunavo.Deadreach.Player;
 using UnityEngine;
 
@@ -24,7 +25,7 @@ namespace Kamilunavo.Deadreach.Extraction
             if (_occupant == null || session == null || session.IsCompleted || session.IsFailed)
                 return;
 
-            var blocked = requireLoot && session.CarriedScrap <= 0;
+            var blocked = requireLoot && !HasAnyLoot(session);
             session.SetExtractionPresence(true, blocked);
 
             if (blocked)
@@ -51,7 +52,7 @@ namespace Kamilunavo.Deadreach.Extraction
             _occupant = player;
             var session = RunSession.Current;
             if (session != null)
-                session.SetExtractionPresence(true, requireLoot && session.CarriedScrap <= 0);
+                session.SetExtractionPresence(true, requireLoot && !HasAnyLoot(session));
         }
 
         private void OnTriggerExit(Collider other)
@@ -69,6 +70,14 @@ namespace Kamilunavo.Deadreach.Extraction
         {
             if (_occupant != null)
                 RunSession.Current?.SetExtractionPresence(false, false);
+        }
+
+        private static bool HasAnyLoot(RunSession session)
+        {
+            if (session.CarriedScrap > 0)
+                return true;
+
+            return RunInventory.Current != null && RunInventory.Current.Weapons.Count > 0;
         }
     }
 }

@@ -2,212 +2,216 @@
 
 _Last updated: 2026-08-23_
 
-This is the canonical handoff file for DEADREACH. Update it after every major development, validation, build, architecture, backend, monetization, store, or release step so another chat can continue without relying on chat history.
+This is the canonical handoff file for DEADREACH. Update it after every major development, validation, build, architecture, backend, monetization, store, or release step.
 
 ## 1. Product identity
 
 - **Game:** DEADREACH
-- **Studio / umbrella:** Kamilunavo
+- **Studio:** Kamilunavo
 - **Repository:** `acciento89-bot/DEADREACH`
-- **App Store Connect:** app created
-- **iOS Bundle Identifier:** `de.kamilunavo.deadzone`
-- **App Store Connect SKU:** `deadzone-001`
 - **Platforms:** iOS + Android
-- **Monetization:** in-app purchases only
+- **Unity:** `6000.3.22f1`
+- **Render pipeline:** URP 17.3
+- **iOS Bundle ID:** `de.kamilunavo.deadzone`
+- **App Store SKU:** `deadzone-001`
+- **Monetization:** IAP only
 - **Advertising:** none
 
-The store-facing name stays **DEADREACH**. The older technical identifier `de.kamilunavo.deadzone` is intentional.
+Store-facing name remains **DEADREACH**. The older internal `deadzone` identifier is intentional.
 
-## 2. Game direction — LOCKED
+## 2. Locked game direction
 
-Premium-feeling mobile 3D survival/extraction roguelite with persistent progression.
+Premium-feeling mobile 3D survival / extraction roguelite with persistent progression.
 
 Core loop:
 
-**Bunker → Deploy → Expedition → Combat → Loot → Risk decision → Extract / Die / Abandon → Persistent result → Bunker**
+**Bunker → Deploy → Expedition → Combat → Loot → Risk decision → Extract / Die / Abandon → Persistent result → Bunker → Equip / Upgrade → Deploy stronger**
 
 Long-term pillars:
 
-- real-time high-angle/isometric-style 3D combat
-- extraction risk and deeper-run rewards
-- persistent survivor progression
+- high-angle real-time 3D combat
+- extraction risk/reward
 - loot-driven weapon/equipment builds
+- persistent survivor progression
 - visible bunker progression
 - bosses and replayable zones
-- daily/weekly challenges and seasons
-- collections, achievements, streaks and leaderboards
-- zero advertising
+- dailies/weeklies/seasons
+- collections, achievements, streaks, leaderboards
+- zero ads
 
-## 3. Technical direction — LOCKED
+## 3. Technical direction
 
-- **Engine:** Unity 6.3 LTS
-- **Pinned editor:** `6000.3.22f1`
-- **Render pipeline:** URP 17.3
-- **Language:** C#
-- **Input:** Unity Input System 1.17
-- **Camera package available:** Cinemachine 3.1.5
-- **Current prototype camera:** custom perspective high-angle follow rig
-- **Serialization:** Force Text
-- **Version control:** GitHub + Git LFS
-- **iOS / Android scripting backend:** IL2CPP
-- **Orientation:** landscape
-- **Color space:** Linear
-- **Backend:** not implemented; Supabase remains an option
-- **IAP:** Apple + Google storefront integration planned
-- **Addressables:** planned
-- **Production AI navigation:** planned; current prototype uses direct steering
+- Unity 6.3 LTS, pinned `6000.3.22f1`
+- C#
+- URP 17.3
+- Unity Input System 1.17
+- Cinemachine available
+- custom perspective high-angle camera currently active
+- IL2CPP for iOS / Android
+- landscape
+- Linear color space
+- Force Text serialization
+- GitHub + Git LFS
+- Addressables planned
+- backend/accounts/leaderboards/events planned
+- Supabase remains an option
+- Apple / Google IAP planned
+- production NavMesh AI planned; current AI is direct steering
 
-Graphics target: real 3D environments/characters, PBR, proper lighting/probes, post-processing, VFX, animation, audio and scalable mobile quality. Primitive prototype art must be replaced, not polished into final art.
+Graphics target remains real 3D characters/environments, PBR, proper lighting/probes, post-processing, animation, audio and scalable mobile quality. Primitive geometry is temporary scaffolding only.
 
-Runtime presets: Performance / Balanced / Ultra.
+## 4. Vertical Slice 0.1 — ACCEPTED / MERGED
 
-## 4. Milestone status
+PR #1 `foundation: Unity 6.3 vertical slice 0.1 — validated` was merged to `main` on 2026-08-23.
 
-### Vertical Slice 0.1 — ACCEPTED
+Merge commit:
 
-All editor-foundation gates passed in real Unity `6000.3.22f1` on 2026-08-23.
+`e4d5dbe2c52d3e9aeed52f421fdd99f7c6b01877`
 
-Confirmed:
+Validated in real Unity:
 
-- clean compile with **0 C# errors**
-- complete Bunker + Dead City generation
-- deterministic Build Settings: Bunker index 0, Dead City index 1
-- Bunker starts
-- Deploy loads Dead City
-- movement / aiming / firing work
-- infected chase, melee and player death work
-- death registers failed run and returns to Bunker
-- Scrap collection works
-- extraction progress works
-- successful extraction returns to Bunker
-- secured Scrap increases
-- extraction streak increments
-- secured Scrap + streak persist after leaving/re-entering Play Mode
-- Pause → Resume works
-- Pause → Abandon Run returns to Bunker with failed-run accounting
-- Performance / Balanced / Ultra switching works without blocking Console errors
+- 0 C# errors
+- Bunker + Dead City generation
+- Bunker → Deploy → gameplay
+- movement / aiming / firing
+- infected chase / melee
+- death → failed run → Bunker
+- Scrap collection
+- successful extraction → Bunker
+- Scrap + streak persistence
+- Pause → Resume
+- Pause → Abandon
+- Performance / Balanced / Ultra switching
 
-Validated core loop:
+## 5. Production Pass 0.2 — ACCEPTED / READY TO MERGE
 
-**Bunker → Deploy → Combat/Loot → Extraction / Death / Abandon → Bunker → persistent result**
+Branch: `production/0.2-gamefeel`
 
-Unity-6.3 compatibility fixes found during live validation:
+PR #2: `production: game feel, weapon loot and equipment loop 0.2`
 
-- removed unsupported `AudioListener.pause` calls
-- removed inaccessible `UniversalRenderPipelineAsset.EnsureGlobalSettings()` call
-- centralized scene Build Settings registration to prevent Dead-City-only return failures
+### Implemented
 
-Physical-device touch and iOS/Android builds are deferred to Production Pass 0.2/device validation and were not blockers for the foundation merge.
+- visible dynamic mobile twin-stick overlay
+- gamepad/mobile haptics architecture
+- decoupled combat feedback bus
+- runtime tracer / impact / critical-hit feedback
+- pooled audio service + data-driven AudioCue assets
+- survivor/infected Animator integration hooks
+- ScriptableObject weapon definitions
+- Common / Uncommon / Rare / Epic / Legendary weapon rarities
+- individual serializable weapon instances
+- item power
+- Damage / Fire Rate / Range / Crit Chance / Crit Damage affixes
+- depth-influenced weapon loot rolls
+- run-only weapon inventory, capacity 6
+- two generated weapon cases in Dead City
+- death/abandon loses unsecured weapon loot
+- extraction banks weapon loot into persistent stash
+- extraction accepts Scrap OR weapon loot
+- save schema v3 with stash + equipped primary + migration
+- Bunker stash/equipment presentation
+- `EQUIP NEXT STASH WEAPON`
+- equipped affixes modify next-run combat stats
+- critical-hit feedback
+- FIELD HUD shows equipped weapon / power / damage / crit / run weapon-loot count
 
-## 5. Foundation implemented
+Established progression loop:
 
-- Unity `.gitignore`
-- Git LFS rules
-- editor pin `6000.3.22f1`
-- URP 17.3.0
-- Input System 1.17.0
-- Cinemachine 3.1.5
-- Unity UI 2.0.0
-- Runtime / Editor asmdefs
-- automatic project settings/bootstrap
-- automatic URP bootstrap
-- 60 FPS target, VSync off, sleep disabled
-- adaptive Performance/Balanced/Ultra quality service
+**Find weapon → survive → extract → stash → equip → next run becomes stronger/different**
 
-Gameplay currently implemented:
+## 6. Production 0.2 real Unity validation — PASSED
 
-- WASD / gamepad / mouse / touch input
-- CharacterController survivor movement
-- perspective high-angle follow camera
-- factions + health/damage/death
-- hitscan shooting
-- infected chase + melee AI
-- enemy Scrap drops + placed Scrap caches
-- extraction hold/progress
-- death/abandon loses carried loot
-- extraction banks Scrap
-- persistent JSON profile for Scrap, successes, failures and streaks
-- Bunker menu
-- pause/resume/abandon
-- Bunker ↔ Dead City scene flow
-- HP bar / damage flash / extraction messaging / progress HUD
+Confirmed by the user in real Unity `6000.3.22f1` on 2026-08-23.
 
-## 6. Scene generation tooling
+### Compile gate
 
-Primary command:
+- **0 red compiler errors**
+- **0 yellow compiler warnings**
 
-`DEADREACH > Build Complete Vertical Slice 0.1`
+Unity-6.3 compatibility fixes during the gate:
 
-Dev-only generators:
+- enabled `com.unity.modules.audio` `1.0.0`
+- enabled `com.unity.modules.animation` `1.0.0`
+- enabled `com.unity.modules.particlesystem` `1.0.0`
+- scoped the mobile-only haptics timestamp field to mobile compilation
 
-`DEADREACH > Dev > ...`
+### Runtime gate
 
-Generated scenes:
+User confirmed the complete Production 0.2 test pass works as expected, including:
 
-- `Assets/Deadreach/Scenes/Bunker_Hub.unity`
-- `Assets/Deadreach/Scenes/DeadCity_VerticalSlice.unity`
+- `DEADREACH > Build Production Slice 0.2` generation
+- Bunker start + previous profile loading
+- Deploy to Dead City
+- movement / aiming / shooting without regressions
+- tracer / impact feedback
+- weapon-case pickup + run weapon-loot HUD
+- unsecured weapon loss on death/abandon
+- successful weapon extraction into persistent stash
+- rarity / item power / affix display
+- equipped-primary persistence
+- equipped affixes reflected in next-run combat stats
+- critical-hit feedback
+- stash/equipment persistence across Play Mode restart
+- foundation death / extraction / pause / abandon flows still working
+- no blocking Console errors
 
-Repair command:
+Production 0.2 is therefore **runtime-accepted and may be merged to `main`**.
 
-`DEADREACH > Project > Repair Scene Build Settings`
+Physical-device touch/haptics and iOS/Android builds remain separate device/build validation tasks; they were not part of this Windows Editor runtime gate.
 
-## 7. Git / release state
+## 7. Deliberate limitations after 0.2
 
-- `foundation/unity-6.3` — Vertical Slice 0.1 foundation, fully validated and ready for merge
-- PR #1 — **foundation: Unity 6.3 vertical slice 0.1 — validated**
-- next branch after merge: `production/0.2-gamefeel`
+- survivor/infected/environment geometry is still temporary prototype art
+- Animator hooks exist but real production character assets/controllers are not yet integrated
+- VFX are functional placeholders
+- audio framework exists but final clips are missing
+- weapon-case geometry is temporary
+- production NavMesh navigation is pending
+- current Bunker/HUD presentation still uses prototype IMGUI
+- physical-device touch/haptics still needs device validation
 
-## 8. Production Pass 0.2 — NEXT
+## 8. Next milestone — Production Art / Presentation 0.3
 
-Goal: stop looking like a systems prototype and establish the first production-quality gameplay presentation while preserving mobile performance.
+Start from updated `main` after PR #2 merge.
 
 Priority:
 
-1. production mobile HUD / visible twin-stick controls + haptics architecture
-2. character presentation hooks + animation-state architecture for real survivor asset integration
-3. infected presentation/animation-state architecture
-4. data-driven weapon definitions and runtime weapon configuration
-5. muzzle flash / tracer / impact / hit-feedback VFX architecture
-6. audio event framework and first combat audio pass
-7. Dead City production environment replacement path
-8. URP post-processing / color grading / atmosphere
-9. rarity / affix model for weapons
-10. real run inventory/equipment
-11. deeper risk/reward decisions and multiple extraction choices
-12. bunker room upgrade architecture
-13. first boss encounter
-14. Addressables/content organization
-15. backend/accounts/leaderboards/events
-16. IAP cosmetics/season structure
-17. iOS/Android build pipeline + physical-device profiling
+1. real survivor model/prefab integration path + production Animator controller
+2. real infected model/prefab integration path + animation sets
+3. real weapon model / muzzle / attachment presentation
+4. pooled muzzle / tracer / impact VFX
+5. first real combat audio-content pass
+6. Dead City production environment-art replacement framework
+7. URP post-processing / color grading / atmosphere
+8. replace prototype IMGUI with production HUD/loadout UI
+9. NavMesh production enemy navigation
+10. physical-device mobile input/haptics validation
+11. iOS/Android build pipeline + profiling
+12. deeper run choices / multiple extraction decisions
+13. bunker upgrades
+14. first boss
+15. Addressables/content organization
+16. backend/accounts/leaderboards/events
+17. IAP cosmetics / season structure
 
-## 9. Immediate next step
-
-After PR #1 merge:
-
-1. create `production/0.2-gamefeel` from updated `main`
-2. add production gameplay/presentation architecture in a large pass
-3. keep generated primitive geometry only as fallback scaffolding
-4. require another clean Unity compile before merging Production Pass 0.2
-5. begin physical-device touch validation and mobile build preparation
-
-## 10. Non-negotiables
+## 9. Non-negotiables
 
 - No cheap generic mobile finish.
-- Primitive geometry is temporary scaffolding.
-- Mobile performance matters from the first production art/shader decisions.
-- Keep gameplay modular/data-driven.
+- Primitive geometry remains temporary scaffolding.
+- Mobile performance matters from the first production-art decisions.
+- Keep gameplay modular and data-driven.
 - Update this file after every major pass.
 - Store name stays **DEADREACH**.
 - No advertising SDKs or ad-based rewards.
 
-## 11. Handoff protocol
+## 10. Handoff protocol
 
 When resuming in another chat:
 
-1. Read this file first.
-2. Inspect latest commits / open PRs / current production branch.
-3. Continue from **Immediate next step** or the newest recorded milestone.
-4. Update this file before ending a major pass.
+1. read this file first
+2. verify PR #2 merge status
+3. if merged, continue on the Production Art / Presentation 0.3 branch
+4. distinguish clearly between implemented, editor-validated, device-validated, and production-art-complete states
+5. update this file before ending the next major pass
 
 Do not rely on chat history alone.
