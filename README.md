@@ -14,9 +14,25 @@ Premium mobile 3D survival-extraction roguelite by Kamilunavo.
 
 ## Game direction
 
-DEADREACH combines real-time isometric 3D combat, extraction risk, loot-driven builds, persistent bunker progression and seasonal live content. The first production milestone is a vertical slice that proves the complete loop:
+DEADREACH combines real-time high-angle 3D combat, extraction risk, loot-driven builds, persistent bunker progression and seasonal live content.
 
-**Bunker → Expedition → Combat → Loot → Extract → Persistent progression**
+Current core loop:
+
+**Bunker → Deploy → Expedition → Combat → Loot → Extract / Die / Abandon → Bunker → Equip / Upgrade → Deploy stronger**
+
+## Current state
+
+Validated and merged:
+
+- Vertical Slice 0.1 foundation
+- Production Pass 0.2 game-feel / weapon-loot / equipment loop
+
+Active:
+
+- `production/0.3-art-presentation`
+- production asset-binding pipeline passed real Unity compile, generator and empty-catalog fallback runtime validation
+- Quaternius Zombie Apocalypse Kit selected as the first CC0 production-art source
+- actual selected Survivor / Infected / Rifle binaries still need to be imported and validated
 
 ## Repository policy
 

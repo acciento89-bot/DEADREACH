@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Feedback
@@ -6,10 +5,16 @@ namespace Kamilunavo.Deadreach.Feedback
     public sealed class CombatFeedbackPresenter : MonoBehaviour
     {
         private static CombatFeedbackPresenter _instance;
+
+        [SerializeField, Min(4)] private int tracerPoolSize = 24;
+
         private Material _tracerMaterial;
         private Material _impactMaterial;
         private ParticleSystem _impactParticles;
         private ParticleSystemRenderer _impactRenderer;
+        private LineRenderer[] _tracers;
+        private float[] _tracerHideAt;
+        private int _nextTracerIndex;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureInstance()
@@ -25,6 +30,7 @@ namespace Kamilunavo.Deadreach.Feedback
         private void Awake()
         {
             SetupMaterials();
+            SetupTracerPool();
             SetupImpactParticles();
         }
 
@@ -40,25 +46,33 @@ namespace Kamilunavo.Deadreach.Feedback
             CombatFeedback.Impacted -= HandleImpact;
         }
 
-        private void HandleShot(ShotFeedback feedback)
+        private void Update()
         {
-            StartCoroutine(ShowTracer(feedback));
+            if (_tracers == null)
+                return;
+
+            var now = Time.unscaledTime;
+            for (var i = 0; i < _tracers.Length; i++)
+            {
+                var tracer = _tracers[i];
+                if (tracer != null && tracer.enabled && now >= _tracerHideAt[i])
+                    tracer.enabled = false;
+            }
         }
 
-        private IEnumerator ShowTracer(ShotFeedback feedback)
+        private void HandleShot(ShotFeedback feedback)
         {
-            var tracerObject = new GameObject("VFX_Tracer");
-            tracerObject.transform.SetParent(transform, false);
+            if (_tracers == null || _tracers.Length == 0)
+                return;
 
-            var line = tracerObject.AddComponent<LineRenderer>();
-            line.useWorldSpace = true;
-            line.positionCount = 2;
+            var index = _nextTracerIndex;
+            _nextTracerIndex = (_nextTracerIndex + 1) % _tracers.Length;
+
+            var line = _tracers[index];
             line.SetPosition(0, feedback.Origin);
             line.SetPosition(1, feedback.EndPoint);
             line.startWidth = Mathf.Max(0.01f, feedback.TracerWidth) * (feedback.Critical ? 1.8f : 1f);
             line.endWidth = line.startWidth * 0.55f;
-            line.numCapVertices = 2;
-            line.material = _tracerMaterial;
 
             line.startColor = feedback.Critical
                 ? new Color(1f, 0.2f, 0.92f, 1f)
@@ -66,9 +80,9 @@ namespace Kamilunavo.Deadreach.Feedback
                     ? new Color(1f, 0.76f, 0.28f, 0.95f)
                     : new Color(0.35f, 0.85f, 1f, 0.9f);
             line.endColor = new Color(line.startColor.r, line.startColor.g, line.startColor.b, 0.08f);
+            line.enabled = true;
 
-            yield return new WaitForSecondsRealtime(Mathf.Max(0.025f, feedback.TracerDuration));
-            Destroy(tracerObject);
+            _tracerHideAt[index] = Time.unscaledTime + Mathf.Max(0.025f, feedback.TracerDuration);
         }
 
         private void HandleImpact(ImpactFeedback feedback)
@@ -98,20 +112,31 @@ namespace Kamilunavo.Deadreach.Feedback
         {
             var tracerShader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Sprites/Default");
             if (tracerShader != null)
-            {
-                _tracerMaterial = new Material(tracerShader)
-                {
-                    name = "Runtime_TracerMaterial"
-                };
-            }
+                _tracerMaterial = new Material(tracerShader) { name = "Runtime_TracerMaterial" };
 
             var particleShader = Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Sprites/Default");
             if (particleShader != null)
+                _impactMaterial = new Material(particleShader) { name = "Runtime_ImpactMaterial" };
+        }
+
+        private void SetupTracerPool()
+        {
+            var count = Mathf.Max(4, tracerPoolSize);
+            _tracers = new LineRenderer[count];
+            _tracerHideAt = new float[count];
+
+            for (var i = 0; i < count; i++)
             {
-                _impactMaterial = new Material(particleShader)
-                {
-                    name = "Runtime_ImpactMaterial"
-                };
+                var tracerObject = new GameObject($"VFX_Tracer_{i:00}");
+                tracerObject.transform.SetParent(transform, false);
+
+                var line = tracerObject.AddComponent<LineRenderer>();
+                line.useWorldSpace = true;
+                line.positionCount = 2;
+                line.numCapVertices = 2;
+                line.sharedMaterial = _tracerMaterial;
+                line.enabled = false;
+                _tracers[i] = line;
             }
         }
 

@@ -1,5 +1,8 @@
+using Kamilunavo.Deadreach.AI;
 using Kamilunavo.Deadreach.Inventory;
 using Kamilunavo.Deadreach.Loot;
+using Kamilunavo.Deadreach.Player;
+using Kamilunavo.Deadreach.Presentation;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
@@ -19,12 +22,32 @@ namespace Kamilunavo.Deadreach.Editor
             if (Object.FindFirstObjectByType<RunInventory>() == null)
                 new GameObject("Systems_RunInventory").AddComponent<RunInventory>();
 
+            var catalog = ProductionArtBootstrap.EnsureCatalog();
+            AttachProductionVisualBinders(catalog);
+
             CreateWeaponCase("WeaponCase_Mid", new Vector3(4.15f, 0.62f, 7.6f), 0.38f, 22031);
             CreateWeaponCase("WeaponCase_Deep", new Vector3(-4.15f, 0.62f, 14.6f), 0.82f, 77291);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-            Debug.Log("DEADREACH Production Pass 0.2 enhancements added: RunInventory + extractable weapon loot cases.");
+            Debug.Log("DEADREACH Production 0.3 scene hooks added: RunInventory + production visual binders + extractable weapon loot cases.");
+        }
+
+        private static void AttachProductionVisualBinders(ProductionAssetCatalog catalog)
+        {
+            var player = Object.FindFirstObjectByType<PlayerMotor>();
+            if (player != null)
+            {
+                var binder = player.GetComponent<ProductionVisualBinder>() ?? player.gameObject.AddComponent<ProductionVisualBinder>();
+                binder.Configure(ProductionVisualRole.Survivor, 0, catalog);
+            }
+
+            var infected = Object.FindObjectsByType<InfectedChaser>(FindObjectsSortMode.None);
+            for (var i = 0; i < infected.Length; i++)
+            {
+                var binder = infected[i].GetComponent<ProductionVisualBinder>() ?? infected[i].gameObject.AddComponent<ProductionVisualBinder>();
+                binder.Configure(ProductionVisualRole.Infected, i, catalog);
+            }
         }
 
         private static void CreateWeaponCase(string name, Vector3 position, float depth, int seed)
