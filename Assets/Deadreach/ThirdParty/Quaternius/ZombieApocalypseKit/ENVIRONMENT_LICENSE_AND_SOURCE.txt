@@ -1,0 +1,17 @@
+﻿DEADREACH Production 0.4 â€” Quaternius Dead City environment subset
+Official Quaternius source: https://quaternius.com/packs/zombieapocalypsekit.html
+Mirror used for automated retrieval: https://github.com/agentkaerf/FreeModels/tree/main/Zombie%20Apocalypse%20Kit%20-%20March%202024
+License: Creative Commons CC0 1.0 / public domain dedication.
+
+Selected content:
+- modular street pieces / cracked street pieces
+- traffic and plastic barriers
+- street lights and traffic light
+- green/red containers
+- barrels, broken pallet, pipes, trash bags, wheel stack
+- blood ground props
+- water tower landmark
+- pickup, sports car and truck
+- shared Zombie_Atlas.png
+
+The environment subset intentionally stays in the same Quaternius visual family as the validated 0.3 Survivor/Infected starter art.
