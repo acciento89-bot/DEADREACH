@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Kamilunavo.Deadreach.Combat;
 using Kamilunavo.Deadreach.Persistence;
+using Kamilunavo.Deadreach.Weapons;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Presentation
@@ -137,6 +138,10 @@ namespace Kamilunavo.Deadreach.Presentation
             // wrapper. FindEmbeddedFirearmRenderer only falls back to disabled renderers when there
             // is no enabled firearm at all, so intentionally hidden Matt weapons stay hidden.
             firearmRenderer.enabled = true;
+
+            // Finish styling is presentation-only. It never changes the artist-authored hand rig,
+            // weapon transform or muzzle basis.
+            WeaponVisualStyle.Apply(firearmRenderer, SaveService.GetEquippedPrimaryWeapon());
 
             var existingMuzzle = FindNamedTransform(firearmRenderer.transform, "MuzzleSocket_Embedded");
             if (existingMuzzle != null)
