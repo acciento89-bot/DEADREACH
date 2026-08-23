@@ -124,20 +124,56 @@ namespace Kamilunavo.Deadreach.Editor
 
         private static void AddBoundsCollider(GameObject root, Renderer[] renderers)
         {
-            if (renderers == null || renderers.Length == 0)
+            if (root == null || renderers == null || renderers.Length == 0)
                 return;
 
-            var bounds = renderers[0].bounds;
-            for (var i = 1; i < renderers.Length; i++)
-                bounds.Encapsulate(renderers[i].bounds);
+            var hasBounds = false;
+            var bounds = default(Bounds);
+            foreach (var renderer in renderers)
+            {
+                if (renderer == null)
+                    continue;
 
-            var box = root.GetComponent<BoxCollider>() ?? root.AddComponent<BoxCollider>();
+                if (!hasBounds)
+                {
+                    bounds = renderer.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(renderer.bounds);
+                }
+            }
+
+            if (!hasBounds)
+                return;
+
+            // Imported glTF/model prefab instances can reject or invalidate components added
+            // directly to their root. Keep gameplay collision on a plain DEADREACH-owned child
+            // so collider authoring is deterministic and independent of prefab importer state.
+            var collisionRoot = new GameObject("CollisionBounds");
+            collisionRoot.transform.SetParent(root.transform, false);
+            collisionRoot.transform.localPosition = Vector3.zero;
+            collisionRoot.transform.localRotation = Quaternion.identity;
+            collisionRoot.transform.localScale = Vector3.one;
+            GameObjectUtility.SetStaticEditorFlags(
+                collisionRoot,
+                StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
+
+            var box = collisionRoot.AddComponent<BoxCollider>();
+            if (box == null)
+            {
+                Debug.LogError($"DEADREACH 0.4 failed to create bounds collider for '{root.name}'.");
+                Object.DestroyImmediate(collisionRoot);
+                return;
+            }
+
             box.center = root.transform.InverseTransformPoint(bounds.center);
-            var scale = root.transform.lossyScale;
+            var lossyScale = root.transform.lossyScale;
             box.size = new Vector3(
-                bounds.size.x / Mathf.Max(Mathf.Abs(scale.x), 0.001f),
-                bounds.size.y / Mathf.Max(Mathf.Abs(scale.y), 0.001f),
-                bounds.size.z / Mathf.Max(Mathf.Abs(scale.z), 0.001f));
+                bounds.size.x / Mathf.Max(Mathf.Abs(lossyScale.x), 0.001f),
+                bounds.size.y / Mathf.Max(Mathf.Abs(lossyScale.y), 0.001f),
+                bounds.size.z / Mathf.Max(Mathf.Abs(lossyScale.z), 0.001f));
         }
 
         private static void SetStaticRecursive(GameObject root)
