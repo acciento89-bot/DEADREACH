@@ -75,8 +75,8 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - active branch: **`production/0.11-expedition-director`**
 - initial Production 0.11 fresh real-Unity compile passed with **0 red compiler errors**
 - first real runtime pass confirmed mission HUD → objective marker → mission extraction seal → primary completion → BLACK CACHE → reinforcements ✅
-- runtime exposed an extraction-egress world-geometry defect while extraction is sealed
-- fix is committed by extending the base ground/main road beyond the north extraction trigger and forcing extraction-owned colliders to remain triggers; **fresh compile + rebuilt 0.11 scene now required**
+- extraction-egress geometry defect was fixed and the rebuilt scene passed real runtime enter/exit/re-entry validation ✅
+- only the final mobile + full Bunker→mission→extraction→Bunker regression remains before merge
 
 ## 4. Stable Production 0.10 baseline that must remain green
 
@@ -103,7 +103,7 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - responsive mobile-readable FIELD OPS HUD
 - accepted Arsenal / Bunker / boss / reward / sector presentation
 
-## 5. Production 0.11 — Expedition Director — PARTIAL REAL-UNITY RUNTIME ACCEPTANCE
+## 5. Production 0.11 — Expedition Director — REAL RUNTIME ACCEPTANCE IN PROGRESS
 
 ### Mission system
 - runtime `ExpeditionDirector` attaches only in expedition scenes with a real `RunSession` + player
@@ -114,7 +114,7 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
   - **PURGE** — eliminate a bounded infected target count
   - **HOLDOUT** — activate uplink, remain in defense radius and survive timed reinforcement pressure
   - **BLACKSITE** — breach terminal → eliminate response / mutation boss → secure vault core
-- first runtime pass confirms the mission HUD / marker / mission gate / primary completion path is live ✅
+- tested runtime confirms mission HUD / marker / mission gate / primary completion path is live ✅
 
 ### Objective world presentation
 - runtime mission markers use URP-safe generated line / light / core presentation
@@ -130,18 +130,16 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - primary completion unlocks extraction and grants unsecured carried Scrap
 - mission-sealed extraction messaging observed successfully in real runtime ✅
 
-### Extraction egress hardening
-Real runtime exposed a pre-existing geometry edge that became visible because 0.11 allows the player to remain inside a sealed extraction zone:
-- `ExtractionZone_Alpha` remains centered at `z=20`
-- the old `World_Ground` / `Road_Main` base surfaces ended around `z=19`
-- lingering at the north extraction edge could leave the player without clean supported pavement to walk back south
+### Extraction egress hardening — FIXED / ACCEPTED ✅
+The sealed-state test exposed an older geometry edge because the accepted extraction sits at `z=20` while the original road/base support ended around `z=19`.
 
-Committed fix:
-- `World_Ground` north support extended beyond the north world boundary
-- `Road_Main` north support extended beyond the north world boundary
-- every collider under the extraction-zone hierarchy is forced to `isTrigger = true` at runtime so later presentation/dressing cannot create a physical trap
-- extraction transform, mobile input and mission logic are unchanged
-- fresh `Build Production Slice 0.11` is required so the generated scene receives the geometry fix
+Committed and real-runtime validated fix:
+- `World_Ground` support extended beyond the north extraction trigger
+- `Road_Main` support extended beyond the north extraction trigger
+- every collider under the extraction-zone hierarchy is forced to `isTrigger = true`
+- extraction transform, mobile input and mission logic remain unchanged
+- player can enter sealed extraction, walk back out normally and re-enter successfully ✅
+- extraction overlay/state clears on exit ✅
 
 ### Risk / reward decision
 - after primary completion the player may extract immediately
@@ -158,7 +156,7 @@ Committed fix:
 - max live infected pressure is capped
 - reinforcements use the same production infected visual catalog
 - reinforcements are configured as Walker / Runner / Brute / Stalker and receive the existing 0.9 role brain + 0.10 special VFX path
-- reinforcements observed successfully in first real runtime pass ✅
+- reinforcements observed successfully in real runtime ✅
 
 ### FIELD OPS mission HUD
 - existing mobile-readable FIELD OPS panel shows mission name + threat
@@ -171,10 +169,10 @@ Committed fix:
 ### Build / validation
 - menu: `DEADREACH > Build Production Slice 0.11`
 - test plan: `docs/PRODUCTION_11_TEST.md`
-- initial pre-egress-fix compile: **PASSED — 0 red compiler errors** ✅
-- mission HUD / marker / extraction seal / primary / BLACK CACHE / reinforcements: **PASSED in first runtime pass** ✅
-- extraction egress: **FAILED in first runtime pass; geometry + trigger hardening committed**
-- current required gate: fresh compile → rebuild Production Slice 0.11 → sealed-zone enter/exit retest → remaining mobile/full regression
+- initial compile: **PASSED — 0 red compiler errors** ✅
+- mission HUD / marker / extraction seal / primary / BLACK CACHE / reinforcements: **PASSED** ✅
+- extraction egress after geometry/trigger hardening: **PASSED** ✅
+- remaining gate: fixed-zone mobile regression + full Bunker → Workshop → Deploy → mission/combat/loot → extract → Bunker regression + **0 red runtime errors**
 
 ## 6. Handoff protocol
 
@@ -182,13 +180,12 @@ When resuming:
 1. read this file first
 2. stable baseline remains Production 0.10 on `main`
 3. active work is Production 0.11 on `production/0.11-expedition-director`
-4. pull latest branch because extraction-support geometry changed
-5. require fresh Unity compile with **0 red compiler errors**
-6. rerun `DEADREACH > Build Production Slice 0.11`
-7. enter sealed extraction before primary completion and verify the player can walk back out normally
-8. then continue mobile + full Bunker → mission → extraction → Bunker regression
-9. preserve schema-v6 Workshop progression
-10. preserve fixed-zone mobile controls
-11. preserve Production 0.10 combat-impact presentation
-12. never reintroduce external gameplay hand-mounted Rifle transforms
-13. keep mobile landscape-only
+4. mission flow and extraction egress are real-runtime accepted
+5. run final fixed-zone mobile regression
+6. run full Bunker → Workshop → Deploy → mission/combat/loot → extraction → Bunker regression
+7. require Unity Console with **0 red runtime errors**
+8. preserve schema-v6 Workshop progression
+9. preserve fixed-zone mobile controls
+10. preserve Production 0.10 combat-impact presentation
+11. never reintroduce external gameplay hand-mounted Rifle transforms
+12. keep mobile landscape-only
