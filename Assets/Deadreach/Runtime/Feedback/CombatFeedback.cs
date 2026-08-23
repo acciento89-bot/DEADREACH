@@ -5,11 +5,12 @@ namespace Kamilunavo.Deadreach.Feedback
 {
     public readonly struct ShotFeedback
     {
-        public ShotFeedback(Vector3 origin, Vector3 endPoint, bool hitDamageable, float tracerDuration, float tracerWidth, float hapticStrength)
+        public ShotFeedback(Vector3 origin, Vector3 endPoint, bool hitDamageable, bool critical, float tracerDuration, float tracerWidth, float hapticStrength)
         {
             Origin = origin;
             EndPoint = endPoint;
             HitDamageable = hitDamageable;
+            Critical = critical;
             TracerDuration = tracerDuration;
             TracerWidth = tracerWidth;
             HapticStrength = hapticStrength;
@@ -18,6 +19,7 @@ namespace Kamilunavo.Deadreach.Feedback
         public Vector3 Origin { get; }
         public Vector3 EndPoint { get; }
         public bool HitDamageable { get; }
+        public bool Critical { get; }
         public float TracerDuration { get; }
         public float TracerWidth { get; }
         public float HapticStrength { get; }
@@ -25,16 +27,18 @@ namespace Kamilunavo.Deadreach.Feedback
 
     public readonly struct ImpactFeedback
     {
-        public ImpactFeedback(Vector3 point, Vector3 normal, bool hitDamageable)
+        public ImpactFeedback(Vector3 point, Vector3 normal, bool hitDamageable, bool critical)
         {
             Point = point;
             Normal = normal;
             HitDamageable = hitDamageable;
+            Critical = critical;
         }
 
         public Vector3 Point { get; }
         public Vector3 Normal { get; }
         public bool HitDamageable { get; }
+        public bool Critical { get; }
     }
 
     public static class CombatFeedback
