@@ -28,6 +28,8 @@ namespace Kamilunavo.Deadreach.Player
         private GUIStyle _smallStyle;
         private GUIStyle _centerStyle;
         private int _styleScaleKey;
+        private string _feedbackText;
+        private float _feedbackUntil;
 
         private void Awake()
         {
@@ -53,8 +55,27 @@ namespace Kamilunavo.Deadreach.Player
         private void Update()
         {
             var input = DeadreachInput.Current;
-            if (input != null && input.ConsumeAbilityPress())
-                TryActivate();
+            if (input == null || !input.ConsumeAbilityPress())
+                return;
+
+            if (TryActivate())
+            {
+                ShowFeedback("FIRED");
+                return;
+            }
+
+            if (!IsReady)
+            {
+                ShowFeedback("COOLDOWN");
+                return;
+            }
+
+            ShowFeedback(_definition.Id switch
+            {
+                "warden" => "NO TARGET",
+                "ranger" => "FULL HP",
+                _ => "BLOCKED"
+            });
         }
 
         public bool TryActivate()
@@ -149,6 +170,12 @@ namespace Kamilunavo.Deadreach.Player
             return Vector3.ClampMagnitude(forward * input.Move.y + right * input.Move.x, 1f);
         }
 
+        private void ShowFeedback(string text)
+        {
+            _feedbackText = text;
+            _feedbackUntil = Time.unscaledTime + 0.8f;
+        }
+
         private void OnGUI()
         {
             if (_health == null || _health.IsDead || string.IsNullOrWhiteSpace(_definition.AbilityName))
@@ -174,14 +201,19 @@ namespace Kamilunavo.Deadreach.Player
             DeadreachInput.Current?.SetAbilityTouchRegion(screenRect);
 
             var guiRect = ScreenToGuiRect(screenRect);
+            var feedbackActive = Time.unscaledTime < _feedbackUntil;
             var old = GUI.color;
-            GUI.color = IsReady
-                ? new Color(_definition.Accent.r, _definition.Accent.g, _definition.Accent.b, 0.92f)
-                : new Color(0.18f, 0.19f, 0.19f, 0.82f);
+            GUI.color = feedbackActive
+                ? new Color(1f, 0.78f, 0.2f, 0.96f)
+                : IsReady
+                    ? new Color(_definition.Accent.r, _definition.Accent.g, _definition.Accent.b, 0.92f)
+                    : new Color(0.18f, 0.19f, 0.19f, 0.82f);
             GUI.Box(guiRect, GUIContent.none);
             GUI.color = old;
 
-            var status = IsReady ? "READY" : $"{CooldownRemaining:0.0}s";
+            var status = feedbackActive
+                ? _feedbackText
+                : IsReady ? "READY" : $"{CooldownRemaining:0.0}s";
             GUI.Label(new Rect(guiRect.x + 6f, guiRect.y + size * 0.18f, guiRect.width - 12f, size * 0.24f), "ABILITY", _centerStyle);
             GUI.Label(new Rect(guiRect.x + 6f, guiRect.y + size * 0.46f, guiRect.width - 12f, size * 0.22f), status, _centerStyle);
             GUI.Label(new Rect(guiRect.x - size * 0.38f, guiRect.y + guiRect.height + 4f, guiRect.width + size * 0.76f, 30f), _definition.AbilityName, _smallStyle);
