@@ -37,6 +37,10 @@ namespace Kamilunavo.Deadreach.Weapons
         public WeaponFamily family = WeaponFamily.Rifle;
         public WeaponRarity rarity;
         public int itemPower;
+
+        // Production 0.8 workshop progression. Legacy profiles deserialize this as 0.
+        public int upgradeLevel;
+
         public List<WeaponAffixRollData> affixes = new();
 
         public WeaponInstanceData Clone()
@@ -50,6 +54,7 @@ namespace Kamilunavo.Deadreach.Weapons
                 family = family,
                 rarity = rarity,
                 itemPower = itemPower,
+                upgradeLevel = upgradeLevel,
                 affixes = new List<WeaponAffixRollData>()
             };
 
