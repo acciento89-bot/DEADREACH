@@ -62,11 +62,10 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - active branch: **`production/0.9-combat-depth`**
 - PR #9: Draft, targets `main`
 - enemy-role runtime gate passed: Walker baseline, Runner burst, Brute slam and Stalker flank behavior accepted
-- operator active-ability runtime gate passed: SAM Field Patch, RAVEN Vector Dash and BRIGGS Shockwave accepted
+- operator active-ability gameplay passed on desktop: SAM Field Patch, RAVEN Vector Dash and BRIGGS Shockwave accepted
 - BRIGGS Shockwave dedicated FX remains non-blocking 0.10 visual debt
-- **first mobile-control gate rejected**: movement/aim were not production usable, weapon aim could pull toward Ability UI, and phone HUD was too small
-- replacement true twin-stick + mobile HUD scaling pass is committed
-- because runtime code changed after the earlier compile/build acceptance, a fresh Unity compile + mobile runtime validation is required
+- **mobile gate remains RED** after two rejected control attempts; 0.9 must not merge yet
+- second replacement mobile-control pass is now committed and requires fresh Unity compile + phone/Device Simulator validation
 
 ## 4. Production 0.8 shipped baseline that must remain green
 
@@ -96,19 +95,22 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - **STALKER** lateral flank/reposition
 - **SAM / FIELD PATCH**
 - **RAVEN / VECTOR DASH**
-- **BRIGGS / SHOCKWAVE**
+- **BRIGGS / SHOCKWAVE** gameplay
 
-### Replacement mobile-control pass — AWAITING REAL VALIDATION
-- left side is a relative 360-degree movement stick with deadzone + shaped response
-- mobile `PlayerMotor` uses faster acceleration/deceleration for immediate direction changes
-- right side is a relative directional aim/fire stick with its own deadzone
-- touch finger absolute screen position is no longer converted into a world target
-- `HitscanWeapon` consumes camera-relative aim direction for touch/gamepad; desktop mouse remains pointer-based
-- phone/Device Simulator touch suppresses mirrored mouse-pointer aim
-- right-stick fire starts only after a small threshold
-- Ability is independently captured and positioned above the lower-right stick control band
-- both stick visuals/interaction radius scale with `Screen.safeArea.height`
-- mobile Field Ops, Vitals/HP bar, weapon/loot/scrap/objective, boss and extraction UI scale up for phone readability
+### Second replacement mobile-control pass — AWAITING REAL VALIDATION
+- controls now use **fixed safe-area centers**, not floating origins at the first finger position
+- lower-left fixed MOVE zone with generous circular capture radius
+- lower-right fixed AIM/FIRE zone with generous circular capture radius
+- MOVE uses full 360-degree X/Y vector, deadzone and shaped response
+- mobile `PlayerMotor` uses fast acceleration/deceleration for immediate direction changes
+- AIM/FIRE uses camera-relative directional input only; touch screen position is never a weapon world target
+- right stick fires as soon as its directional input leaves the deadzone
+- simulated mobile touch suppresses mirrored mouse-pointer aim
+- Ability uses a separate upper-right touch region with enlarged invisible hit target
+- Ability queues on touch-begin, not on release
+- Ability button now gives visible `FIRED`, `NO TARGET`, `FULL HP`, `BLOCKED` or `COOLDOWN` feedback
+- fixed stick visuals use the exact same centers as the input capture zones
+- mobile Field Ops, Vitals/HP bar, weapon/loot/scrap/objective, boss and extraction UI remain scaled up for phone readability
 
 ### Known 0.10 follow-up
 - BRIGGS Shockwave needs a dedicated expanding ring / ground pulse / impact VFX
@@ -117,15 +119,15 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 
 Already green:
 1. enemy roles ✅
-2. SAM / RAVEN / BRIGGS ability gameplay ✅
+2. SAM / RAVEN / BRIGGS ability gameplay on desktop ✅
 
 Fresh gate required now:
 3. `git pull` latest branch
 4. Unity compile → **0 red compiler errors**
-5. phone/Device Simulator left stick: up/down/left/right/diagonal all correct
-6. mobile movement stops/changes direction quickly without floaty slide
-7. right stick: direction-based aim/fire; never snaps toward Ability UI
-8. Ability: independent touch, no move/aim/fire side effect
+5. phone/Device Simulator: MOVE stick remains fixed lower-left and supports up/down/left/right/diagonal
+6. movement stops/changes direction quickly
+7. AIM/FIRE stick remains fixed lower-right; aiming and shooting work in every direction and never snap toward UI
+8. Ability upper-right touch shows immediate feedback and does not become move/aim/fire
 9. mobile HUD/HP/objective comfortably readable
 10. final 0.8 regression + **0 red runtime errors**
 
@@ -135,9 +137,9 @@ When resuming:
 1. read this file first
 2. stable baseline remains Production 0.8 on `main`
 3. active work is Production 0.9 on `production/0.9-combat-depth`
-4. enemy roles and operator ability gameplay are green
-5. first mobile implementation was rejected and must never be treated as accepted
-6. current replacement mobile pass must pass fresh compile + runtime validation
+4. enemy roles and operator gameplay are green
+5. both earlier mobile implementations were rejected and must never be treated as accepted
+6. current fixed-zone mobile pass must pass fresh compile + runtime validation
 7. BRIGGS Shockwave FX is tracked for 0.10 and does not block 0.9
 8. preserve schema-v6 Workshop progression and accepted presentation
 9. never reintroduce external gameplay hand-mounted Rifle transforms
