@@ -63,7 +63,8 @@ Validated in real Unity:
 - active branch: **`production/0.5-bunker-progression-boss-ui`**
 - Production 0.5 is a large systems/presentation pass
 - Production 0.5 **REAL-UNITY COMPILE GATE PASSED: 0 C# compiler errors confirmed by user on 2026-08-23**
-- Production 0.5 runtime / visual / progression / boss acceptance is still pending
+- Production 0.5 Bunker desktop/editor visual polish is now accepted as a good direction from real Unity screenshots
+- Production 0.5 runtime / progression / boss / combat acceptance is still pending
 - 0.5 must remain Draft until `docs/PRODUCTION_05_TEST.md` passes
 
 ## 4. Production 0.5 — Big Update implemented on branch
@@ -236,36 +237,64 @@ The Bunker STORE tab includes production-facing cards for:
 
 **No fake purchase is implemented.** Store buttons are non-purchasing placeholders in 0.5. `ownedContentIds` / `GrantContent` are entitlement hooks for a later verified StoreKit / Google Play integration.
 
-## 5. Immediate validation gate
+## 5. Mandatory mobile UI release gate
+
+The accepted 0.5 Bunker screenshots are **Unity Editor/Desktop preview only**. They must not be treated as final mobile acceptance.
+
+Before release, DEADREACH requires a dedicated landscape-mobile UI pass covering at minimum:
+- `Screen.safeArea` / notch / Dynamic Island / rounded-corner protection
+- iPhone and Android landscape aspect ratios, including very wide 19.5:9 / 20:9 devices
+- UI scaling at small physical screen sizes, not only Game View pixels
+- minimum touch-target sizing and spacing for all navigation / equip / operator / campaign / store / deploy controls
+- responsive Bunker layouts: panels may collapse/reflow rather than simply shrink
+- Arsenal 3D preview must not overlap the weapon list on narrow screens
+- Operator 3D preview and stats must remain readable without covering selection controls
+- Campaign sector + 10-level grid must fit through responsive sizing/scrolling rather than tiny buttons
+- Store cards must stack or scroll safely on narrow devices
+- all gameplay HUD/twin-stick controls must obey safe area independently of Bunker UI
+- real-device validation on at least one notched iPhone and one representative Android phone
+
+Current anchor-based 0.5 layout is a better foundation for responsiveness, but **mobile layout is not validated yet**.
+
+Do not mark UI/release as final until this mobile gate passes.
+
+## 6. Immediate validation gate
 
 ### Compile gate — PASSED
 User confirmed **0 red C# compiler errors** in real Unity `6000.3.22f1` on 2026-08-23.
 
+### Bunker visual direction — EDITOR PASS
+Real Unity screenshots after the second layout-polish pass confirm the Bunker Command Center is now visually acceptable as a desktop/editor presentation direction:
+- DEADREACH header visible
+- Overview no longer overlaps
+- Arsenal uses a dedicated weapon list + 3D inspector column
+- Operators use a 3D character preview
+- Campaign shows one 10-level sector grid at a time
+- navigation / deploy framing is coherent
+
+This is **not mobile acceptance**; see mandatory mobile gate above.
+
 ### Next runtime gate
 Run `docs/PRODUCTION_05_TEST.md`:
-1. run **`DEADREACH > Build Production Slice 0.5`**
-2. inspect Bunker Command Center tabs
-3. verify Arsenal / Operators / Campaign / Store interactions
-4. deploy Level 1 and verify movement/combat/loot/extraction
-5. use the Level 10 Editor shortcut to validate boss + extraction seal
-6. validate new muzzle/tracer/impact FX
-7. re-run 0.4 regression locks
+1. deploy Level 1 and verify movement/combat/loot/extraction
+2. validate new muzzle/tracer/impact FX
+3. validate infected archetype variety
+4. use the Level 10 Editor shortcut to validate boss + extraction seal
+5. re-run 0.4 regression locks
 
-Do not claim 0.5 runtime works until the real Unity gate passes.
+Do not claim 0.5 runtime works until the real Unity gameplay gate passes.
 
-## 6. Likely follow-up after 0.5 validation
+## 7. Likely follow-up after 0.5 validation
 
-- fix any actual Unity runtime/layout issues found locally
-- visual polish from real screenshots
 - separate authored operator meshes/animations
 - distinct authored sector maps and encounters beyond shared Dead City foundation
 - real StoreKit / Google Play products and receipt verification
-- production mobile field HUD
+- dedicated mobile-responsive Bunker UI + production mobile field HUD
 - production NavMesh / more advanced infected behaviors
 - combat audio-content pass
 - physical-device profiling
 
-## 7. Handoff protocol
+## 8. Handoff protocol
 
 When resuming:
 1. read this file first
@@ -273,8 +302,9 @@ When resuming:
 3. never reintroduce the external Rifle hand-socket transform path
 4. left-hand artist-rigged embedded weapon remains accepted
 5. active work is `production/0.5-bunker-progression-boss-ui`
-6. 0.5 compile gate is PASSED in real Unity; runtime acceptance is pending
-7. next action is `DEADREACH > Build Production Slice 0.5`
-8. keep PR draft until real-Unity acceptance passes
+6. 0.5 compile gate is PASSED in real Unity
+7. current Bunker visual direction is accepted in Unity Editor, but mobile UI acceptance remains explicitly pending
+8. next gate is Level 1 gameplay/combat FX, then Level 10 boss validation
+9. keep PR draft until real-Unity acceptance passes
 
 Do not rely on chat history alone.
