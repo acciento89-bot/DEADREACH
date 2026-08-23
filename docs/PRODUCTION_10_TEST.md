@@ -6,17 +6,17 @@ Production 0.10 branches from the fully real-Unity-validated Production 0.9 `mai
 
 Increase combat readability and impact without changing the accepted 0.9 core loop, progression, operator input or fixed-zone mobile controls.
 
-## Compile / build gate
+## Compile / build gate — PASSED 2026-08-23
 
 1. Pull `production/0.10-combat-impact`.
 2. Let Unity finish compiling.
-3. Require **0 red compiler errors**. ✅ PASSED 2026-08-23
-4. Run `DEADREACH > Build Production Slice 0.10`. ✅ PASSED 2026-08-23
+3. Require **0 red compiler errors**. ✅
+4. Run `DEADREACH > Build Production Slice 0.10`. ✅
 5. No blocking red build/setup error. ✅
 
 ## Combat presentation gate — PASSED 2026-08-23
 
-Real Unity runtime acceptance confirmed for the complete 0.10 combat-impact layer:
+Real Unity runtime acceptance confirmed for the complete 0.10 combat-impact layer.
 
 ### Operator abilities
 - SAM / FIELD PATCH heal presentation accepted ✅
@@ -38,27 +38,29 @@ Real Unity runtime acceptance confirmed for the complete 0.10 combat-impact laye
 - critical pulse accepted ✅
 - camera/lens impact accepted as noticeable but comfortable ✅
 
-## Mobile regression — REMAINING
+## Mobile regression — PASSED 2026-08-23
 
-Use the accepted landscape phone / Device Simulator setup:
-- MOVE remains fixed lower-left
-- up/down/left/right/diagonal movement still works
-- AIM/FIRE remains fixed lower-right
-- aiming and shooting remain reliable
-- Ability remains independent upper-right
-- new hit markers / ability VFX do not block touch controls
-- mobile HUD readability remains accepted
+Accepted landscape phone / Device Simulator regression:
+- MOVE remains fixed lower-left ✅
+- up/down/left/right/diagonal movement still works ✅
+- AIM/FIRE remains fixed lower-right ✅
+- aiming and shooting remain reliable ✅
+- Ability remains independent upper-right ✅
+- new hit markers / ability VFX do not block touch controls ✅
+- mobile HUD readability remains accepted ✅
 
-## Full regression — REMAINING
+## Full regression — PASSED 2026-08-23
 
-1. Bunker → Workshop present.
-2. Arsenal orientation/framing intact.
-3. Deploy.
-4. Combat / loot / ability / infected-special presentation remains correct.
-5. Extract.
-6. Return to Bunker.
-7. Workshop and progression persist.
-8. Sector atmosphere / reward / boss presentation remain intact where encountered.
-9. Unity Console ends with **0 red runtime errors**.
+1. Bunker → Workshop present ✅
+2. Arsenal orientation/framing intact ✅
+3. Deploy ✅
+4. Combat / loot / ability / infected-special presentation remains correct ✅
+5. Extract ✅
+6. Return to Bunker ✅
+7. Workshop and progression persist ✅
+8. Accepted sector / reward / boss presentation remains intact ✅
+9. Unity Console ends with **0 red runtime errors** ✅
 
-Production 0.10 remains unmerged until the mobile and full regression gates pass.
+## Promotion status
+
+**Production 0.10 is fully real-Unity validated and ready to merge to `main`.**
