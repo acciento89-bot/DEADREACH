@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Kamilunavo.Deadreach.AI;
 using Kamilunavo.Deadreach.CameraSystem;
 using Kamilunavo.Deadreach.Combat;
@@ -21,7 +20,7 @@ namespace Kamilunavo.Deadreach.Editor
         private const string MaterialFolder = "Assets/Deadreach/Art/DevPalette";
         private const string ScenePath = SceneFolder + "/DeadCity_VerticalSlice.unity";
 
-        [MenuItem("DEADREACH/Build Vertical Slice 0.1")]
+        [MenuItem("DEADREACH/Dev/Build Dead City Only")]
         public static void Build()
         {
             EnsureFolders();
@@ -38,10 +37,10 @@ namespace Kamilunavo.Deadreach.Editor
             CreateExtraction(palette);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            AddSceneToBuildSettings();
+            DeadreachBuildSettings.Repair();
             Selection.activeGameObject = player;
             SceneView.lastActiveSceneView?.FrameSelected();
-            Debug.Log($"DEADREACH Vertical Slice 0.1 generated at {ScenePath}");
+            Debug.Log($"DEADREACH Dead City dev scene generated at {ScenePath}");
         }
 
         private static void EnsureFolders()
@@ -292,16 +291,6 @@ namespace Kamilunavo.Deadreach.Editor
             cube.transform.localScale = scale;
             cube.GetComponent<Renderer>().sharedMaterial = material;
             return cube;
-        }
-
-        private static void AddSceneToBuildSettings()
-        {
-            var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-            if (scenes.Exists(scene => scene.path == ScenePath))
-                return;
-
-            scenes.Add(new EditorBuildSettingsScene(ScenePath, true));
-            EditorBuildSettings.scenes = scenes.ToArray();
         }
 
         private sealed class Palette
