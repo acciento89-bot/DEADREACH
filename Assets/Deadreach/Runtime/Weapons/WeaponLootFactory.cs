@@ -19,31 +19,48 @@ namespace Kamilunavo.Deadreach.Weapons
         {
             var random = new System.Random(seed);
             var affixCount = GetAffixCount(rarity);
-            var affixes = new List<WeaponAffixRollData>(affixCount);
-            var available = new List<WeaponAffixStat>(AffixPool);
-
-            for (var i = 0; i < affixCount && available.Count > 0; i++)
-            {
-                var statIndex = random.Next(0, available.Count);
-                var stat = available[statIndex];
-                available.RemoveAt(statIndex);
-
-                affixes.Add(new WeaponAffixRollData
-                {
-                    stat = stat,
-                    value = RollValue(random, stat, rarity)
-                });
-            }
+            var affixes = RollAffixes(random, rarity, affixCount);
 
             return new WeaponInstanceData
             {
                 instanceId = Guid.NewGuid().ToString("N"),
                 definitionId = "dr7-rifle",
                 displayNameSnapshot = GetDisplayName(rarity),
+                visualSkinId = WeaponVisualStyle.RollStandardFinishId(seed ^ 0x5A17),
                 rarity = rarity,
                 itemPower = 100 + (int)rarity * 18 + random.Next(0, 13),
                 affixes = affixes
             };
+        }
+
+        public static WeaponInstanceData CreateBossReward(int level, int seed)
+        {
+            var tier = Mathf.Clamp(Mathf.Max(1, level / 10), 1, 5);
+            var rarity = tier >= 3 ? WeaponRarity.Legendary : WeaponRarity.Epic;
+            var random = new System.Random(seed ^ (tier * 7919));
+            var affixCount = Mathf.Min(4, GetAffixCount(rarity));
+            var reward = new WeaponInstanceData
+            {
+                instanceId = Guid.NewGuid().ToString("N"),
+                definitionId = "dr7-mutation",
+                displayNameSnapshot = $"MUTATION T{tier} // DR-7 RELIC",
+                visualSkinId = $"mutation-{tier}",
+                rarity = rarity,
+                itemPower = 170 + tier * 28 + random.Next(0, 18),
+                affixes = RollAffixes(random, rarity, affixCount)
+            };
+
+            // Boss rewards always carry a meaningful offensive identity even if random affixes miss damage.
+            if (!reward.affixes.Exists(item => item != null && item.stat == WeaponAffixStat.DamagePercent))
+            {
+                reward.affixes.Add(new WeaponAffixRollData
+                {
+                    stat = WeaponAffixStat.DamagePercent,
+                    value = 12f + tier * 3.5f
+                });
+            }
+
+            return reward;
         }
 
         public static WeaponRarity RollRarity(float normalizedDepth, int seed)
@@ -66,6 +83,26 @@ namespace Kamilunavo.Deadreach.Weapons
             if (roll < legendary + epic + rare + uncommon)
                 return WeaponRarity.Uncommon;
             return WeaponRarity.Common;
+        }
+
+        private static List<WeaponAffixRollData> RollAffixes(System.Random random, WeaponRarity rarity, int affixCount)
+        {
+            var affixes = new List<WeaponAffixRollData>(affixCount);
+            var available = new List<WeaponAffixStat>(AffixPool);
+
+            for (var i = 0; i < affixCount && available.Count > 0; i++)
+            {
+                var statIndex = random.Next(0, available.Count);
+                var stat = available[statIndex];
+                available.RemoveAt(statIndex);
+                affixes.Add(new WeaponAffixRollData
+                {
+                    stat = stat,
+                    value = RollValue(random, stat, rarity)
+                });
+            }
+
+            return affixes;
         }
 
         private static int GetAffixCount(WeaponRarity rarity)
