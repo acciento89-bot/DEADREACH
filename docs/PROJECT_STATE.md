@@ -61,13 +61,12 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - stable merge: `876127fb9997951afcca738cd7251acd2f662014`
 - active branch: **`production/0.9-combat-depth`**
 - PR #9: Draft, targets `main`
-- Production 0.9 compile gate passed with **0 red compiler errors** on 2026-08-23 before the later mobile-control rebuild
-- `DEADREACH > Build Production Slice 0.9` completed successfully before the later mobile-control rebuild
 - enemy-role runtime gate passed: Walker baseline, Runner burst, Brute slam and Stalker flank behavior accepted
 - operator active-ability runtime gate passed: SAM Field Patch, RAVEN Vector Dash and BRIGGS Shockwave accepted
-- open non-blocking presentation debt: BRIGGS Shockwave currently has no dedicated visible FX; add dedicated shockwave VFX in Production 0.10
-- **mobile gate failed** on 2026-08-23: movement/aim felt wrong, firing could aim toward the Ability UI, and the phone HUD was too small to read comfortably
-- a replacement mobile-control pass is now committed and requires a fresh Unity compile/runtime gate before 0.9 can progress
+- BRIGGS Shockwave dedicated FX remains non-blocking 0.10 visual debt
+- **first mobile-control gate rejected**: movement/aim were not production usable, weapon aim could pull toward Ability UI, and phone HUD was too small
+- replacement true twin-stick + mobile HUD scaling pass is committed
+- because runtime code changed after the earlier compile/build acceptance, a fresh Unity compile + mobile runtime validation is required
 
 ## 4. Production 0.8 shipped baseline that must remain green
 
@@ -82,72 +81,65 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - Arsenal Rifle / SMG / Pistol / Shotgun orientation and framing
 - Bunker layouts at 4:3 / 16:10 / 16:9 / ~19:9 landscape
 - landscape-only mobile orientation
-- compact Field Ops HUD on desktop/tablet; mobile legibility is being corrected in the current 0.9 pass
+- accepted desktop/tablet combat presentation
 - slim boss health/identity strip and mutation-state chip
 - lower-right Relic reward toast
 - Bunker reward debrief → Arsenal transfer
-- Flooded Industrial rain / Ash District ash / Blackout dust / Ground Zero contamination FX
-- final Bunker → expedition → combat → loot → return flow with no red runtime errors
+- sector atmosphere FX
 
-## 5. Production 0.9 goal — Combat Depth
+## 5. Production 0.9 — Combat Depth
 
-Turn existing statistical variants into real gameplay identities and finish a production-usable mobile combat control layer.
+### Runtime accepted
+- **WALKER** baseline chaser
+- **RUNNER** timed medium-range burst
+- **BRUTE** close-range slam
+- **STALKER** lateral flank/reposition
+- **SAM / FIELD PATCH**
+- **RAVEN / VECTOR DASH**
+- **BRIGGS / SHOCKWAVE**
 
-### Infected combat roles implemented / runtime accepted
-- **WALKER** remains the readable baseline chaser
-- **RUNNER** gains a timed medium-range forward burst and possible burst contact damage
-- **BRUTE** gains a separate high-damage close-range slam cooldown
-- **STALKER** gains periodic lateral flank/reposition movement instead of only direct pursuit
-- Runner / Brute / Stalker special moves have short role-colored point-light telegraphs
-- normal role abilities are not applied to mutation bosses; existing boss phase logic remains authoritative
+### Replacement mobile-control pass — AWAITING REAL VALIDATION
+- left side is a relative 360-degree movement stick with deadzone + shaped response
+- mobile `PlayerMotor` uses faster acceleration/deceleration for immediate direction changes
+- right side is a relative directional aim/fire stick with its own deadzone
+- touch finger absolute screen position is no longer converted into a world target
+- `HitscanWeapon` consumes camera-relative aim direction for touch/gamepad; desktop mouse remains pointer-based
+- phone/Device Simulator touch suppresses mirrored mouse-pointer aim
+- right-stick fire starts only after a small threshold
+- Ability is independently captured and positioned above the lower-right stick control band
+- both stick visuals/interaction radius scale with `Screen.safeArea.height`
+- mobile Field Ops, Vitals/HP bar, weapon/loot/scrap/objective, boss and extraction UI scale up for phone readability
 
-### Operator active abilities implemented / runtime accepted
-- **SAM / FIELD PATCH** — restore 32% max HP, 18s cooldown, no cooldown waste at full health
-- **RAVEN / VECTOR DASH** — collision-aware 4.6m dash, 7.5s cooldown
-- **BRIGGS / SHOCKWAVE** — damage all infected within 4.6m, 12s cooldown, no cooldown waste with no valid target
-- desktop input: `SPACE`
-- gamepad input: right shoulder
-
-### Mobile-control rebuild — NEW / AWAITING VALIDATION
-The first 0.9 mobile attempt was rejected in real use. The replacement pass now does the following:
-- left side is a real relative 360-degree movement stick with deadzone + shaped response
-- mobile movement uses much faster acceleration/deceleration so direction changes are immediate instead of floaty
-- right side is a real relative directional aim/fire stick; finger screen position is no longer converted into a world-space target
-- `HitscanWeapon` consumes camera-relative aim direction on touch/gamepad while desktop mouse remains pointer-based
-- Device Simulator/mobile touch suppresses mirrored mouse-pointer aiming, removing the bug where firing could aim toward the Ability UI
-- right-stick firing begins only after the aim stick leaves a small threshold/deadzone
-- Ability touch is captured independently and moved above the lower-right aim control band
-- both virtual sticks scale with Screen.safeArea height instead of fixed desktop pixels
-- mobile Field Ops HUD, HP bar, loot/scrap/objective, boss and extraction UI now scale up for phone readability
-
-### Known 0.10 visual-polish follow-up
-- BRIGGS Shockwave needs a dedicated visible expanding ring / impact FX
-- presentation debt only; Shockwave gameplay behavior is already runtime accepted in 0.9
+### Known 0.10 follow-up
+- BRIGGS Shockwave needs a dedicated expanding ring / ground pulse / impact VFX
 
 ## 6. Current 0.9 gate
 
-Already accepted before the mobile rebuild:
+Already green:
 1. enemy roles ✅
-2. SAM / RAVEN / BRIGGS active ability gameplay ✅
+2. SAM / RAVEN / BRIGGS ability gameplay ✅
 
-Fresh gate required after the mobile rebuild:
-3. pull latest branch and Unity compile → **0 red compiler errors**
-4. phone/Device Simulator: left stick must move correctly in all directions, not one-sided
-5. right stick must aim/fire by direction only; touching/firing must never snap aim toward Ability UI
-6. Ability must trigger independently without also moving/aiming/firing
-7. mobile Field Ops/HP/objective text must be comfortably readable
-8. final Production 0.8 regression and **0 red runtime errors**
+Fresh gate required now:
+3. `git pull` latest branch
+4. Unity compile → **0 red compiler errors**
+5. phone/Device Simulator left stick: up/down/left/right/diagonal all correct
+6. mobile movement stops/changes direction quickly without floaty slide
+7. right stick: direction-based aim/fire; never snaps toward Ability UI
+8. Ability: independent touch, no move/aim/fire side effect
+9. mobile HUD/HP/objective comfortably readable
+10. final 0.8 regression + **0 red runtime errors**
 
 ## 7. Handoff protocol
 
 When resuming:
 1. read this file first
-2. stable baseline is Production 0.8 on `main`
+2. stable baseline remains Production 0.8 on `main`
 3. active work is Production 0.9 on `production/0.9-combat-depth`
 4. enemy roles and operator ability gameplay are green
-5. mobile gate was explicitly rejected; do not mark 0.9 ready until the replacement twin-stick/HUD pass is real-device/simulator validated
-6. BRIGGS Shockwave dedicated FX is tracked for Production 0.10 and does not block 0.9
-7. preserve schema-v6 Workshop progression and accepted presentation baseline
-8. never reintroduce external gameplay hand-mounted Rifle transforms
-9. keep mobile landscape-only
-10. run `docs/PRODUCTION_09_TEST.md` before promoting 0.9
+5. first mobile implementation was rejected and must never be treated as accepted
+6. current replacement mobile pass must pass fresh compile + runtime validation
+7. BRIGGS Shockwave FX is tracked for 0.10 and does not block 0.9
+8. preserve schema-v6 Workshop progression and accepted presentation
+9. never reintroduce external gameplay hand-mounted Rifle transforms
+10. keep mobile landscape-only
+11. run `docs/PRODUCTION_09_TEST.md` before promoting 0.9
