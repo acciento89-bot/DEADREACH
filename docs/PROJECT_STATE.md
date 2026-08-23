@@ -135,26 +135,7 @@ Public entry point:
 Implementation:
 `Assets/Deadreach/Editor/Production05OperatorArtSetupV2.cs`
 
-Real-Unity failures that forced the redesign:
-- first auto-downloaded Lis/Matt sources failed glTFast import
-- first repair corrected the source mapping to Shaun/Matt but cleanup used `AssetDatabase.DeleteAsset` on obsolete sources while legacy wrapper prefabs still referenced their source GUIDs
-- Unity therefore imported a half-deleted graph and reported `Missing Nested Prefab Asset` for old Lis/Matt wrappers
-- Shaun/Matt were also refreshed/imported source-by-source while dependency/importer state was still being mutated, causing continued glTFast failures and duplicate import attempts
-
-Atomic V2:
-- leaves `Production05OperatorArtSetup` as a thin stable API/menu wrapper so existing builder calls do not change
-- removes generated/legacy wrapper prefabs + controllers and obsolete Lis/Matt sources through filesystem operations **before any AssetDatabase refresh**
-- removes `.meta` for Shaun/Matt only when the previous glTFast import produced no GameObject, clearing stale failed ScriptedImporter state
-- prepares **both** `Survivor_Shaun.gltf` and `Survivor_Matt_Full.gltf` completely before Unity sees either source
-- discovers every non-`data:` `"uri"`, resolves it against the original remote glTF URL, ensures the external dependency exists locally and rewrites the URI to its stable local basename
-- performs one synchronous `AssetDatabase.Refresh(...ForceSynchronousImport | ForceUpdate)` after the complete filesystem graph is coherent
-- does not perform repeated source-by-source `Refresh + ImportAsset + retry` loops
-- validates both imported GameObjects only after that one pass
-- instantiates then `UnpackPrefabInstance(...Completely...)` before saving wrapper prefabs, eliminating nested glTF prefab-parent links in generated production wrappers
-- Shaun keeps its artist-rigged SMG
-- Matt full keeps its artist-rigged Rifle and hides all other embedded weapon renderers
-- dedicated animator controllers are built from each imported operator's own clips where available, with validated Sam controller only as fallback
-- no external hand-mounted weapon path is introduced
+Atomic V2 is accepted as the active importer path. It removes legacy/generated files before AssetDatabase refresh, prepares both operator glTF sources and dependencies before Unity sees them, performs one synchronous import pass, fully unpacks generated wrappers, preserves Shaun/SMG + Matt/Rifle, and does not reintroduce an external hand-mounted weapon path.
 
 **Real Unity result on 2026-08-23:** `DEADREACH > Build Production Slice 0.5` completed with no blocking error after pulling Atomic V2. The prior nested-prefab/glTFast blocker is accepted as fixed. Runtime/visual behavior of the full 0.5 scope still requires the MEGA Runtime Gate below.
 
