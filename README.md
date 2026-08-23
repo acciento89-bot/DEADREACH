@@ -27,11 +27,12 @@ Validated and merged:
 - Vertical Slice 0.1 foundation
 - Production Pass 0.2 game-feel / weapon-loot / equipment loop
 
-Active branch:
+Active:
 
 - `production/0.3-art-presentation`
-- Production asset binding pipeline has passed real Unity compile, generator and empty-catalog fallback runtime validation
-- actual Survivor / Infected / weapon production assets are the next integration step
+- production asset-binding pipeline passed real Unity compile, generator and empty-catalog fallback runtime validation
+- Quaternius Zombie Apocalypse Kit selected as the first CC0 production-art source
+- actual selected Survivor / Infected / Rifle binaries still need to be imported and validated
 
 ## Repository policy
 
