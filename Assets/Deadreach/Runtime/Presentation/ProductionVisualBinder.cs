@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using Kamilunavo.Deadreach.Combat;
+using Kamilunavo.Deadreach.Persistence;
+using Kamilunavo.Deadreach.Weapons;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Presentation
@@ -58,7 +60,7 @@ namespace Kamilunavo.Deadreach.Presentation
                 return false;
 
             var prefab = role == ProductionVisualRole.Survivor
-                ? catalog.SurvivorPrefab
+                ? catalog.GetSurvivorPrefab(SaveService.Data.selectedCharacterId)
                 : catalog.GetInfectedPrefab(variantIndex);
 
             if (prefab == null)
@@ -69,7 +71,9 @@ namespace Kamilunavo.Deadreach.Presentation
 
             var anchor = visualAnchor != null ? visualAnchor : transform;
             _instance = Instantiate(prefab, anchor, false);
-            _instance.name = $"ProductionVisual_{role}";
+            _instance.name = role == ProductionVisualRole.Survivor
+                ? $"ProductionVisual_{role}_{SaveService.Data.selectedCharacterId}"
+                : $"ProductionVisual_{role}";
 
             if (role == ProductionVisualRole.Survivor)
             {
@@ -103,10 +107,9 @@ namespace Kamilunavo.Deadreach.Presentation
             {
                 GetComponent<PlayerAnimationDriver>()?.SetAnimator(animator);
 
-                // Quaternius' Characters_Sam_SingleWeapon export already contains an artist-authored,
-                // rigged firearm. Previous 0.3 attempts hid that weapon and mounted a second standalone
-                // rifle onto an imported hand basis, which caused the repeated rotation/position errors.
-                // Keep the authored transform untouched and derive only the gameplay muzzle from it.
+                // Production operators keep a weapon authored on the character rig. Shaun uses his
+                // SingleWeapon SMG; Matt's full export is filtered by the Editor wrapper to one Rifle.
+                // Never mount a second external weapon onto an imported hand basis.
                 var muzzle = BindEmbeddedSingleWeaponMuzzle();
                 if (muzzle != null)
                 {
@@ -115,7 +118,7 @@ namespace Kamilunavo.Deadreach.Presentation
                 else
                 {
                     Debug.LogWarning(
-                        "DEADREACH could not find an embedded firearm renderer in the Quaternius SingleWeapon Survivor. " +
+                        "DEADREACH could not find an artist-rigged embedded firearm renderer in the selected operator. " +
                         "No external rifle was mounted; HitscanWeapon will keep its safe fallback origin.");
                 }
             }
@@ -131,9 +134,14 @@ namespace Kamilunavo.Deadreach.Presentation
             if (firearmRenderer == null)
                 return null;
 
-            // Older locally generated 0.3 wrappers deliberately disabled the embedded weapon.
-            // Re-enable it at runtime so this fix works after git pull without regenerating prefabs.
+            // Old Sam prefabs may have the accepted embedded pistol disabled by their historical
+            // wrapper. FindEmbeddedFirearmRenderer only falls back to disabled renderers when there
+            // is no enabled firearm at all, so intentionally hidden Matt weapons stay hidden.
             firearmRenderer.enabled = true;
+
+            // Finish styling is presentation-only. It never changes the artist-authored hand rig,
+            // weapon transform or muzzle basis.
+            WeaponVisualStyle.Apply(firearmRenderer, SaveService.GetEquippedPrimaryWeapon());
 
             var existingMuzzle = FindNamedTransform(firearmRenderer.transform, "MuzzleSocket_Embedded");
             if (existingMuzzle != null)
@@ -152,8 +160,6 @@ namespace Kamilunavo.Deadreach.Presentation
             var center = localBounds.center;
             var size = localBounds.size;
 
-            // Use the longest mesh axis as the weapon/barrel axis, then choose the endpoint farther
-            // from the Survivor body. This keeps the artist-authored weapon rotation completely intact.
             var axis = 0;
             if (size.y > size.x && size.y >= size.z)
                 axis = 1;
@@ -182,7 +188,7 @@ namespace Kamilunavo.Deadreach.Presentation
             muzzle.localScale = Vector3.one;
 
             Debug.Log(
-                $"DEADREACH using artist-rigged embedded SingleWeapon '{firearmRenderer.name}'. " +
+                $"DEADREACH using artist-rigged embedded firearm '{firearmRenderer.name}' on operator '{SaveService.Data.selectedCharacterId}'. " +
                 $"External hand-mounted Rifle disabled; muzzle={muzzle.position}.");
 
             return muzzle;
@@ -206,12 +212,26 @@ namespace Kamilunavo.Deadreach.Presentation
 
         private static Renderer FindEmbeddedFirearmRenderer(GameObject root)
         {
+            // First pass: honor the wrapper's explicit weapon choice. This is critical for Matt's
+            // full character export where Pistol/Rifle/Shotgun/SMG are all present but only Rifle is
+            // intentionally enabled.
+            var enabled = FindBestFirearmRenderer(root, enabledOnly: true);
+            if (enabled != null)
+                return enabled;
+
+            // Compatibility fallback for the previously validated Sam prefab where the historical
+            // setup disabled the embedded pistol and runtime re-enables it.
+            return FindBestFirearmRenderer(root, enabledOnly: false);
+        }
+
+        private static Renderer FindBestFirearmRenderer(GameObject root, bool enabledOnly)
+        {
             Renderer best = null;
             var bestScore = int.MinValue;
 
             foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
             {
-                if (renderer == null)
+                if (renderer == null || (enabledOnly && !renderer.enabled))
                     continue;
 
                 var score = ScoreFirearmRenderer(renderer);

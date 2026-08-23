@@ -6,15 +6,19 @@ namespace Kamilunavo.Deadreach.Feedback
     {
         private static CombatFeedbackPresenter _instance;
 
-        [SerializeField, Min(4)] private int tracerPoolSize = 24;
+        [SerializeField, Min(8)] private int tracerPoolSize = 28;
 
-        private Material _tracerMaterial;
-        private Material _impactMaterial;
-        private ParticleSystem _impactParticles;
-        private ParticleSystemRenderer _impactRenderer;
-        private LineRenderer[] _tracers;
+        private Material _tracerCoreMaterial;
+        private Material _tracerGlowMaterial;
+        private Material _sparkMaterial;
+        private Material _goreMaterial;
+        private LineRenderer[] _tracerCore;
+        private LineRenderer[] _tracerGlow;
         private float[] _tracerHideAt;
         private int _nextTracerIndex;
+        private ParticleSystem _sparkParticles;
+        private ParticleSystem _goreParticles;
+        private ParticleSystem _muzzleParticles;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureInstance()
@@ -31,7 +35,7 @@ namespace Kamilunavo.Deadreach.Feedback
         {
             SetupMaterials();
             SetupTracerPool();
-            SetupImpactParticles();
+            SetupParticleSystems();
         }
 
         private void OnEnable()
@@ -48,81 +52,181 @@ namespace Kamilunavo.Deadreach.Feedback
 
         private void Update()
         {
-            if (_tracers == null)
+            if (_tracerCore == null)
                 return;
 
             var now = Time.unscaledTime;
-            for (var i = 0; i < _tracers.Length; i++)
+            for (var i = 0; i < _tracerCore.Length; i++)
             {
-                var tracer = _tracers[i];
-                if (tracer != null && tracer.enabled && now >= _tracerHideAt[i])
-                    tracer.enabled = false;
+                if (now < _tracerHideAt[i])
+                    continue;
+
+                if (_tracerCore[i] != null) _tracerCore[i].enabled = false;
+                if (_tracerGlow[i] != null) _tracerGlow[i].enabled = false;
             }
         }
 
         private void HandleShot(ShotFeedback feedback)
         {
-            if (_tracers == null || _tracers.Length == 0)
+            if (_tracerCore == null || _tracerCore.Length == 0)
                 return;
 
             var index = _nextTracerIndex;
-            _nextTracerIndex = (_nextTracerIndex + 1) % _tracers.Length;
+            _nextTracerIndex = (_nextTracerIndex + 1) % _tracerCore.Length;
 
-            var line = _tracers[index];
-            line.SetPosition(0, feedback.Origin);
-            line.SetPosition(1, feedback.EndPoint);
-            line.startWidth = Mathf.Max(0.01f, feedback.TracerWidth) * (feedback.Critical ? 1.8f : 1f);
-            line.endWidth = line.startWidth * 0.55f;
+            var core = _tracerCore[index];
+            var glow = _tracerGlow[index];
+            var direction = feedback.EndPoint - feedback.Origin;
+            var normalizedDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
 
-            line.startColor = feedback.Critical
-                ? new Color(1f, 0.2f, 0.92f, 1f)
+            var shotColor = feedback.Critical
+                ? new Color(1f, 0.24f, 0.86f, 1f)
                 : feedback.HitDamageable
-                    ? new Color(1f, 0.76f, 0.28f, 0.95f)
-                    : new Color(0.35f, 0.85f, 1f, 0.9f);
-            line.endColor = new Color(line.startColor.r, line.startColor.g, line.startColor.b, 0.08f);
-            line.enabled = true;
+                    ? new Color(1f, 0.64f, 0.16f, 1f)
+                    : new Color(0.28f, 0.78f, 1f, 1f);
 
-            _tracerHideAt[index] = Time.unscaledTime + Mathf.Max(0.025f, feedback.TracerDuration);
+            ConfigureLine(core, feedback.Origin, feedback.EndPoint,
+                Mathf.Max(0.009f, feedback.TracerWidth * 0.52f),
+                shotColor, new Color(shotColor.r, shotColor.g, shotColor.b, 0.05f));
+
+            ConfigureLine(glow, feedback.Origin, feedback.EndPoint,
+                Mathf.Max(0.035f, feedback.TracerWidth * 2.35f),
+                new Color(shotColor.r, shotColor.g, shotColor.b, 0.34f),
+                new Color(shotColor.r, shotColor.g, shotColor.b, 0f));
+
+            _tracerHideAt[index] = Time.unscaledTime + Mathf.Max(0.04f, feedback.TracerDuration * 1.35f);
+            EmitMuzzleFlash(feedback.Origin, normalizedDirection, shotColor, feedback.Critical);
+        }
+
+        private static void ConfigureLine(LineRenderer line, Vector3 origin, Vector3 end, float width, Color start, Color finish)
+        {
+            if (line == null)
+                return;
+
+            line.SetPosition(0, origin);
+            line.SetPosition(1, end);
+            line.startWidth = width;
+            line.endWidth = width * 0.22f;
+            line.startColor = start;
+            line.endColor = finish;
+            line.enabled = true;
         }
 
         private void HandleImpact(ImpactFeedback feedback)
         {
-            if (_impactParticles == null)
+            if (feedback.HitDamageable)
+            {
+                EmitGore(feedback);
+                EmitSparks(feedback, feedback.Critical ? 7 : 3, feedback.Critical ? 3.2f : 1.6f);
+            }
+            else
+            {
+                EmitSparks(feedback, feedback.Critical ? 12 : 8, feedback.Critical ? 4f : 2.8f);
+            }
+        }
+
+        private void EmitMuzzleFlash(Vector3 origin, Vector3 direction, Color color, bool critical)
+        {
+            if (_muzzleParticles == null)
                 return;
 
-            var color = feedback.Critical
-                ? new Color(1f, 0.12f, 0.92f, 1f)
-                : feedback.HitDamageable
-                    ? new Color(1f, 0.22f, 0.08f, 1f)
-                    : new Color(1f, 0.72f, 0.28f, 1f);
-
-            var emit = new ParticleSystem.EmitParams
+            var count = critical ? 7 : 5;
+            for (var i = 0; i < count; i++)
             {
-                position = feedback.Point + feedback.Normal * 0.025f,
-                velocity = feedback.Normal * (feedback.Critical ? 2.8f : feedback.HitDamageable ? 1.2f : 2.1f),
-                startLifetime = feedback.Critical ? 0.24f : feedback.HitDamageable ? 0.16f : 0.12f,
-                startSize = feedback.Critical ? 0.29f : feedback.HitDamageable ? 0.19f : 0.12f,
-                startColor = color
-            };
+                var jitter = Random.insideUnitSphere * 0.35f;
+                var emit = new ParticleSystem.EmitParams
+                {
+                    position = origin + direction * 0.025f,
+                    velocity = direction * Random.Range(1.2f, 3.1f) + jitter,
+                    startLifetime = Random.Range(0.035f, 0.075f),
+                    startSize = Random.Range(0.035f, critical ? 0.12f : 0.085f),
+                    startColor = i == 0 ? Color.white : color
+                };
+                _muzzleParticles.Emit(emit, 1);
+            }
+        }
 
-            _impactParticles.Emit(emit, feedback.Critical ? 6 : feedback.HitDamageable ? 3 : 2);
+        private void EmitSparks(ImpactFeedback feedback, int count, float speed)
+        {
+            if (_sparkParticles == null)
+                return;
+
+            for (var i = 0; i < count; i++)
+            {
+                var tangent = Vector3.Cross(feedback.Normal, Random.onUnitSphere);
+                var velocity = (feedback.Normal * Random.Range(0.35f, 1f) + tangent * Random.Range(-0.8f, 0.8f)).normalized * Random.Range(speed * 0.55f, speed);
+                var color = feedback.Critical
+                    ? new Color(1f, 0.2f, 0.9f, 1f)
+                    : new Color(1f, Random.Range(0.42f, 0.78f), 0.08f, 1f);
+
+                var emit = new ParticleSystem.EmitParams
+                {
+                    position = feedback.Point + feedback.Normal * 0.02f,
+                    velocity = velocity,
+                    startLifetime = Random.Range(0.08f, 0.22f),
+                    startSize = Random.Range(0.012f, 0.045f),
+                    startColor = color
+                };
+                _sparkParticles.Emit(emit, 1);
+            }
+        }
+
+        private void EmitGore(ImpactFeedback feedback)
+        {
+            if (_goreParticles == null)
+                return;
+
+            var count = feedback.Critical ? 14 : 8;
+            for (var i = 0; i < count; i++)
+            {
+                var velocity = feedback.Normal * Random.Range(0.3f, 1.5f) + Random.insideUnitSphere * Random.Range(0.45f, 1.8f);
+                velocity.y = Mathf.Abs(velocity.y) + Random.Range(0.05f, 0.55f);
+                var emit = new ParticleSystem.EmitParams
+                {
+                    position = feedback.Point + feedback.Normal * 0.018f,
+                    velocity = velocity,
+                    startLifetime = Random.Range(0.12f, 0.32f),
+                    startSize = Random.Range(0.018f, feedback.Critical ? 0.075f : 0.055f),
+                    startColor = feedback.Critical
+                        ? new Color(0.95f, 0.04f, 0.32f, 1f)
+                        : new Color(Random.Range(0.42f, 0.72f), 0.018f, 0.012f, 1f)
+                };
+                _goreParticles.Emit(emit, 1);
+            }
         }
 
         private void SetupMaterials()
         {
-            var tracerShader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Sprites/Default");
-            if (tracerShader != null)
-                _tracerMaterial = new Material(tracerShader) { name = "Runtime_TracerMaterial" };
+            var lineShader = Shader.Find("Sprites/Default") ?? Shader.Find("Universal Render Pipeline/Unlit");
+            if (lineShader != null)
+            {
+                _tracerCoreMaterial = new Material(lineShader) { name = "Runtime_TracerCore" };
+                _tracerGlowMaterial = new Material(lineShader) { name = "Runtime_TracerGlow" };
+            }
 
             var particleShader = Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Sprites/Default");
             if (particleShader != null)
-                _impactMaterial = new Material(particleShader) { name = "Runtime_ImpactMaterial" };
+            {
+                _sparkMaterial = new Material(particleShader) { name = "Runtime_ImpactSparks" };
+                _goreMaterial = new Material(particleShader) { name = "Runtime_ImpactGore" };
+                PrepareParticleMaterial(_sparkMaterial, Color.white);
+                PrepareParticleMaterial(_goreMaterial, Color.white);
+            }
+        }
+
+        private static void PrepareParticleMaterial(Material material, Color color)
+        {
+            if (material == null)
+                return;
+            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+            if (material.HasProperty("_Color")) material.SetColor("_Color", color);
         }
 
         private void SetupTracerPool()
         {
-            var count = Mathf.Max(4, tracerPoolSize);
-            _tracers = new LineRenderer[count];
+            var count = Mathf.Max(8, tracerPoolSize);
+            _tracerCore = new LineRenderer[count];
+            _tracerGlow = new LineRenderer[count];
             _tracerHideAt = new float[count];
 
             for (var i = 0; i < count; i++)
@@ -130,47 +234,74 @@ namespace Kamilunavo.Deadreach.Feedback
                 var tracerObject = new GameObject($"VFX_Tracer_{i:00}");
                 tracerObject.transform.SetParent(transform, false);
 
-                var line = tracerObject.AddComponent<LineRenderer>();
-                line.useWorldSpace = true;
-                line.positionCount = 2;
-                line.numCapVertices = 2;
-                line.sharedMaterial = _tracerMaterial;
-                line.enabled = false;
-                _tracers[i] = line;
+                var glow = CreateLine(tracerObject, "Glow", _tracerGlowMaterial, 2);
+                var core = CreateLine(tracerObject, "Core", _tracerCoreMaterial, 4);
+                _tracerGlow[i] = glow;
+                _tracerCore[i] = core;
             }
         }
 
-        private void SetupImpactParticles()
+        private static LineRenderer CreateLine(GameObject root, string name, Material material, int capVertices)
         {
-            _impactParticles = gameObject.AddComponent<ParticleSystem>();
-            _impactParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var child = new GameObject(name);
+            child.transform.SetParent(root.transform, false);
+            var line = child.AddComponent<LineRenderer>();
+            line.useWorldSpace = true;
+            line.positionCount = 2;
+            line.numCapVertices = capVertices;
+            line.numCornerVertices = 2;
+            line.textureMode = LineTextureMode.Stretch;
+            line.sharedMaterial = material;
+            line.enabled = false;
+            line.alignment = LineAlignment.View;
+            return line;
+        }
 
-            var main = _impactParticles.main;
+        private void SetupParticleSystems()
+        {
+            _muzzleParticles = CreateParticleSystem("VFX_MuzzleFlash", _sparkMaterial, ParticleSystemRenderMode.Stretch, 220, 2.4f);
+            _sparkParticles = CreateParticleSystem("VFX_ImpactSparks", _sparkMaterial, ParticleSystemRenderMode.Stretch, 380, 3.2f);
+            _goreParticles = CreateParticleSystem("VFX_ImpactGore", _goreMaterial, ParticleSystemRenderMode.Stretch, 320, 0.65f);
+        }
+
+        private ParticleSystem CreateParticleSystem(string name, Material material, ParticleSystemRenderMode renderMode, int maxParticles, float lengthScale)
+        {
+            var gameObject = new GameObject(name);
+            gameObject.transform.SetParent(transform, false);
+            var particles = gameObject.AddComponent<ParticleSystem>();
+            particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            var main = particles.main;
             main.loop = false;
             main.playOnAwake = false;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = 96;
+            main.maxParticles = maxParticles;
             main.startSpeed = 0f;
             main.startLifetime = 0.15f;
-            main.startSize = 0.15f;
+            main.startSize = 0.04f;
+            main.gravityModifier = name.Contains("Gore") ? 0.8f : 0.18f;
 
-            var emission = _impactParticles.emission;
+            var emission = particles.emission;
             emission.enabled = false;
-
-            var shape = _impactParticles.shape;
+            var shape = particles.shape;
             shape.enabled = false;
 
-            _impactRenderer = _impactParticles.GetComponent<ParticleSystemRenderer>();
-            if (_impactMaterial != null)
-                _impactRenderer.sharedMaterial = _impactMaterial;
+            var renderer = particles.GetComponent<ParticleSystemRenderer>();
+            renderer.renderMode = renderMode;
+            renderer.lengthScale = lengthScale;
+            renderer.velocityScale = 0.55f;
+            renderer.cameraVelocityScale = 0f;
+            if (material != null)
+                renderer.sharedMaterial = material;
+            return particles;
         }
 
         private void OnDestroy()
         {
-            if (_tracerMaterial != null)
-                Destroy(_tracerMaterial);
-            if (_impactMaterial != null)
-                Destroy(_impactMaterial);
+            if (_tracerCoreMaterial != null) Destroy(_tracerCoreMaterial);
+            if (_tracerGlowMaterial != null) Destroy(_tracerGlowMaterial);
+            if (_sparkMaterial != null) Destroy(_sparkMaterial);
+            if (_goreMaterial != null) Destroy(_goreMaterial);
 
             if (_instance == this)
                 _instance = null;

@@ -2,7 +2,8 @@
   "name": "Deadreach.Runtime",
   "rootNamespace": "Kamilunavo.Deadreach",
   "references": [
-    "Unity.InputSystem"
+    "Unity.InputSystem",
+    "UnityEngine.UI"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

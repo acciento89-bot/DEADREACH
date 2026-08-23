@@ -9,7 +9,7 @@ namespace Kamilunavo.Deadreach.Persistence
     [Serializable]
     public sealed class DeadreachProfileData
     {
-        public int schemaVersion = 3;
+        public int schemaVersion = 4;
         public int securedScrap;
         public int successfulExtractions;
         public int failedRuns;
@@ -17,12 +17,22 @@ namespace Kamilunavo.Deadreach.Persistence
         public int bestExtractionStreak;
         public List<WeaponInstanceData> stashWeapons = new();
         public string equippedPrimaryWeaponId;
+
+        // Production 0.5 progression.
+        public int highestUnlockedLevel = 1;
+        public int selectedLevel = 1;
+        public int highestCompletedLevel;
+        public int bossKills;
+        public string selectedCharacterId = "ranger";
+        public List<string> unlockedCharacterIds = new() { "ranger", "scout", "warden" };
+        public List<string> ownedContentIds = new();
     }
 
     public static class SaveService
     {
         private const string FileName = "deadreach-profile.json";
-        private const int CurrentSchemaVersion = 3;
+        private const int CurrentSchemaVersion = 4;
+        public const int MaxCampaignLevel = 50;
         private static DeadreachProfileData _cached;
 
         public static DeadreachProfileData Data => _cached ??= Load();
@@ -30,10 +40,15 @@ namespace Kamilunavo.Deadreach.Persistence
 
         public static void RegisterExtraction(int scrap)
         {
-            RegisterExtraction(scrap, null);
+            RegisterExtraction(scrap, null, Data.selectedLevel);
         }
 
         public static void RegisterExtraction(int scrap, IReadOnlyList<WeaponInstanceData> extractedWeapons)
+        {
+            RegisterExtraction(scrap, extractedWeapons, Data.selectedLevel);
+        }
+
+        public static void RegisterExtraction(int scrap, IReadOnlyList<WeaponInstanceData> extractedWeapons, int completedLevel)
         {
             var data = Data;
             data.securedScrap += Mathf.Max(0, scrap);
@@ -59,6 +74,22 @@ namespace Kamilunavo.Deadreach.Persistence
 
             if (string.IsNullOrWhiteSpace(data.equippedPrimaryWeaponId) && bestNewWeapon != null)
                 data.equippedPrimaryWeaponId = bestNewWeapon.instanceId;
+
+            var level = Mathf.Clamp(completedLevel, 1, MaxCampaignLevel);
+            data.highestCompletedLevel = Mathf.Max(data.highestCompletedLevel, level);
+            if (level % 10 == 0)
+                data.bossKills++;
+
+            if (level >= data.highestUnlockedLevel && level < MaxCampaignLevel)
+                data.highestUnlockedLevel = Mathf.Min(MaxCampaignLevel, level + 1);
+
+            // Successful extraction advances the deployment cursor automatically. Replaying an old
+            // level moves to its next already-unlocked level; clearing the frontier moves directly
+            // onto the newly unlocked mission. Level 50 remains selected at campaign end.
+            if (level < MaxCampaignLevel && level + 1 <= data.highestUnlockedLevel)
+                data.selectedLevel = level + 1;
+            else
+                data.selectedLevel = Mathf.Clamp(level, 1, data.highestUnlockedLevel);
 
             Save();
         }
@@ -95,12 +126,56 @@ namespace Kamilunavo.Deadreach.Persistence
             return true;
         }
 
+        public static bool SelectLevel(int level)
+        {
+            var data = Data;
+            if (level < 1 || level > Mathf.Clamp(data.highestUnlockedLevel, 1, MaxCampaignLevel))
+                return false;
+
+            data.selectedLevel = level;
+            Save();
+            return true;
+        }
+
+        public static bool SelectCharacter(string characterId)
+        {
+            var data = Data;
+            data.unlockedCharacterIds ??= CreateDefaultCharacterUnlocks();
+            if (string.IsNullOrWhiteSpace(characterId) || !data.unlockedCharacterIds.Contains(characterId))
+                return false;
+
+            data.selectedCharacterId = characterId;
+            Save();
+            return true;
+        }
+
+        public static bool OwnsContent(string contentId)
+        {
+            return !string.IsNullOrWhiteSpace(contentId) && Data.ownedContentIds != null && Data.ownedContentIds.Contains(contentId);
+        }
+
+        // Local entitlement hook for UI/integration testing. Real StoreKit/Google Play purchase
+        // verification will call this after a verified transaction in a later store integration pass.
+        public static void GrantContent(string contentId)
+        {
+            if (string.IsNullOrWhiteSpace(contentId))
+                return;
+
+            var data = Data;
+            data.ownedContentIds ??= new List<string>();
+            if (!data.ownedContentIds.Contains(contentId))
+                data.ownedContentIds.Add(contentId);
+            Save();
+        }
+
         public static void Save()
         {
             try
             {
                 Data.schemaVersion = CurrentSchemaVersion;
                 Data.stashWeapons ??= new List<WeaponInstanceData>();
+                Data.unlockedCharacterIds ??= CreateDefaultCharacterUnlocks();
+                Data.ownedContentIds ??= new List<string>();
                 var json = JsonUtility.ToJson(Data, true);
                 File.WriteAllText(SavePath, json);
             }
@@ -135,13 +210,38 @@ namespace Kamilunavo.Deadreach.Persistence
             {
                 schemaVersion = CurrentSchemaVersion,
                 stashWeapons = new List<WeaponInstanceData>(),
-                equippedPrimaryWeaponId = string.Empty
+                equippedPrimaryWeaponId = string.Empty,
+                highestUnlockedLevel = 1,
+                selectedLevel = 1,
+                highestCompletedLevel = 0,
+                bossKills = 0,
+                selectedCharacterId = "ranger",
+                unlockedCharacterIds = CreateDefaultCharacterUnlocks(),
+                ownedContentIds = new List<string>()
             };
+        }
+
+        private static List<string> CreateDefaultCharacterUnlocks()
+        {
+            return new List<string> { "ranger", "scout", "warden" };
         }
 
         private static void Migrate(DeadreachProfileData data)
         {
             data.stashWeapons ??= new List<WeaponInstanceData>();
+            data.unlockedCharacterIds ??= CreateDefaultCharacterUnlocks();
+            data.ownedContentIds ??= new List<string>();
+
+            if (!data.unlockedCharacterIds.Contains("ranger")) data.unlockedCharacterIds.Add("ranger");
+            if (!data.unlockedCharacterIds.Contains("scout")) data.unlockedCharacterIds.Add("scout");
+            if (!data.unlockedCharacterIds.Contains("warden")) data.unlockedCharacterIds.Add("warden");
+
+            if (string.IsNullOrWhiteSpace(data.selectedCharacterId) || !data.unlockedCharacterIds.Contains(data.selectedCharacterId))
+                data.selectedCharacterId = "ranger";
+
+            data.highestUnlockedLevel = Mathf.Clamp(Mathf.Max(1, data.highestUnlockedLevel), 1, MaxCampaignLevel);
+            data.highestCompletedLevel = Mathf.Clamp(data.highestCompletedLevel, 0, MaxCampaignLevel);
+            data.selectedLevel = Mathf.Clamp(Mathf.Max(1, data.selectedLevel), 1, data.highestUnlockedLevel);
 
             if (!string.IsNullOrWhiteSpace(data.equippedPrimaryWeaponId) &&
                 !data.stashWeapons.Exists(item => item != null && item.instanceId == data.equippedPrimaryWeaponId))

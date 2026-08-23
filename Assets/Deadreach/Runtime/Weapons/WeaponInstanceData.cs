@@ -25,6 +25,7 @@ namespace Kamilunavo.Deadreach.Weapons
         public string instanceId;
         public string definitionId;
         public string displayNameSnapshot;
+        public string visualSkinId;
         public WeaponRarity rarity;
         public int itemPower;
         public List<WeaponAffixRollData> affixes = new();
@@ -36,6 +37,7 @@ namespace Kamilunavo.Deadreach.Weapons
                 instanceId = instanceId,
                 definitionId = definitionId,
                 displayNameSnapshot = displayNameSnapshot,
+                visualSkinId = visualSkinId,
                 rarity = rarity,
                 itemPower = itemPower,
                 affixes = new List<WeaponAffixRollData>()

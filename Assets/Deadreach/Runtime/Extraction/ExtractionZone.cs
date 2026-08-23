@@ -1,6 +1,7 @@
 using Kamilunavo.Deadreach.Core;
 using Kamilunavo.Deadreach.Inventory;
 using Kamilunavo.Deadreach.Player;
+using Kamilunavo.Deadreach.Progression;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Extraction
@@ -25,10 +26,11 @@ namespace Kamilunavo.Deadreach.Extraction
             if (_occupant == null || session == null || session.IsCompleted || session.IsFailed)
                 return;
 
-            var blocked = requireLoot && !HasAnyLoot(session);
-            session.SetExtractionPresence(true, blocked);
+            var blockedByNoLoot = requireLoot && !HasAnyLoot(session);
+            var blockedByBoss = IsBossGateBlocked();
+            session.SetExtractionPresence(true, blockedByNoLoot, blockedByBoss);
 
-            if (blocked)
+            if (blockedByNoLoot || blockedByBoss)
             {
                 _elapsed = 0f;
                 session.SetExtractionProgress(0f);
@@ -52,7 +54,7 @@ namespace Kamilunavo.Deadreach.Extraction
             _occupant = player;
             var session = RunSession.Current;
             if (session != null)
-                session.SetExtractionPresence(true, requireLoot && !HasAnyLoot(session));
+                session.SetExtractionPresence(true, requireLoot && !HasAnyLoot(session), IsBossGateBlocked());
         }
 
         private void OnTriggerExit(Collider other)
@@ -63,18 +65,24 @@ namespace Kamilunavo.Deadreach.Extraction
 
             _occupant = null;
             _elapsed = 0f;
-            RunSession.Current?.SetExtractionPresence(false, false);
+            RunSession.Current?.SetExtractionPresence(false, false, false);
         }
 
         private void OnDisable()
         {
             if (_occupant != null)
-                RunSession.Current?.SetExtractionPresence(false, false);
+                RunSession.Current?.SetExtractionPresence(false, false, false);
+        }
+
+        private static bool IsBossGateBlocked()
+        {
+            var director = RunDifficultyDirector.Current;
+            return director != null && director.IsBossLevel && !director.BossGateCleared;
         }
 
         private static bool HasAnyLoot(RunSession session)
         {
-            if (session.CarriedScrap > 0)
+            if (session.CarriedScrap > 0 || session.PendingBossReward != null)
                 return true;
 
             return RunInventory.Current != null && RunInventory.Current.Weapons.Count > 0;
