@@ -9,7 +9,7 @@ namespace Kamilunavo.Deadreach.Persistence
     [Serializable]
     public sealed class DeadreachProfileData
     {
-        public int schemaVersion = 4;
+        public int schemaVersion = 5;
         public int securedScrap;
         public int successfulExtractions;
         public int failedRuns;
@@ -18,7 +18,6 @@ namespace Kamilunavo.Deadreach.Persistence
         public List<WeaponInstanceData> stashWeapons = new();
         public string equippedPrimaryWeaponId;
 
-        // Production 0.5 progression.
         public int highestUnlockedLevel = 1;
         public int selectedLevel = 1;
         public int highestCompletedLevel;
@@ -26,12 +25,16 @@ namespace Kamilunavo.Deadreach.Persistence
         public string selectedCharacterId = "ranger";
         public List<string> unlockedCharacterIds = new() { "ranger", "scout", "warden" };
         public List<string> ownedContentIds = new();
+
+        // Production 0.6 Bunker debrief.
+        public WeaponInstanceData lastBossReward;
+        public bool bossRewardDebriefPending;
     }
 
     public static class SaveService
     {
         private const string FileName = "deadreach-profile.json";
-        private const int CurrentSchemaVersion = 4;
+        private const int CurrentSchemaVersion = 5;
         public const int MaxCampaignLevel = 50;
         private static DeadreachProfileData _cached;
 
@@ -83,14 +86,31 @@ namespace Kamilunavo.Deadreach.Persistence
             if (level >= data.highestUnlockedLevel && level < MaxCampaignLevel)
                 data.highestUnlockedLevel = Mathf.Min(MaxCampaignLevel, level + 1);
 
-            // Successful extraction advances the deployment cursor automatically. Replaying an old
-            // level moves to its next already-unlocked level; clearing the frontier moves directly
-            // onto the newly unlocked mission. Level 50 remains selected at campaign end.
             if (level < MaxCampaignLevel && level + 1 <= data.highestUnlockedLevel)
                 data.selectedLevel = level + 1;
             else
                 data.selectedLevel = Mathf.Clamp(level, 1, data.highestUnlockedLevel);
 
+            Save();
+        }
+
+        public static void RecordSecuredBossReward(WeaponInstanceData reward)
+        {
+            if (reward == null)
+                return;
+
+            var data = Data;
+            data.lastBossReward = reward.Clone();
+            data.bossRewardDebriefPending = true;
+            Save();
+        }
+
+        public static void MarkBossRewardDebriefSeen()
+        {
+            if (!Data.bossRewardDebriefPending)
+                return;
+
+            Data.bossRewardDebriefPending = false;
             Save();
         }
 
@@ -154,8 +174,6 @@ namespace Kamilunavo.Deadreach.Persistence
             return !string.IsNullOrWhiteSpace(contentId) && Data.ownedContentIds != null && Data.ownedContentIds.Contains(contentId);
         }
 
-        // Local entitlement hook for UI/integration testing. Real StoreKit/Google Play purchase
-        // verification will call this after a verified transaction in a later store integration pass.
         public static void GrantContent(string contentId)
         {
             if (string.IsNullOrWhiteSpace(contentId))
@@ -217,7 +235,9 @@ namespace Kamilunavo.Deadreach.Persistence
                 bossKills = 0,
                 selectedCharacterId = "ranger",
                 unlockedCharacterIds = CreateDefaultCharacterUnlocks(),
-                ownedContentIds = new List<string>()
+                ownedContentIds = new List<string>(),
+                lastBossReward = null,
+                bossRewardDebriefPending = false
             };
         }
 
@@ -249,6 +269,7 @@ namespace Kamilunavo.Deadreach.Persistence
                 data.equippedPrimaryWeaponId = string.Empty;
             }
 
+            // WeaponFamily.Rifle is enum value 0, so legacy 0.5 weapon JSON migrates naturally.
             data.schemaVersion = CurrentSchemaVersion;
         }
 
