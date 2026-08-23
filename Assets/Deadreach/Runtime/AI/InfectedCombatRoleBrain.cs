@@ -1,5 +1,6 @@
 using System;
 using Kamilunavo.Deadreach.Combat;
+using Kamilunavo.Deadreach.Feedback;
 using Kamilunavo.Deadreach.Player;
 using UnityEngine;
 
@@ -94,8 +95,10 @@ namespace Kamilunavo.Deadreach.AI
                 return;
 
             FlashTelegraph();
+            var start = transform.position + Vector3.up * 0.45f;
             if (_controller != null && _controller.enabled)
                 _controller.Move(direction * 2.85f);
+            var end = transform.position + Vector3.up * 0.45f;
 
             var afterDistance = Vector3.Distance(Flat(transform.position), Flat(_target.position));
             if (afterDistance <= 1.75f)
@@ -107,6 +110,12 @@ namespace Kamilunavo.Deadreach.AI
                     direction));
             }
 
+            CombatFeedback.RaiseEnemySpecial(new EnemySpecialImpactFeedback(
+                EnemySpecialKind.RunnerBurst,
+                start,
+                end,
+                direction,
+                1.55f));
             _nextSpecialTime = Time.time + 4.1f;
             SpecialTriggered?.Invoke(Role);
         }
@@ -123,6 +132,12 @@ namespace Kamilunavo.Deadreach.AI
                 _target.position,
                 direction));
 
+            CombatFeedback.RaiseEnemySpecial(new EnemySpecialImpactFeedback(
+                EnemySpecialKind.BruteSlam,
+                transform.position + Vector3.up * 0.08f,
+                transform.position + Vector3.up * 0.08f,
+                direction,
+                4.25f));
             _nextSpecialTime = Time.time + 5.8f;
             SpecialTriggered?.Invoke(Role);
         }
@@ -136,10 +151,18 @@ namespace Kamilunavo.Deadreach.AI
             var lateral = Vector3.Cross(Vector3.up, direction) * _stalkerSide;
             _stalkerSide *= -1;
             var flankDirection = (lateral * 0.88f + direction * 0.48f).normalized;
+            var start = transform.position + Vector3.up * 0.45f;
 
             if (_controller != null && _controller.enabled)
                 _controller.Move(flankDirection * 2.45f);
 
+            var end = transform.position + Vector3.up * 0.45f;
+            CombatFeedback.RaiseEnemySpecial(new EnemySpecialImpactFeedback(
+                EnemySpecialKind.StalkerFlank,
+                start,
+                end,
+                flankDirection,
+                1.35f));
             _nextSpecialTime = Time.time + 4.7f;
             SpecialTriggered?.Invoke(Role);
         }
