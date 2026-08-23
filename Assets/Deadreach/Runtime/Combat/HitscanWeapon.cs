@@ -1,4 +1,5 @@
 using System;
+using Kamilunavo.Deadreach.Audio;
 using Kamilunavo.Deadreach.Feedback;
 using Kamilunavo.Deadreach.Input;
 using Kamilunavo.Deadreach.Weapons;
@@ -96,6 +97,8 @@ namespace Kamilunavo.Deadreach.Combat
             if (direction.sqrMagnitude < 0.5f)
                 direction = transform.forward;
 
+            AudioService.Play(definition != null ? definition.ShotAudio : null, origin);
+
             var hits = Physics.RaycastAll(origin, direction, Range, hitMask, QueryTriggerInteraction.Ignore);
             Array.Sort(hits, static (a, b) => a.distance.CompareTo(b.distance));
 
@@ -115,6 +118,7 @@ namespace Kamilunavo.Deadreach.Combat
                     hitDamageable = damageable.TakeDamage(new DamageInfo(Damage, faction, hit.point, direction));
                 }
 
+                AudioService.Play(definition != null ? definition.ImpactAudio : null, hit.point);
                 CombatFeedback.RaiseImpact(new ImpactFeedback(hit.point, hit.normal, hitDamageable));
                 break;
             }
