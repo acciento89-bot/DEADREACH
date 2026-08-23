@@ -20,95 +20,97 @@ Core loop:
 
 **Bunker → Deploy → Expedition → Combat → Loot → Risk decision → Extract / Die / Abandon → Bunker → Equip / Upgrade → Deploy stronger**
 
-## 2. Stable baseline and permanent rule
+## 2. Validated / merged baselines
 
-Production 0.1–0.5 are merged / validated. Stable main baseline remains Production 0.5 at `a066386f05c6593f1840ef6902f62c808cbdf319`.
+Production 0.1–0.5 are merged / real-Unity validated. Stable main baseline remains Production 0.5 merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 
-Permanent gameplay weapon rule:
+Permanent gameplay-art rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig for gameplay
 - derive muzzle from that embedded firearm
-- never reintroduce the failed external hand-mounted weapon transform path just to force Arsenal visuals onto operators
+- never reintroduce the failed external hand-mounted Rifle transform path
 
-## 3. Production 0.6 functional validation
+## 3. Current stacked workflow
 
-Branch: `production/0.6-content-rewards-mobile` / PR #6.
+- Production 0.6 branch: `production/0.6-content-rewards-mobile`
+- Production 0.7 branch: **`production/0.7-presentation-polish`**
+- Production 0.7 Draft PR: **#7**
+- 0.7 is stacked on the functionally tested 0.6 draft and is not merge-ready until all real-Unity presentation gates pass.
 
-Functionally validated in real Unity on 2026-08-23:
-- 0 compiler errors
-- `DEADREACH > Build Production Slice 0.6` passed
-- Bunker / Arsenal weapon-family flow passed
-- Levels 1 / 11 / 21 / 31 / 41 are visibly distinct
-- Level 10 `THE BREAKER` boss presentation works
-- `MUTATION RELIC SECURED` appears on boss kill
-- extraction Bunker relic debrief appears
-- `TRANSFER TO ARSENAL` transfers the reward and reward is equipable
+## 4. Production 0.6 functional status
 
-Presentation debt exposed during the real Unity gate:
-- Bunker/modal/header regions can visually overlap or feel cramped
-- new SMG / Pistol / Shotgun Arsenal previews can be inverted/wrongly oriented while DR-7 is acceptable
-- sector atmospheric ParticleSystems render magenta/purple missing-material streaks
-- sector-specific atmosphere needs stronger production identity
+Functionally validated in real Unity:
+- compile gate: 0 errors
+- `DEADREACH > Build Production Slice 0.6`
+- Rifle / SMG / Pistol / Shotgun persistence and Arsenal use
+- five sector identities visibly differ
+- Level 10 `THE BREAKER` boss identity / phase presentation
+- `MUTATION RELIC SECURED` combat popup
+- successful extraction → persistent Bunker relic debrief
+- `TRANSFER TO ARSENAL` → same reward present and equipable
 
-0.6 PR remains Draft and is the base for 0.7.
+Presentation debt exposed by the gate became the scope of Production 0.7.
 
-## 4. Active work — Production 0.7
+## 5. Production 0.7 implemented scope
 
-- active branch: **`production/0.7-presentation-polish`**
-- PR: **#7**
-- base: `production/0.6-content-rewards-mobile`
-- goal: presentation/layout/Arsenal/sector-FX polish without regressing 0.6 gameplay/reward behavior
+### Layout / safe area
+- Bunker header/navigation/content/deploy use separate safe-area zones with gutters
+- ultrawide, 16:9, 16:10 and 4:3-ish landscape breakpoints
+- compact landscape now reclaims width from the navigation rail for split content views
 
-Implemented:
-- separated Bunker header / navigation / content / deploy anchor zones with breakpoint-specific gutters
-- safe-area-aware boss reward card placed below persistent top HUD zones
-- safe-area-aware modal Bunker relic debrief with blocked underlying interaction
-- human-readable reward/debrief affix labels
-- family-aware Arsenal preview orientation
-- DR-7 Rifle keeps its validated baseline flip
-- SMG / Pistol / Shotgun no longer inherit the wrong DR-7 inversion
-- combined-bounds recentering and automatic camera framing
-- actual runtime particle material assignment with URP / Standard / Sprite fallback
-- distinct cool rain / drifting ash / blackout dust / red contamination atmosphere styles
-- toned-down Blackout purple lighting
-- new `DEADREACH > Build Production Slice 0.7` menu entry
-- dedicated `docs/PRODUCTION_07_TEST.md`
+### Arsenal
+- DR-7 baseline orientation preserved
+- SMG / Pistol / Shotgun incorrect inversion removed
+- family-aware yaw, centering and camera framing
+- real Unity Arsenal orientation gate accepted for all four weapon families
 
-## 5. Production 0.7 real Unity validation
+### Operators
+- standalone operator 3D preview no longer relies on fixed global screen anchors
+- preview frame now follows the live `OperatorInspector` panel screen bounds
+- compact landscape reserves a larger lower information zone for operator name / role / stats
+- square preview aspect is preserved to avoid character stretching
+- portrait is intentionally not a supported Bunker layout; mobile target remains landscape
 
-Passed on 2026-08-23:
-- **compile gate:** 0 compiler errors ✅
-- **build gate:** `DEADREACH > Build Production Slice 0.7` completed with no blocking red build/import error ✅
+### Boss reward / debrief
+- reward card reflows inside safe area and lower than persistent boss/HUD regions
+- Bunker recovery debrief uses safe-area modal layout and blocks underlying interaction
+- human-readable affix labels
 
-Still pending:
-1. Arsenal orientation runtime gate — Rifle / SMG / Pistol / Shotgun
-2. Bunker responsive runtime gate — 16:9 / ~19.5:9 / compact landscape
-3. Level 10 boss reward + relic debrief presentation regression
-4. Levels 11 / 21 / 31 / 41 sector FX regression
-5. final gameplay/persistence regression
+### Sector FX
+- particle systems receive real runtime materials with URP / Standard / Sprite shader fallback
+- Flooded Industrial: cool rain
+- Ash District: drifting ash
+- Blackout: sparse dust with reduced purple intensity
+- Ground Zero: rising red contamination motes
 
-PR #7 remains Draft until those real Unity presentation gates are clean.
+### Build gate
+- `DEADREACH > Build Production Slice 0.7`
 
-## 6. Next action
+## 6. Real Unity validation progress
 
-Open Play → Bunker → Arsenal and equip one weapon from each family.
+- 0 compiler errors ✅
+- Production 0.7 build gate ✅
+- Arsenal four-family orientation/framing ✅
+- Bunker first multi-aspect pass: 16:9 / 19:9 acceptable, but 4:3 / 16:10 exposed compact-layout drift ⚠️
+- compact-layout follow-up implemented in commits `9dacdef131a579aae3c9f9c4f01bb606dadc36e1` and `f56b7b71006b296b8532bb7c326ef370454296d6`; **retest required**
+- boss reward/debrief 0.7 regression pending
+- sector FX 0.7 regression pending
 
-Required first:
-- DR-7 / Rifle remains correct
-- SMG grip/magazine points downward
-- Pistol grip points downward and silhouette is readable
-- Shotgun horizontal/readable and not inverted
-- preview remains centered while rotating
-- finish tint remains visible
+## 7. Next action
 
-Then continue with `docs/PRODUCTION_07_TEST.md`.
+1. pull `production/0.7-presentation-polish`
+2. require 0 compiler errors after the compact-layout follow-up
+3. retest Operators at 4:3 / 16:10 / 16:9 / 19:9 landscape
+4. if clean, continue Level 10 reward/debrief regression
+5. then Levels 11 / 21 / 31 / 41 FX regression
+6. keep PR #7 Draft until all real Unity gates pass
 
-## 7. Handoff protocol
+## 8. Handoff protocol
 
 When resuming:
 1. read this file first
-2. main stable baseline is Production 0.5
-3. 0.6 is functionally validated but remains a Draft presentation base
-4. active work is PR #7 / `production/0.7-presentation-polish`
-5. 0.7 compile + build gates are already green
-6. next real Unity gate is Arsenal weapon orientation
-7. never reintroduce arbitrary external gameplay hand-mounted weapon transforms
+2. treat 0.1–0.5 as merged / real-Unity validated baseline
+3. treat 0.6 gameplay/reward behavior as functionally tested but still stacked below 0.7
+4. active working branch is `production/0.7-presentation-polish`
+5. never reintroduce external gameplay hand-mounted Rifle transforms
+6. do not call Bunker responsive UI final until the compact landscape retest passes
+7. mobile target is landscape; portrait is not part of the accepted release layout
