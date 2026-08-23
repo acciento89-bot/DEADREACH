@@ -33,22 +33,13 @@ namespace Kamilunavo.Deadreach.Presentation
         {
             var host = new GameObject("Systems_Production09CombatDepthBootstrap");
             Object.DontDestroyOnLoad(host);
-            host.AddComponent<DeferredBinder>();
+            host.AddComponent<Production09CombatDepthDeferredBinder>();
         }
 
-        private sealed class DeferredBinder : MonoBehaviour
+        internal static void BindNow()
         {
-            private IEnumerator Start()
-            {
-                // RunDifficultyDirector and OperatorRuntimeApplier both configure themselves in Start.
-                // Waiting one frame lets 0.9 bind to their final names/profile state without replacing
-                // the validated 0.8 scene-authoring path.
-                yield return null;
-
-                BindEnemyRoles();
-                BindOperatorAbility();
-                Destroy(gameObject);
-            }
+            BindEnemyRoles();
+            BindOperatorAbility();
         }
 
         private static void BindEnemyRoles()
@@ -108,6 +99,19 @@ namespace Kamilunavo.Deadreach.Presentation
                 InfectedCombatRole.Stalker => 10f,
                 _ => 0f
             };
+        }
+    }
+
+    public sealed class Production09CombatDepthDeferredBinder : MonoBehaviour
+    {
+        private IEnumerator Start()
+        {
+            // RunDifficultyDirector and OperatorRuntimeApplier both configure themselves in Start.
+            // Waiting one frame lets 0.9 bind to their final names/profile state without replacing
+            // the validated 0.8 scene-authoring path.
+            yield return null;
+            Production09CombatDepthBootstrap.BindNow();
+            Destroy(gameObject);
         }
     }
 }
