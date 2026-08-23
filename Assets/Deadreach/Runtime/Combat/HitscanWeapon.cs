@@ -24,6 +24,7 @@ namespace Kamilunavo.Deadreach.Combat
         private Vector3 _aimPoint;
         private WeaponRuntimeStats _runtimeStats;
         private WeaponInstanceData _equippedInstance;
+        private float _operatorDamageMultiplier = 1f;
 
         public Vector3 AimPoint => _aimPoint;
         public WeaponDefinition Definition => definition;
@@ -77,10 +78,22 @@ namespace Kamilunavo.Deadreach.Combat
             muzzle = newMuzzle;
         }
 
+        public void SetOperatorDamageMultiplier(float multiplier)
+        {
+            _operatorDamageMultiplier = Mathf.Clamp(multiplier, 0.5f, 1.75f);
+            RefreshRuntimeStats();
+        }
+
         public void RefreshRuntimeStats()
         {
             _equippedInstance = SaveService.GetEquippedPrimaryWeapon();
-            _runtimeStats = WeaponStatResolver.Resolve(BaseDamage, BaseRoundsPerSecond, BaseRange, _equippedInstance);
+            var resolved = WeaponStatResolver.Resolve(BaseDamage, BaseRoundsPerSecond, BaseRange, _equippedInstance);
+            _runtimeStats = new WeaponRuntimeStats(
+                resolved.Damage * _operatorDamageMultiplier,
+                resolved.RoundsPerSecond,
+                resolved.Range,
+                resolved.CritChance,
+                resolved.CritMultiplier);
         }
 
         private void UpdateAim(DeadreachInput input)
