@@ -26,7 +26,13 @@ namespace Kamilunavo.Deadreach.Editor
         [MenuItem("DEADREACH/Build Production Slice 0.9", priority = 3)]
         public static void Build09()
         {
-            BuildInternal("0.9", "0.8 validated progression + distinct infected combat roles + active operator abilities + mobile ability input");
+            BuildInternal("0.9", "0.8 validated progression + distinct infected combat roles + active operator abilities + fixed-zone mobile controls");
+        }
+
+        [MenuItem("DEADREACH/Build Production Slice 0.10", priority = 4)]
+        public static void Build10()
+        {
+            BuildInternal("0.10", "0.9 validated combat depth + operator ability VFX + infected special impact FX + camera/critical feedback polish");
         }
 
         private static void BuildInternal(string version, string featureSummary)

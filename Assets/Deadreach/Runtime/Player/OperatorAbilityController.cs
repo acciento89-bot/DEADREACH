@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Kamilunavo.Deadreach.Combat;
+using Kamilunavo.Deadreach.Feedback;
 using Kamilunavo.Deadreach.Input;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Progression;
@@ -49,7 +50,7 @@ namespace Kamilunavo.Deadreach.Player
             _definition = OperatorCatalog.Get(SaveService.Data.selectedCharacterId);
             _camera = Camera.main;
             _nextReadyTime = Time.time + 0.65f;
-            Debug.Log($"DEADREACH 0.9 ability online // {_definition.Name} // {_definition.AbilityName} // CD {_definition.AbilityCooldown:0.#}s.");
+            Debug.Log($"DEADREACH 0.10 ability online // {_definition.Name} // {_definition.AbilityName} // CD {_definition.AbilityCooldown:0.#}s.");
         }
 
         private void Update()
@@ -104,6 +105,13 @@ namespace Kamilunavo.Deadreach.Player
                 return false;
 
             _health.Heal(_health.MaxHealth * 0.32f);
+            var origin = transform.position + Vector3.up * 0.18f;
+            CombatFeedback.RaiseAbility(new AbilityImpactFeedback(
+                CombatAbilityKind.FieldPatch,
+                origin,
+                origin,
+                Vector3.up,
+                3.2f));
             return true;
         }
 
@@ -116,7 +124,16 @@ namespace Kamilunavo.Deadreach.Player
             if (direction.sqrMagnitude < 0.01f)
                 direction = transform.forward;
 
-            _controller.Move(direction.normalized * 4.6f);
+            direction.Normalize();
+            var start = transform.position + Vector3.up * 0.55f;
+            _controller.Move(direction * 4.6f);
+            var end = transform.position + Vector3.up * 0.55f;
+            CombatFeedback.RaiseAbility(new AbilityImpactFeedback(
+                CombatAbilityKind.VectorDash,
+                start,
+                end,
+                direction,
+                1.45f));
             return true;
         }
 
@@ -148,7 +165,16 @@ namespace Kamilunavo.Deadreach.Player
                     direction.normalized));
             }
 
-            return damaged.Count > 0;
+            if (damaged.Count <= 0)
+                return false;
+
+            CombatFeedback.RaiseAbility(new AbilityImpactFeedback(
+                CombatAbilityKind.Shockwave,
+                transform.position + Vector3.up * 0.08f,
+                transform.position + Vector3.up * 0.08f,
+                transform.forward,
+                4.6f));
+            return true;
         }
 
         private Vector3 GetMovementDirection()
