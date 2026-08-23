@@ -46,64 +46,57 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 ### Production 0.6 + 0.7 — MERGED / REAL UNITY VALIDATED
 - PR #7 merged Production 0.7 presentation polish into the 0.6 integration branch at `9633aabd903251a09c8475b5b8672a03988a92bc`
 - PR #6 promoted the full 0.6 + 0.7 stack to `main` at `b69f5270a6e3e26780ccaa0445e4e6764808f753`
-- Production 0.7 remains the canonical stable `main` baseline
+
+### Production 0.8 — MERGED / REAL UNITY VALIDATED
+- PR #8 squash merged to `main` at `876127fb9997951afcca738cd7251acd2f662014`
+- compile gates passed with **0 red compiler errors**
+- `DEADREACH > Build Production Slice 0.8` completed successfully
+- Workshop layout / Calibration / Item Power / Scrap spending validated
+- two-step Salvage and active-loadout protection validated
+- Workbench / Medbay / Cargo Rig / Scavenger purchases and persistence validated
+- expedition → extraction → Bunker return validated after lifecycle fix; WORKSHOP remains present
+- final runtime/regression check passed
 
 ## 3. Current Git state
 
 - stable branch: `main`
-- stable production level: **0.7**
-- active branch: **`production/0.8-workshop-progression`**
-- PR #8: Draft, targets `main`
-- Production 0.8 Phase A + Phase B compile gates passed with **0 red compiler errors** on 2026-08-23
-- `DEADREACH > Build Production Slice 0.8` completed successfully on 2026-08-23
-- Workshop/economy interactions were runtime-validated before the first extraction return
-- regression found on 2026-08-23: after expedition → extraction → Bunker, WORKSHOP navigation disappeared because the first implementation installed only on the initial `AfterSceneLoad` callback
-- fix committed as `b34e08df645cca96ab953a3480cb2a4d990ac14d`: `Production08WorkshopBootstrap` now subscribes once to `SceneManager.sceneLoaded` and reinstalls the Workshop extension on every recreated Bunker UI
-- current required gate: pull latest, compile, then validate WORKSHOP remains present after expedition → extraction → Bunker
-- all new work must preserve the accepted 0.7 presentation/regression baseline
+- stable production level: **0.8**
+- stable merge: `876127fb9997951afcca738cd7251acd2f662014`
+- no active production branch is authoritative after the 0.8 merge
+- next production work must branch from current `main`
 
-## 4. Production 0.8 goal
+## 4. Production 0.8 shipped baseline
 
-Close the missing **Equip / Upgrade** half of the core loop with real persistent progression instead of presentation-only Item Power.
+Production 0.8 closes the missing **Equip / Upgrade** half of the core loop with real persistent progression.
 
-### Phase A — progression engine implemented
-- save schema advanced from v5 to **v6**
-- existing profiles migrate without losing Scrap, stash, campaign or equipped weapon
-- each weapon now persists `upgradeLevel`
-- Item Power now contributes to real combat damage
-- calibration levels add small range/crit handling gains
-- secured Scrap becomes the in-game Workshop currency
-- weapon upgrade/calibration API spends Scrap, raises calibration level and adds Item Power
-- non-equipped weapon salvage API returns secured Scrap
-- equipped weapon is protected from salvage
-- four permanent Bunker upgrade tracks:
-  - **Workbench** — raises weapon calibration ceiling
-  - **Medbay** — +6% operator max HP per rank
-  - **Cargo Rig** — +1 expedition weapon capacity per rank
-  - **Scavenger Network** — +8% Scrap banked on extraction per rank
-- Bunker upgrades have five ranks and escalating in-game Scrap costs
-- Cargo Rig is wired into `RunInventory`
-- Medbay is wired into `OperatorRuntimeApplier`
-- Scavenger Network is wired into `SaveService.RegisterExtraction`
-- new `DEADREACH > Build Production Slice 0.8` gate
-- new 0.8 dev helpers for Scrap / weapon-family seeding / test profile setup
+### Progression engine
+- save schema **v6** with non-destructive migration from v5
+- per-weapon persistent `upgradeLevel`
+- Item Power contributes to real combat damage
+- calibration adds Item Power plus small range/crit handling gains
+- secured Scrap is the Workshop currency
+- weapon calibration spends Scrap, raises calibration and adds +8 Item Power
+- non-equipped weapons can be salvaged for secured Scrap
+- equipped weapon cannot be salvaged
 
-### Phase B — Workshop UI implemented
-- new **WORKSHOP** entry is injected into the existing Bunker navigation without rewriting the validated 0.7 Bunker command-center implementation
-- Store navigation is shifted down and Bunker status is compacted to make room for the sixth navigation item
-- Workshop renders inside the validated Bunker content viewport so existing landscape/safe-area behavior is inherited
-- permanent-system cards show Workbench / Medbay / Cargo Rig / Scavenger Network rank, live effect, next purchase cost and affordability
-- weapon list prioritizes the active loadout, then sorts by Item Power
-- every weapon card shows family / rarity / Item Power / calibration / affixes and real Item-Power damage contribution
-- Calibration spends secured Scrap, adds one calibration level and +8 Item Power, then refreshes immediately
-- Workshop exposes the actual Workbench calibration ceiling; weapons at the cap show `WORKBENCH REQUIRED`
-- Salvage is two-step confirmed to prevent accidental destruction
-- active equipped weapon shows `ACTIVE LOADOUT` and remains unsalvageable
-- Scrap summary refreshes after calibration, salvage and Bunker upgrades
-- Item-Power damage multiplier is exposed by `WeaponStatResolver` so Workshop presentation uses the same source of truth as combat
-- lifecycle bootstrap now reinstalls the Workshop after every scene load so expedition → Bunker return preserves the tab
+### Permanent Bunker systems
+- **Workbench** — raises weapon calibration ceiling
+- **Medbay** — +6% operator max HP per rank
+- **Cargo Rig** — +1 expedition weapon capacity per rank
+- **Scavenger Network** — +8% Scrap banked on extraction per rank
+- each track has five ranks with escalating Scrap costs
 
-## 5. Production 0.7 regression baseline that must stay green
+### Workshop UI
+- dedicated **WORKSHOP** navigation entry in the Bunker
+- live rank / effect / cost / affordability cards
+- weapon cards show family / rarity / Item Power / calibration / affixes / real Item-Power damage contribution
+- Calibration and Salvage refresh immediately
+- Salvage uses two-step confirmation
+- active weapon shows `ACTIVE LOADOUT`
+- Scrap profile summary refreshes after transactions
+- `Production08WorkshopBootstrap` reinstalls Workshop after each scene load so expedition → Bunker return remains correct
+
+## 5. Production 0.7 presentation baseline that remains accepted
 
 - Arsenal Rifle / SMG / Pistol / Shotgun orientation and framing
 - Bunker layout at 4:3 / 16:10 / 16:9 / ~19:9 landscape
@@ -113,30 +106,13 @@ Close the missing **Equip / Upgrade** half of the core loop with real persistent
 - lower-right Relic reward toast
 - Bunker reward debrief → Arsenal transfer
 - Flooded Industrial rain / Ash District ash / Blackout dust / Ground Zero contamination FX
-- final Bunker → expedition → combat → loot → return flow with no red runtime errors
+- Bunker → expedition → combat → loot → return flow with no red runtime errors
 
-## 6. Current 0.8 gate
+## 6. Next development entry point
 
-Run `docs/PRODUCTION_08_TEST.md`.
-
-Immediate next validation:
-1. pull latest `production/0.8-workshop-progression`
-2. Unity compile → **0 red compiler errors**
-3. Play → Bunker → WORKSHOP must exist
-4. Deploy → successful extraction → Bunker
-5. WORKSHOP must still exist and open
-6. Calibration / Bunker ranks / Scrap must still reflect the persisted state
-7. Console must remain at **0 red runtime errors**
-8. then validate Medbay / Cargo / Scavenger runtime effects and final 0.7 regression
-
-## 7. Handoff protocol
-
-When resuming:
-1. read this file first
-2. treat Production 0.7 on `main` as the stable real-Unity-validated baseline
-3. active work is Production 0.8 on `production/0.8-workshop-progression`
-4. Phase A + Phase B compile/build gates are green
-5. Workshop/economy interactions work before deployment
-6. lifecycle regression after extraction was fixed by `Production08WorkshopBootstrap`; retest that exact return path first
-7. never reintroduce external gameplay hand-mounted Rifle transforms
-8. keep mobile landscape-only
+1. `git switch main`
+2. `git pull`
+3. branch the next production pass from current `main`
+4. preserve schema-v6 Workshop progression and the accepted 0.7 presentation baseline
+5. never reintroduce external gameplay hand-mounted Rifle transforms
+6. keep mobile landscape-only
