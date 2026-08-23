@@ -31,6 +31,7 @@ namespace Kamilunavo.Deadreach.UI
         private RenderTexture _renderTexture;
         private Camera _previewCamera;
         private RawImage _previewImage;
+        private Text _finishLabel;
         private GameObject _previewRoot;
         private GameObject _weaponVisual;
         private string _lastEquippedId;
@@ -98,13 +99,27 @@ namespace Kamilunavo.Deadreach.UI
             var rawObject = new GameObject("Weapon_Render", typeof(RectTransform), typeof(RawImage));
             rawObject.transform.SetParent(frameObject.transform, false);
             var rawRect = rawObject.GetComponent<RectTransform>();
-            rawRect.anchorMin = new Vector2(0.025f, 0.035f);
+            rawRect.anchorMin = new Vector2(0.025f, 0.13f);
             rawRect.anchorMax = new Vector2(0.975f, 0.955f);
             rawRect.offsetMin = Vector2.zero;
             rawRect.offsetMax = Vector2.zero;
             _previewImage = rawObject.GetComponent<RawImage>();
             _previewImage.color = Color.white;
             _previewImage.raycastTarget = false;
+
+            var labelObject = new GameObject("Weapon_Finish_Label", typeof(RectTransform), typeof(Text));
+            labelObject.transform.SetParent(frameObject.transform, false);
+            var labelRect = labelObject.GetComponent<RectTransform>();
+            labelRect.anchorMin = new Vector2(0.04f, 0.02f);
+            labelRect.anchorMax = new Vector2(0.96f, 0.115f);
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+            _finishLabel = labelObject.GetComponent<Text>();
+            _finishLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _finishLabel.fontSize = 16;
+            _finishLabel.fontStyle = FontStyle.Bold;
+            _finishLabel.alignment = TextAnchor.MiddleCenter;
+            _finishLabel.raycastTarget = false;
 
             _renderTexture = new RenderTexture(640, 480, 16, RenderTextureFormat.ARGB32)
             {
@@ -173,9 +188,17 @@ namespace Kamilunavo.Deadreach.UI
                 : BuildFallbackWeapon(_previewRoot.transform);
             _weaponVisual.name = source != null ? "Preview_ProductionWeapon" : "Preview_FallbackWeapon";
 
+            var equippedWeapon = SaveService.GetEquippedPrimaryWeapon();
             SetLayerRecursive(_weaponVisual, PreviewLayer);
             NormalizeWeaponForPreview(_weaponVisual);
-            WeaponVisualStyle.Apply(_weaponVisual, SaveService.GetEquippedPrimaryWeapon());
+            WeaponVisualStyle.Apply(_weaponVisual, equippedWeapon);
+
+            if (_finishLabel != null)
+            {
+                var finishId = WeaponVisualStyle.ResolveFinishId(equippedWeapon);
+                _finishLabel.text = $"FINISH // {WeaponVisualStyle.GetDisplayName(finishId)}";
+                _finishLabel.color = WeaponVisualStyle.ResolveColor(equippedWeapon);
+            }
         }
 
         private static void NormalizeWeaponForPreview(GameObject visual)
