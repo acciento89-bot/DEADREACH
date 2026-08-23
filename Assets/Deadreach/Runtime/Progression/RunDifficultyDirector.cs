@@ -3,7 +3,6 @@ using System.Linq;
 using Kamilunavo.Deadreach.AI;
 using Kamilunavo.Deadreach.Combat;
 using Kamilunavo.Deadreach.Persistence;
-using Kamilunavo.Deadreach.Presentation;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Progression
@@ -88,14 +87,7 @@ namespace Kamilunavo.Deadreach.Progression
             var levelDamageScale = 1f + (Level - 1) * 0.048f;
 
             for (var i = 0; i < infected.Length; i++)
-            {
-                var enemy = infected[i];
-                ConfigureArchetype(enemy, (Level + i) % 4, levelHealthScale, levelDamageScale, i);
-
-                var binder = enemy.GetComponent<ProductionVisualBinder>();
-                if (binder != null)
-                    binder.RebindVariant(Level + i);
-            }
+                ConfigureArchetype(infected[i], (Level + i) % 4, levelHealthScale, levelDamageScale, i);
 
             if (IsBossLevel)
                 PromoteBoss(infected[infected.Length - 1]);
@@ -107,22 +99,22 @@ namespace Kamilunavo.Deadreach.Progression
         {
             switch (archetype)
             {
-                case 0: // Walker
+                case 0:
                     enemy.Configure(2.65f, 58f * healthScale, 10f * damageScale, 4 + index);
                     enemy.transform.localScale = Vector3.one;
                     enemy.name = $"Infected_Walker_{index + 1:00}";
                     break;
-                case 1: // Runner
+                case 1:
                     enemy.Configure(3.95f, 42f * healthScale, 8.5f * damageScale, 4 + index);
                     enemy.transform.localScale = Vector3.one * 0.88f;
                     enemy.name = $"Infected_Runner_{index + 1:00}";
                     break;
-                case 2: // Brute
+                case 2:
                     enemy.Configure(2.15f, 112f * healthScale, 16.5f * damageScale, 7 + index);
                     enemy.transform.localScale = Vector3.one * 1.23f;
                     enemy.name = $"Infected_Brute_{index + 1:00}";
                     break;
-                default: // Stalker
+                default:
                     enemy.Configure(3.25f, 72f * healthScale, 12.5f * damageScale, 5 + index);
                     enemy.transform.localScale = Vector3.one * 1.03f;
                     enemy.name = $"Infected_Stalker_{index + 1:00}";
@@ -135,19 +127,12 @@ namespace Kamilunavo.Deadreach.Progression
             var tier = Mathf.Max(1, Level / 10);
             boss.name = $"BOSS_Mutation_Tier_{tier}";
             boss.transform.localScale = Vector3.one * (1.58f + tier * 0.09f);
-            boss.Configure(
-                2.55f + tier * 0.08f,
-                650f + tier * 260f,
-                24f + tier * 5f,
-                45 + tier * 20);
+            boss.Configure(2.55f + tier * 0.08f, 650f + tier * 260f, 24f + tier * 5f, 45 + tier * 20);
 
             _bossChaser = boss;
             _bossHealth = boss.GetComponent<Damageable>();
             if (_bossHealth != null)
                 _bossHealth.Died += HandleBossDeath;
-
-            var binder = boss.GetComponent<ProductionVisualBinder>();
-            binder?.RebindVariant(1 + tier);
         }
 
         private void HandleBossDeath()
