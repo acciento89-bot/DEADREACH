@@ -24,6 +24,7 @@ namespace Kamilunavo.Deadreach.Presentation
 
         public GameObject SurvivorPrefab => survivorPrefab;
         public GameObject PrimaryWeaponPrefab => primaryWeaponPrefab;
+        public int InfectedPrefabCount => infectedPrefabs?.Length ?? 0;
         public Vector3 SurvivorLocalPosition => survivorLocalPosition;
         public Vector3 SurvivorLocalEuler => survivorLocalEuler;
         public float SurvivorScale => survivorScale;
