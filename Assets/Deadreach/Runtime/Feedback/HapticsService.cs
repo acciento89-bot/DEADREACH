@@ -38,7 +38,11 @@ namespace Kamilunavo.Deadreach.Feedback
 
         private void HandleShot(ShotFeedback feedback)
         {
-            PulseGamepad(Mathf.Lerp(0.05f, 0.22f, feedback.HapticStrength), 0.035f);
+            var strength = feedback.Critical
+                ? Mathf.Max(0.42f, feedback.HapticStrength)
+                : Mathf.Lerp(0.05f, 0.22f, feedback.HapticStrength);
+            var duration = feedback.Critical ? 0.065f : 0.035f;
+            PulseGamepad(strength, duration);
         }
 
         private void HandlePlayerDamaged(float normalizedDamage)
