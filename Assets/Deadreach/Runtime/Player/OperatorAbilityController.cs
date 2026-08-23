@@ -27,6 +27,7 @@ namespace Kamilunavo.Deadreach.Player
         private GUIStyle _titleStyle;
         private GUIStyle _smallStyle;
         private GUIStyle _centerStyle;
+        private int _styleScaleKey;
 
         private void Awake()
         {
@@ -153,9 +154,9 @@ namespace Kamilunavo.Deadreach.Player
             if (_health == null || _health.IsDead || string.IsNullOrWhiteSpace(_definition.AbilityName))
                 return;
 
-            EnsureStyles();
             var safe = Screen.safeArea;
             var touchCapable = Application.isMobilePlatform || Touchscreen.current != null;
+            EnsureStyles(touchCapable);
 
             if (touchCapable)
                 DrawMobileAbility(safe);
@@ -165,23 +166,25 @@ namespace Kamilunavo.Deadreach.Player
 
         private void DrawMobileAbility(Rect safe)
         {
-            const float size = 104f;
-            var center = new Vector2(safe.xMax - 235f, safe.yMin + 270f);
+            var size = Mathf.Clamp(safe.height * 0.145f, 108f, 158f);
+            var center = new Vector2(
+                safe.xMax - size * 0.72f,
+                safe.yMin + safe.height * 0.78f);
             var screenRect = new Rect(center.x - size * 0.5f, center.y - size * 0.5f, size, size);
             DeadreachInput.Current?.SetAbilityTouchRegion(screenRect);
 
             var guiRect = ScreenToGuiRect(screenRect);
             var old = GUI.color;
             GUI.color = IsReady
-                ? new Color(_definition.Accent.r, _definition.Accent.g, _definition.Accent.b, 0.88f)
-                : new Color(0.18f, 0.19f, 0.19f, 0.76f);
+                ? new Color(_definition.Accent.r, _definition.Accent.g, _definition.Accent.b, 0.92f)
+                : new Color(0.18f, 0.19f, 0.19f, 0.82f);
             GUI.Box(guiRect, GUIContent.none);
             GUI.color = old;
 
             var status = IsReady ? "READY" : $"{CooldownRemaining:0.0}s";
-            GUI.Label(new Rect(guiRect.x + 4f, guiRect.y + 18f, guiRect.width - 8f, 32f), "ABILITY", _centerStyle);
-            GUI.Label(new Rect(guiRect.x + 4f, guiRect.y + 48f, guiRect.width - 8f, 28f), status, _centerStyle);
-            GUI.Label(new Rect(guiRect.x - 38f, guiRect.y + guiRect.height + 2f, guiRect.width + 76f, 24f), _definition.AbilityName, _smallStyle);
+            GUI.Label(new Rect(guiRect.x + 6f, guiRect.y + size * 0.18f, guiRect.width - 12f, size * 0.24f), "ABILITY", _centerStyle);
+            GUI.Label(new Rect(guiRect.x + 6f, guiRect.y + size * 0.46f, guiRect.width - 12f, size * 0.22f), status, _centerStyle);
+            GUI.Label(new Rect(guiRect.x - size * 0.38f, guiRect.y + guiRect.height + 4f, guiRect.width + size * 0.76f, 30f), _definition.AbilityName, _smallStyle);
         }
 
         private void DrawDesktopAbility(Rect safe)
@@ -210,14 +213,19 @@ namespace Kamilunavo.Deadreach.Player
                 screenRect.height);
         }
 
-        private void EnsureStyles()
+        private void EnsureStyles(bool mobile)
         {
-            if (_titleStyle != null)
+            var scaleKey = mobile ? Mathf.Clamp(Mathf.RoundToInt(Screen.safeArea.height / 50f), 14, 24) : 14;
+            if (_titleStyle != null && _styleScaleKey == scaleKey)
                 return;
+
+            _styleScaleKey = scaleKey;
+            var titleSize = mobile ? Mathf.Clamp(scaleKey, 16, 22) : 14;
+            var smallSize = mobile ? Mathf.Clamp(scaleKey - 2, 14, 20) : 11;
 
             _titleStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 14,
+                fontSize = titleSize,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleLeft
             };
@@ -225,7 +233,7 @@ namespace Kamilunavo.Deadreach.Player
 
             _smallStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 11,
+                fontSize = smallSize,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter
             };
@@ -233,7 +241,7 @@ namespace Kamilunavo.Deadreach.Player
 
             _centerStyle = new GUIStyle(_smallStyle)
             {
-                fontSize = 12,
+                fontSize = titleSize,
                 alignment = TextAnchor.MiddleCenter
             };
         }
