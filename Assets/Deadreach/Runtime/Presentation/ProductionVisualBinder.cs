@@ -108,12 +108,12 @@ namespace Kamilunavo.Deadreach.Presentation
                     _weaponInstance = Instantiate(catalog.PrimaryWeaponPrefab, _weaponSocket, false);
                     _weaponInstance.name = "ProductionPrimaryWeapon";
 
-                    // The Quaternius hand bone has its own authored bind rotation. The rifle prefab,
-                    // however, is normalized so local +Z is the barrel/forward direction. Keep the
-                    // grip at the animated hand position but align the weapon itself to the actual
-                    // DEADREACH gameplay-facing direction instead of inheriting the hand-bone basis.
-                    // LateUpdate reapplies this after Animator evaluation so the rifle never tilts
-                    // vertically or sideways while the player is aiming/running.
+                    // Keep the grip at the animated right hand while DEADREACH owns the visual
+                    // weapon basis. Quaternius' imported rifle is authored with the opposite roll
+                    // convention to the gameplay basis, so it needs a 180-degree roll around its
+                    // own forward/barrel axis. This correction is applied here (and in LateUpdate)
+                    // instead of in the prefab, because runtime alignment intentionally overwrites
+                    // the prefab root rotation every frame.
                     AlignMountedWeapon();
 
                     muzzle = FindNamedTransform(_weaponInstance.transform, "MuzzleSocket")
@@ -137,13 +137,13 @@ namespace Kamilunavo.Deadreach.Presentation
             if (_weaponInstance == null || _weaponSocket == null)
                 return;
 
-            // Position is driven by the animated right hand/grip socket.
+            // Position stays locked to the animated hand/grip socket.
             _weaponInstance.transform.position = _weaponSocket.position;
 
-            // DEADREACH combat is planar, so keep the rifle level and point its normalized +Z
-            // exactly along the gameplay root's facing direction. This also keeps the child
-            // MuzzleSocket at the real barrel tip, so HitscanWeapon/tracers originate visually
-            // from the rifle rather than from the hand-bone's arbitrary imported rotation.
+            // DEADREACH combat is planar. Quaternius' rifle forward axis is already normalized
+            // to local +Z by the production wrapper, but its roll is inverted relative to Unity's
+            // world-up basis. Using world DOWN as the LookRotation up-vector is exactly a 180°
+            // roll around the barrel axis: same aim direction and hand position, rifle right-side-up.
             var forward = transform.forward;
             forward.y = 0f;
 
@@ -156,7 +156,7 @@ namespace Kamilunavo.Deadreach.Presentation
             if (forward.sqrMagnitude < 0.0001f)
                 forward = Vector3.forward;
 
-            _weaponInstance.transform.rotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
+            _weaponInstance.transform.rotation = Quaternion.LookRotation(forward.normalized, Vector3.down);
         }
 
         private static Transform FindNamedTransform(Transform root, string targetName)
