@@ -88,6 +88,13 @@ namespace Kamilunavo.Deadreach.AI
             GetComponent<Damageable>().Configure(CombatFaction.Infected, health, false);
         }
 
+        public void ApplyMutation(float speedMultiplier, float damageMultiplier, float attackRateMultiplier)
+        {
+            moveSpeed = Mathf.Clamp(moveSpeed * Mathf.Max(0.1f, speedMultiplier), 0.1f, 12f);
+            attackDamage = Mathf.Clamp(attackDamage * Mathf.Max(0.1f, damageMultiplier), 0f, 250f);
+            attacksPerSecond = Mathf.Clamp(attacksPerSecond * Mathf.Max(0.1f, attackRateMultiplier), 0.1f, 4f);
+        }
+
         private void HandleDeath()
         {
             if (_controller != null)
