@@ -83,7 +83,14 @@ namespace Kamilunavo.Deadreach.Persistence
             if (level >= data.highestUnlockedLevel && level < MaxCampaignLevel)
                 data.highestUnlockedLevel = Mathf.Min(MaxCampaignLevel, level + 1);
 
-            data.selectedLevel = Mathf.Clamp(data.selectedLevel, 1, data.highestUnlockedLevel);
+            // Successful extraction advances the deployment cursor automatically. Replaying an old
+            // level moves to its next already-unlocked level; clearing the frontier moves directly
+            // onto the newly unlocked mission. Level 50 remains selected at campaign end.
+            if (level < MaxCampaignLevel && level + 1 <= data.highestUnlockedLevel)
+                data.selectedLevel = level + 1;
+            else
+                data.selectedLevel = Mathf.Clamp(level, 1, data.highestUnlockedLevel);
+
             Save();
         }
 
