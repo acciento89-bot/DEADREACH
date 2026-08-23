@@ -35,13 +35,14 @@ namespace Kamilunavo.Deadreach.Editor
         public static void BuildCompleteSlice()
         {
             VerticalSliceSceneBuilder.Build();
+            ProductionSliceEnhancer.EnhanceCurrentDeadCityScene();
             Build();
 
             if (!DeadreachBuildSettings.ConfigureCompleteSlice())
                 return;
 
             EditorSceneManager.OpenScene(DeadreachBuildSettings.BunkerScenePath, OpenSceneMode.Single);
-            Debug.Log("DEADREACH complete Vertical Slice 0.1 generated. Build Settings verified: Bunker first, Dead City second. Press Play from Bunker_Hub.");
+            Debug.Log("DEADREACH complete Vertical Slice generated with Production Pass 0.2 hooks. Build Settings verified: Bunker first, Dead City second.");
         }
 
         private static void EnsureFolders()
