@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using Kamilunavo.Deadreach.Presentation;
 using UnityEditor;
@@ -14,6 +13,9 @@ namespace Kamilunavo.Deadreach.Editor
         private const string ProductionRoot = "Assets/Deadreach/Art/Production";
         private const string PrefabRoot = ProductionRoot + "/Prefabs";
         private const string ControllerRoot = ProductionRoot + "/Controllers";
+        private const string MaterialRoot = ProductionRoot + "/Materials";
+        private const string AtlasPath = SourceRoot + "/Zombie_Atlas.png";
+        private const string AtlasMaterialPath = MaterialRoot + "/Quaternius_ZombieAtlas.mat";
 
         private static readonly string SurvivorSource = SourceRoot + "/Survivor_Sam.gltf";
         private static readonly string RifleSource = SourceRoot + "/Weapon_Rifle.gltf";
@@ -26,9 +28,6 @@ namespace Kamilunavo.Deadreach.Editor
             SourceRoot + "/Infected_Ribcage.gltf"
         };
 
-        // Quaternius character files can contain weapon presentation meshes. DEADREACH owns
-        // equipment presentation itself, so those embedded visuals must stay hidden and only
-        // the weapon mounted through ProductionVisualBinder may be visible.
         private static readonly string[] EmbeddedWeaponTokens =
         {
             "rifle",
@@ -50,6 +49,7 @@ namespace Kamilunavo.Deadreach.Editor
             EnsureFolder("Assets/Deadreach/Art", "Production");
             EnsureFolder(ProductionRoot, "Prefabs");
             EnsureFolder(ProductionRoot, "Controllers");
+            EnsureFolder(ProductionRoot, "Materials");
 
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
 
@@ -67,12 +67,16 @@ namespace Kamilunavo.Deadreach.Editor
                 return;
             }
 
-            var survivor = BuildCharacterWrapper(SurvivorSource, "Survivor_Quaternius_Sam", true, 0);
+            var atlasMaterial = EnsureAtlasMaterial();
+            if (atlasMaterial == null)
+                return;
+
+            var survivor = BuildCharacterWrapper(SurvivorSource, "Survivor_Quaternius_Sam", true, atlasMaterial);
             var infected = new GameObject[InfectedSources.Length];
             for (var i = 0; i < InfectedSources.Length; i++)
-                infected[i] = BuildCharacterWrapper(InfectedSources[i], $"Infected_Quaternius_{i + 1:00}", false, i);
+                infected[i] = BuildCharacterWrapper(InfectedSources[i], $"Infected_Quaternius_{i + 1:00}", false, atlasMaterial);
 
-            var rifle = BuildWeaponWrapper(RifleSource, "Weapon_Quaternius_Rifle");
+            var rifle = BuildWeaponWrapper(RifleSource, "Weapon_Quaternius_Rifle", atlasMaterial);
 
             var catalog = ProductionArtBootstrap.EnsureCatalog();
             catalog.ConfigureAssets(survivor, infected, rifle);
@@ -85,10 +89,55 @@ namespace Kamilunavo.Deadreach.Editor
             Selection.activeObject = catalog;
             EditorGUIUtility.PingObject(catalog);
 
-            Debug.Log("DEADREACH Quaternius glTF starter art setup complete. Regenerate with DEADREACH > Build Production Slice 0.3 and test visual scale/orientation in Play Mode.");
+            Debug.Log("DEADREACH Quaternius starter art setup complete: explicit URP atlas material assigned, Survivor hand socket resolved and Rifle grip/muzzle wrapper rebuilt. Regenerate Production Slice 0.3 and validate visually.");
         }
 
-        private static GameObject BuildCharacterWrapper(string sourcePath, string prefabName, bool survivor, int variantIndex)
+        private static Material EnsureAtlasMaterial()
+        {
+            var atlas = AssetDatabase.LoadAssetAtPath<Texture2D>(AtlasPath);
+            if (atlas == null)
+            {
+                Debug.LogError($"DEADREACH cannot build Quaternius materials because '{AtlasPath}' is missing or not imported as a Texture2D. Rerun the Quaternius installer, wait for Unity import, then retry setup.");
+                return null;
+            }
+
+            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            if (shader == null)
+            {
+                Debug.LogError("DEADREACH could not find URP/Lit or Standard shader for the Quaternius atlas material.");
+                return null;
+            }
+
+            var material = AssetDatabase.LoadAssetAtPath<Material>(AtlasMaterialPath);
+            if (material == null)
+            {
+                material = new Material(shader) { name = "Quaternius_ZombieAtlas" };
+                AssetDatabase.CreateAsset(material, AtlasMaterialPath);
+            }
+            else if (material.shader != shader)
+            {
+                material.shader = shader;
+            }
+
+            if (material.HasProperty("_BaseMap"))
+                material.SetTexture("_BaseMap", atlas);
+            if (material.HasProperty("_MainTex"))
+                material.SetTexture("_MainTex", atlas);
+            if (material.HasProperty("_BaseColor"))
+                material.SetColor("_BaseColor", Color.white);
+            if (material.HasProperty("_Color"))
+                material.SetColor("_Color", Color.white);
+            if (material.HasProperty("_Smoothness"))
+                material.SetFloat("_Smoothness", 0.12f);
+            if (material.HasProperty("_Metallic"))
+                material.SetFloat("_Metallic", 0f);
+
+            EditorUtility.SetDirty(material);
+            AssetDatabase.SaveAssets();
+            return material;
+        }
+
+        private static GameObject BuildCharacterWrapper(string sourcePath, string prefabName, bool survivor, Material atlasMaterial)
         {
             ConfigureModelImporter(sourcePath);
 
@@ -99,6 +148,7 @@ namespace Kamilunavo.Deadreach.Editor
             model.transform.SetParent(root.transform, false);
 
             RemoveVisualColliders(model);
+            ApplyAtlasMaterial(model, atlasMaterial);
 
             if (survivor)
                 DisableEmbeddedSurvivorWeaponVisuals(model);
@@ -111,7 +161,7 @@ namespace Kamilunavo.Deadreach.Editor
             animator.applyRootMotion = false;
 
             if (survivor)
-                CreateSurvivorWeaponSocket(root.transform, model.transform);
+                CreateSurvivorWeaponSocket(root.transform, model, animator);
 
             var path = $"{PrefabRoot}/{prefabName}.prefab";
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
@@ -119,7 +169,7 @@ namespace Kamilunavo.Deadreach.Editor
             return prefab;
         }
 
-        private static GameObject BuildWeaponWrapper(string sourcePath, string prefabName)
+        private static GameObject BuildWeaponWrapper(string sourcePath, string prefabName, Material atlasMaterial)
         {
             ConfigureModelImporter(sourcePath);
 
@@ -129,16 +179,30 @@ namespace Kamilunavo.Deadreach.Editor
             model.name = "Model";
             model.transform.SetParent(root.transform, false);
             RemoveVisualColliders(model);
+            ApplyAtlasMaterial(model, atlasMaterial);
+
+            // Quaternius rifle geometry is authored primarily along X. DEADREACH weapons use
+            // local +Z as forward, with wrapper origin at the grip/trigger instead of the mesh pivot.
+            if (TryGetCombinedRendererBounds(model, out var initialBounds) && initialBounds.size.x > initialBounds.size.z * 1.15f)
+                model.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+
+            if (TryGetCombinedRendererBounds(model, out var alignedBounds))
+            {
+                var gripWorld = new Vector3(
+                    alignedBounds.center.x,
+                    alignedBounds.min.y + alignedBounds.size.y * 0.42f,
+                    alignedBounds.min.z + alignedBounds.size.z * 0.38f);
+
+                model.transform.position -= gripWorld - root.transform.position;
+            }
 
             var muzzle = new GameObject("MuzzleSocket").transform;
             muzzle.SetParent(root.transform, false);
 
-            if (TryGetCombinedRendererBounds(model, out var bounds))
+            if (TryGetCombinedRendererBounds(model, out var finalBounds))
             {
-                var useX = bounds.size.x >= bounds.size.z;
-                muzzle.position = useX
-                    ? new Vector3(bounds.max.x, bounds.center.y, bounds.center.z)
-                    : new Vector3(bounds.center.x, bounds.center.y, bounds.max.z);
+                var worldMuzzle = new Vector3(finalBounds.center.x, finalBounds.center.y, finalBounds.max.z);
+                muzzle.position = worldMuzzle;
             }
             else
             {
@@ -151,10 +215,20 @@ namespace Kamilunavo.Deadreach.Editor
             return prefab;
         }
 
+        private static void ApplyAtlasMaterial(GameObject root, Material atlasMaterial)
+        {
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var slotCount = Mathf.Max(1, renderer.sharedMaterials?.Length ?? 0);
+                var materials = new Material[slotCount];
+                for (var i = 0; i < materials.Length; i++)
+                    materials[i] = atlasMaterial;
+                renderer.sharedMaterials = materials;
+            }
+        }
+
         private static void ConfigureModelImporter(string sourcePath)
         {
-            // FBX uses ModelImporter; glTFast uses its own scripted importer.
-            // Keep the old ModelImporter tuning path so the setup remains format-tolerant.
             if (AssetImporter.GetAtPath(sourcePath) is not ModelImporter importer)
                 return;
 
@@ -191,9 +265,7 @@ namespace Kamilunavo.Deadreach.Editor
                 .ToArray();
 
             if (clips.Length == 0)
-            {
-                Debug.LogWarning($"DEADREACH found no AnimationClip subassets in '{sourcePath}'. The model will still render, but animation setup may need a dedicated Quaternius animation import/retarget pass.");
-            }
+                Debug.LogWarning($"DEADREACH found no AnimationClip subassets in '{sourcePath}'. The model will render, but animation setup may still need a dedicated Quaternius animation import/retarget pass.");
 
             var stateMachine = controller.layers[0].stateMachine;
             var idleClip = FindClip(clips, "idle") ?? clips.FirstOrDefault();
@@ -208,12 +280,10 @@ namespace Kamilunavo.Deadreach.Editor
 
             var move = stateMachine.AddState("Move");
             move.motion = moveClip;
-
             var toMove = idle.AddTransition(move);
             toMove.hasExitTime = false;
             toMove.duration = 0.08f;
             toMove.AddCondition(AnimatorConditionMode.If, 0f, "IsMoving");
-
             var toIdle = move.AddTransition(idle);
             toIdle.hasExitTime = false;
             toIdle.duration = 0.08f;
@@ -260,12 +330,10 @@ namespace Kamilunavo.Deadreach.Editor
         {
             foreach (var token in tokens)
             {
-                var match = clips.FirstOrDefault(clip =>
-                    clip.name.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0);
+                var match = clips.FirstOrDefault(clip => clip.name.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0);
                 if (match != null)
                     return match;
             }
-
             return null;
         }
 
@@ -282,44 +350,30 @@ namespace Kamilunavo.Deadreach.Editor
             }
 
             if (disabled > 0)
-            {
-                Debug.Log($"DEADREACH suppressed {disabled} embedded Quaternius weapon renderer(s) on Survivor Sam. Equipped weapon presentation remains owned by DEADREACH.");
-            }
+                Debug.Log($"DEADREACH suppressed {disabled} embedded Quaternius weapon renderer(s) on Survivor Sam.");
             else
-            {
-                Debug.Log("DEADREACH found no separately named embedded weapon renderers on Survivor Sam. The SingleWeapon source variant is still used to avoid the multi-weapon character export.");
-            }
+                Debug.Log("DEADREACH found no separately named embedded weapon renderers on Survivor Sam. The SingleWeapon source variant remains active.");
         }
 
         private static bool IsEmbeddedWeaponRenderer(Transform rendererTransform, Transform modelRoot)
         {
-            // Inspect the renderer and a few meaningful ancestors, but do not use the generic
-            // word 'weapon': the source asset itself is named SingleWeapon and that would hide
-            // the entire character hierarchy.
             var current = rendererTransform;
             while (current != null)
             {
-                var normalized = current.name
-                    .Replace(" ", string.Empty)
-                    .Replace("_", string.Empty)
-                    .Replace("-", string.Empty)
-                    .ToLowerInvariant();
-
-                if (EmbeddedWeaponTokens.Any(token => normalized.Contains(token)))
+                var normalized = NormalizeName(current.name);
+                if (EmbeddedWeaponTokens.Any(token => normalized.Contains(NormalizeName(token))))
                     return true;
 
                 if (current == modelRoot)
                     break;
-
                 current = current.parent;
             }
-
             return false;
         }
 
-        private static void CreateSurvivorWeaponSocket(Transform root, Transform model)
+        private static void CreateSurvivorWeaponSocket(Transform root, GameObject model, Animator animator)
         {
-            var hand = FindTransform(model, "righthand", "right_hand", "hand_r", "hand.r", "r_hand", "handright");
+            var hand = ResolveRightHand(model, animator);
             var socket = new GameObject("WeaponSocket").transform;
 
             if (hand != null)
@@ -327,30 +381,97 @@ namespace Kamilunavo.Deadreach.Editor
                 socket.SetParent(hand, false);
                 socket.localPosition = Vector3.zero;
                 socket.localRotation = Quaternion.identity;
+                Debug.Log($"DEADREACH WeaponSocket bound to Survivor hand transform '{hand.name}'.");
+                return;
+            }
+
+            socket.SetParent(root, false);
+            if (TryGetCombinedRendererBounds(model, out var bounds))
+            {
+                var fallbackWorld = new Vector3(
+                    bounds.center.x + bounds.extents.x * 0.72f,
+                    bounds.min.y + bounds.size.y * 0.56f,
+                    bounds.center.z);
+                socket.position = fallbackWorld;
             }
             else
             {
-                socket.SetParent(root, false);
-                socket.localPosition = new Vector3(0.28f, 1.15f, 0.38f);
-                socket.localRotation = Quaternion.identity;
-                Debug.LogWarning("DEADREACH could not identify the Quaternius right-hand bone automatically. WeaponSocket received a temporary root-space fallback and may need visual adjustment.");
+                socket.localPosition = new Vector3(0.32f, 0.86f, 0.16f);
             }
+
+            socket.localRotation = Quaternion.identity;
+            Debug.LogWarning("DEADREACH could not identify the Quaternius right-hand bone. WeaponSocket uses a geometry-derived hand-height fallback instead of the old root/head placement.");
         }
 
-        private static Transform FindTransform(Transform root, params string[] tokens)
+        private static Transform ResolveRightHand(GameObject model, Animator animator)
         {
-            var normalized = root.name.Replace(" ", string.Empty).ToLowerInvariant();
-            if (tokens.Any(token => normalized.Contains(token.Replace(" ", string.Empty).ToLowerInvariant())))
-                return root;
-
-            for (var i = 0; i < root.childCount; i++)
+            if (animator != null && animator.avatar != null && animator.avatar.isHuman)
             {
-                var found = FindTransform(root.GetChild(i), tokens);
-                if (found != null)
-                    return found;
+                var humanoidHand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+                if (humanoidHand != null)
+                    return humanoidHand;
             }
 
-            return null;
+            var transforms = model.GetComponentsInChildren<Transform>(true);
+            var named = transforms
+                .Select(t => new { Transform = t, Score = ScoreRightHandName(t.name) })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .Select(x => x.Transform)
+                .FirstOrDefault();
+
+            if (named != null)
+                return named;
+
+            var bones = model.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+                .SelectMany(renderer => renderer.bones ?? Array.Empty<Transform>())
+                .Where(t => t != null)
+                .Distinct()
+                .ToArray();
+
+            var candidates = bones.Length > 0 ? bones : transforms;
+            if (!TryGetCombinedRendererBounds(model, out var bounds) || candidates.Length == 0)
+                return null;
+
+            var expectedHand = new Vector3(
+                bounds.center.x + bounds.extents.x * 0.78f,
+                bounds.min.y + bounds.size.y * 0.56f,
+                bounds.center.z);
+
+            var minimumY = bounds.min.y + bounds.size.y * 0.32f;
+            var maximumY = bounds.min.y + bounds.size.y * 0.78f;
+
+            return candidates
+                .Where(t => t.position.y >= minimumY && t.position.y <= maximumY)
+                .OrderBy(t => Vector3.SqrMagnitude(t.position - expectedHand))
+                .FirstOrDefault();
+        }
+
+        private static int ScoreRightHandName(string name)
+        {
+            var normalized = NormalizeName(name);
+            if (normalized.Contains("lefthand") || normalized.Contains("handleft") || normalized.Contains("handl") || normalized.Contains("lhand"))
+                return -1000;
+
+            if (normalized.Contains("righthand")) return 120;
+            if (normalized.Contains("handright")) return 115;
+            if (normalized.Contains("handr")) return 105;
+            if (normalized.Contains("rhand")) return 100;
+            if (normalized.Contains("rightwrist")) return 90;
+            if (normalized.Contains("wristright")) return 85;
+            if (normalized.Contains("wristr")) return 80;
+            return 0;
+        }
+
+        private static string NormalizeName(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            return new string(value
+                .Where(char.IsLetterOrDigit)
+                .Select(char.ToLowerInvariant)
+                .ToArray());
         }
 
         private static void RemoveVisualColliders(GameObject root)
@@ -361,7 +482,10 @@ namespace Kamilunavo.Deadreach.Editor
 
         private static bool TryGetCombinedRendererBounds(GameObject root, out Bounds bounds)
         {
-            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            var renderers = root.GetComponentsInChildren<Renderer>(true)
+                .Where(renderer => renderer.enabled)
+                .ToArray();
+
             if (renderers.Length == 0)
             {
                 bounds = default;
