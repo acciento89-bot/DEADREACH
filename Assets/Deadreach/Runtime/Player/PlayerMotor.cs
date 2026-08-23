@@ -15,9 +15,11 @@ namespace Kamilunavo.Deadreach.Player
         private Vector3 _planarVelocity;
         private float _verticalVelocity;
         private Camera _camera;
+        private float _moveSpeedMultiplier = 1f;
 
         public Vector3 Velocity => _planarVelocity + Vector3.up * _verticalVelocity;
         public bool IsMoving => _planarVelocity.sqrMagnitude > 0.04f;
+        public float EffectiveMoveSpeed => moveSpeed * _moveSpeedMultiplier;
 
         private void Awake()
         {
@@ -27,6 +29,11 @@ namespace Kamilunavo.Deadreach.Player
         private void Start()
         {
             _camera = Camera.main;
+        }
+
+        public void SetMoveSpeedMultiplier(float multiplier)
+        {
+            _moveSpeedMultiplier = Mathf.Clamp(multiplier, 0.5f, 1.6f);
         }
 
         private void Update()
@@ -42,7 +49,7 @@ namespace Kamilunavo.Deadreach.Player
             right.Normalize();
 
             var desiredDirection = Vector3.ClampMagnitude(forward * moveInput.y + right * moveInput.x, 1f);
-            var desiredVelocity = desiredDirection * moveSpeed;
+            var desiredVelocity = desiredDirection * EffectiveMoveSpeed;
             _planarVelocity = Vector3.MoveTowards(_planarVelocity, desiredVelocity, acceleration * Time.deltaTime);
 
             if (_controller.isGrounded && _verticalVelocity < 0f)
