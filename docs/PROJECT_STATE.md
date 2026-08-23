@@ -73,11 +73,11 @@ PR #11 squash merge `5b1b40322e305b1546a9ca5a37c1f6b89eabea72`.
 - stable branch: **`main`**
 - stable production level: **0.11**
 - stable merge: **`5b1b40322e305b1546a9ca5a37c1f6b89eabea72`**
-- PR #11: merged / closed
-- no production branch is authoritative after the 0.11 merge
-- next production work must branch from current `main`
+- active branch: **`production/0.12-sector-expansion`**
+- Production 0.12 is implemented in code but **not yet real-Unity validated**
+- next gate: fresh Unity compile → `Build Production Slice 0.12` → sector/world/runtime/mobile validation
 
-## 4. Stable Production 0.11 baseline
+## 4. Stable Production 0.11 baseline that must remain green
 
 ### Progression
 - save schema v6
@@ -111,57 +111,129 @@ PR #11 squash merge `5b1b40322e305b1546a9ca5a37c1f6b89eabea72`.
 - responsive mobile-readable FIELD OPS HUD
 
 ### Expedition Director
-- **RECOVERY** — secure data core
-- **PURGE** — eliminate bounded infected target count
-- **HOLDOUT** — activate uplink and hold defense radius under reinforcement pressure
-- **BLACKSITE** — breach terminal → eliminate response / mutation boss → secure vault core
+- RECOVERY / PURGE / HOLDOUT / BLACKSITE
 - boss levels force BLACKSITE
-- Primary objective gates extraction
-- Primary completion unlocks extraction immediately
-- optional BLACK CACHE creates an extract-now vs risk-more decision
-- BLACK CACHE can trigger reinforcement response
+- Primary gates extraction
+- BLACK CACHE creates extract-now vs risk-more decision
 - optional mission reward banks only after successful extraction
 - death / abandon clears pending mission rewards
 
-### Extraction egress hardening
-- accepted extraction remains centered at `z=20`
-- `World_Ground` and `Road_Main` support extend beyond the north extraction trigger
-- extraction-owned colliders are trigger-only
-- sealed-zone enter → exit → re-entry passed real runtime validation
+### Extraction hardening
+- trigger-only extraction hierarchy
+- north extraction support extended
+- sealed-zone enter → exit → re-entry real-runtime validated
 
-### Presentation baseline preserved
-- accepted Arsenal orientation/framing
-- responsive Bunker layouts
-- boss/reward presentation
-- sector atmosphere FX
-- artist-rigged embedded firearms only
+## 5. Production 0.12 — Sector Expansion — CODE IMPLEMENTED / NOT YET UNITY VALIDATED
 
-## 5. Production 0.11 validation record
+### World network expansion
+- new `Production_SectorNetwork_0_12` authoring pass adds real Quaternius east/west road spurs to the existing north/south route
+- world-safety rectangle expands from the old narrow corridor to the full cross-street playspace
+- PlayerFallSafety receives widened x bounds while preserving north/south safety
+- existing 0.11 north extraction support remains intact
 
-- fresh compile: **0 red compiler errors** ✅
-- `DEADREACH > Build Production Slice 0.11` ✅
-- Mission HUD / objective marker ✅
-- `EXTRACTION SEALED` before Primary ✅
-- Primary completion / extraction unlock ✅
-- BLACK CACHE / reinforcement path ✅
-- extraction egress fix ✅
-- fixed-zone MOVE / AIM-FIRE / Ability ✅
-- Bunker → Workshop / Arsenal → Deploy → mission / combat / loot → extraction → Bunker ✅
-- Workshop / progression persistence ✅
-- optional cache reward banks after successful extraction ✅
-- Production 0.10 combat / boss / reward / sector presentation intact ✅
-- Unity Console: **0 red runtime errors** ✅
+### Four authored sector layouts
+`Production_SectorLayouts_0_12` contains four inactive authored roots; runtime activates exactly one per expedition:
 
-Test plan: `docs/PRODUCTION_11_TEST.md`
+1. **QUARANTINE WARD**
+   - checkpoint/slalom barriers
+   - quarantine containers / response pickup
+   - east-side extraction
+   - contamination hazard
+   - teal/green atmosphere
 
-## 6. Next development entry point
+2. **TRANSIT COLLAPSE**
+   - wrecked truck + car route blockers
+   - alternate path around transport wrecks
+   - west-side extraction
+   - electrical arc hazard
+   - cold blue atmosphere
 
-1. `git switch main`
-2. `git pull`
-3. branch the next production pass from current `main`
-4. preserve Production 0.11 Expedition Director / extraction / risk-reward systems
-5. preserve schema-v6 Workshop progression
-6. preserve fixed-zone mobile controls
-7. preserve Production 0.10 combat-impact presentation
-8. never reintroduce external gameplay hand-mounted Rifle transforms
-9. keep mobile landscape-only
+3. **INDUSTRIAL SPILL**
+   - container channels / pipes / barrels
+   - north extraction
+   - contamination + fire hazards
+   - amber industrial atmosphere
+
+4. **BLACKOUT PLAZA**
+   - blackout wreck/barrier layout
+   - east-side extraction
+   - electrical + fire hazards
+   - dark violet/red emergency atmosphere
+
+All sector route blockers use existing Quaternius production assets; no dev-cube blocker layer was introduced.
+
+### Sector runtime director
+- `SectorDirector` selects a sector deterministically from campaign/run state
+- non-selected authored sector roots remain inactive
+- baseline 0.4 route blockers are disabled so they cannot collide with sector-specific layouts
+- active sector applies its own fog/key-light identity
+- player moves to sector spawn anchor
+- ExtractionZone + both extraction beacon presentations move to sector extraction anchor
+- ordinary infected move to sector enemy anchors
+- existing Scrap and weapon loot move to sector loot anchors
+
+### Sector-aware Production 0.11 integration
+The validated 0.11 `ExpeditionDirector` code itself remains intact.
+
+0.12 layers geography over it:
+- Primary objective marker is moved to sector-authored objective anchors
+- BLACKSITE vault/core stage moves to the sector vault anchor
+- optional BLACK CACHE moves to a distant sector anchor
+- newly spawned Holdout / Blacksite / cache reinforcements are detected and moved to sector reinforcement anchors
+- objective and reinforcement behavior remains owned by the 0.11 director
+
+### Gameplay hazards
+- `SectorHazardZone` is trigger-only
+- hazard types: Contamination / Electrical Arc / Fireline
+- pulsing world ring + local light presentation
+- periodic neutral-faction damage while player remains inside
+- damage stops when player leaves
+- hazard state is reported to FIELD OPS
+- hazards never modify or steal mobile input
+
+### Sector risk/reward
+Primary completion grants additional unsecured sector-risk Scrap:
+- Quarantine +4
+- Transit +6
+- Industrial +8
+- Blackout +10
+
+BLACK CACHE receives sector Item Power bonus:
+- Quarantine +2
+- Transit +3
+- Industrial +5
+- Blackout +6
+
+`RunInventory` clones inserted weapons, so `SectorRewardSynchronizer` mirrors the sector power bonus onto the carried inventory clone while the existing event object keeps the correct bonus for the full-inventory pending-reward path.
+
+### FIELD OPS 0.12 HUD
+- panel enlarged without moving accepted lower control zones
+- dedicated `SECTOR // <name> // <hazard profile>` line
+- live sector line changes to danger state while inside a hazard
+- centered `HAZARD // <type> // MOVE CLEAR` warning
+- Mission / Vitals / weapon / loot / objective information preserved
+
+### Build / validation
+- menu: `DEADREACH > Build Production Slice 0.12`
+- build first regenerates the validated base slice, then applies the 0.12 sector scene pass
+- test plan: `docs/PRODUCTION_12_TEST.md`
+- **no real Unity compile/build/runtime claim yet**
+
+## 6. Handoff protocol
+
+When resuming:
+1. read this file first
+2. stable baseline remains Production 0.11 on `main`
+3. active work is Production 0.12 on `production/0.12-sector-expansion`
+4. first gate is fresh local Unity compile with **0 red compiler errors**
+5. then run `DEADREACH > Build Production Slice 0.12`
+6. validate wider cross-street traversal and outer world safety
+7. validate sector identity / extraction / enemy / loot / objective / reinforcement anchors
+8. validate hazard damage + warning clear-on-exit
+9. validate sector Scrap / Item Power reward bonuses
+10. preserve complete 0.11 mission / extraction / BLACK CACHE behavior
+11. preserve schema-v6 Workshop progression
+12. preserve fixed-zone mobile controls
+13. preserve Production 0.10 combat-impact presentation
+14. never reintroduce external gameplay hand-mounted Rifle transforms
+15. keep mobile landscape-only
