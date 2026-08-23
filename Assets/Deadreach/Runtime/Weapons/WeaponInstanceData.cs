@@ -12,6 +12,14 @@ namespace Kamilunavo.Deadreach.Weapons
         CritDamagePercent = 4
     }
 
+    public enum WeaponFamily
+    {
+        Rifle = 0,
+        Smg = 1,
+        Pistol = 2,
+        Shotgun = 3
+    }
+
     [Serializable]
     public sealed class WeaponAffixRollData
     {
@@ -26,6 +34,7 @@ namespace Kamilunavo.Deadreach.Weapons
         public string definitionId;
         public string displayNameSnapshot;
         public string visualSkinId;
+        public WeaponFamily family = WeaponFamily.Rifle;
         public WeaponRarity rarity;
         public int itemPower;
         public List<WeaponAffixRollData> affixes = new();
@@ -38,6 +47,7 @@ namespace Kamilunavo.Deadreach.Weapons
                 definitionId = definitionId,
                 displayNameSnapshot = displayNameSnapshot,
                 visualSkinId = visualSkinId,
+                family = family,
                 rarity = rarity,
                 itemPower = itemPower,
                 affixes = new List<WeaponAffixRollData>()
