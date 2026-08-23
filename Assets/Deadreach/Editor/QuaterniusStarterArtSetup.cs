@@ -26,6 +26,24 @@ namespace Kamilunavo.Deadreach.Editor
             SourceRoot + "/Infected_Ribcage.gltf"
         };
 
+        // Quaternius character files can contain weapon presentation meshes. DEADREACH owns
+        // equipment presentation itself, so those embedded visuals must stay hidden and only
+        // the weapon mounted through ProductionVisualBinder may be visible.
+        private static readonly string[] EmbeddedWeaponTokens =
+        {
+            "rifle",
+            "shotgun",
+            "pistol",
+            "smg",
+            "submachine",
+            "axe",
+            "knife",
+            "spear",
+            "woodenbat",
+            "baseballbat",
+            "guitar"
+        };
+
         [MenuItem("DEADREACH/Production/Setup Quaternius Starter Art", priority = 20)]
         public static void Setup()
         {
@@ -81,6 +99,9 @@ namespace Kamilunavo.Deadreach.Editor
             model.transform.SetParent(root.transform, false);
 
             RemoveVisualColliders(model);
+
+            if (survivor)
+                DisableEmbeddedSurvivorWeaponVisuals(model);
 
             var animator = model.GetComponentInChildren<Animator>(true);
             if (animator == null)
@@ -246,6 +267,54 @@ namespace Kamilunavo.Deadreach.Editor
             }
 
             return null;
+        }
+
+        private static void DisableEmbeddedSurvivorWeaponVisuals(GameObject model)
+        {
+            var disabled = 0;
+            foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!IsEmbeddedWeaponRenderer(renderer.transform, model.transform))
+                    continue;
+
+                renderer.enabled = false;
+                disabled++;
+            }
+
+            if (disabled > 0)
+            {
+                Debug.Log($"DEADREACH suppressed {disabled} embedded Quaternius weapon renderer(s) on Survivor Sam. Equipped weapon presentation remains owned by DEADREACH.");
+            }
+            else
+            {
+                Debug.Log("DEADREACH found no separately named embedded weapon renderers on Survivor Sam. The SingleWeapon source variant is still used to avoid the multi-weapon character export.");
+            }
+        }
+
+        private static bool IsEmbeddedWeaponRenderer(Transform rendererTransform, Transform modelRoot)
+        {
+            // Inspect the renderer and a few meaningful ancestors, but do not use the generic
+            // word 'weapon': the source asset itself is named SingleWeapon and that would hide
+            // the entire character hierarchy.
+            var current = rendererTransform;
+            while (current != null)
+            {
+                var normalized = current.name
+                    .Replace(" ", string.Empty)
+                    .Replace("_", string.Empty)
+                    .Replace("-", string.Empty)
+                    .ToLowerInvariant();
+
+                if (EmbeddedWeaponTokens.Any(token => normalized.Contains(token)))
+                    return true;
+
+                if (current == modelRoot)
+                    break;
+
+                current = current.parent;
+            }
+
+            return false;
         }
 
         private static void CreateSurvivorWeaponSocket(Transform root, Transform model)
