@@ -9,19 +9,20 @@ namespace Kamilunavo.Deadreach.Persistence
     [Serializable]
     public sealed class DeadreachProfileData
     {
-        public int schemaVersion = 2;
+        public int schemaVersion = 3;
         public int securedScrap;
         public int successfulExtractions;
         public int failedRuns;
         public int currentExtractionStreak;
         public int bestExtractionStreak;
         public List<WeaponInstanceData> stashWeapons = new();
+        public string equippedPrimaryWeaponId;
     }
 
     public static class SaveService
     {
         private const string FileName = "deadreach-profile.json";
-        private const int CurrentSchemaVersion = 2;
+        private const int CurrentSchemaVersion = 3;
         private static DeadreachProfileData _cached;
 
         public static DeadreachProfileData Data => _cached ??= Load();
@@ -40,15 +41,24 @@ namespace Kamilunavo.Deadreach.Persistence
             data.currentExtractionStreak++;
             data.bestExtractionStreak = Mathf.Max(data.bestExtractionStreak, data.currentExtractionStreak);
 
+            WeaponInstanceData bestNewWeapon = null;
             if (extractedWeapons != null)
             {
                 data.stashWeapons ??= new List<WeaponInstanceData>();
                 foreach (var weapon in extractedWeapons)
                 {
-                    if (weapon != null)
-                        data.stashWeapons.Add(weapon.Clone());
+                    if (weapon == null)
+                        continue;
+
+                    var copy = weapon.Clone();
+                    data.stashWeapons.Add(copy);
+                    if (bestNewWeapon == null || copy.itemPower > bestNewWeapon.itemPower)
+                        bestNewWeapon = copy;
                 }
             }
+
+            if (string.IsNullOrWhiteSpace(data.equippedPrimaryWeaponId) && bestNewWeapon != null)
+                data.equippedPrimaryWeaponId = bestNewWeapon.instanceId;
 
             Save();
         }
@@ -59,6 +69,30 @@ namespace Kamilunavo.Deadreach.Persistence
             data.failedRuns++;
             data.currentExtractionStreak = 0;
             Save();
+        }
+
+        public static WeaponInstanceData GetEquippedPrimaryWeapon()
+        {
+            var data = Data;
+            if (string.IsNullOrWhiteSpace(data.equippedPrimaryWeaponId) || data.stashWeapons == null)
+                return null;
+
+            return data.stashWeapons.Find(item => item != null && item.instanceId == data.equippedPrimaryWeaponId);
+        }
+
+        public static bool EquipPrimaryWeapon(string instanceId)
+        {
+            var data = Data;
+            if (string.IsNullOrWhiteSpace(instanceId) || data.stashWeapons == null)
+                return false;
+
+            var exists = data.stashWeapons.Exists(item => item != null && item.instanceId == instanceId);
+            if (!exists)
+                return false;
+
+            data.equippedPrimaryWeaponId = instanceId;
+            Save();
+            return true;
         }
 
         public static void Save()
@@ -100,13 +134,21 @@ namespace Kamilunavo.Deadreach.Persistence
             return new DeadreachProfileData
             {
                 schemaVersion = CurrentSchemaVersion,
-                stashWeapons = new List<WeaponInstanceData>()
+                stashWeapons = new List<WeaponInstanceData>(),
+                equippedPrimaryWeaponId = string.Empty
             };
         }
 
         private static void Migrate(DeadreachProfileData data)
         {
             data.stashWeapons ??= new List<WeaponInstanceData>();
+
+            if (!string.IsNullOrWhiteSpace(data.equippedPrimaryWeaponId) &&
+                !data.stashWeapons.Exists(item => item != null && item.instanceId == data.equippedPrimaryWeaponId))
+            {
+                data.equippedPrimaryWeaponId = string.Empty;
+            }
+
             data.schemaVersion = CurrentSchemaVersion;
         }
 
