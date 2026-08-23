@@ -47,6 +47,12 @@ namespace Kamilunavo.Deadreach.Editor
                 return;
             }
 
+            if (!Production05OperatorArtSetup.EnsureOperatorAssetsReady())
+            {
+                Debug.LogError("DEADREACH Production Slice 0.5 aborted: distinct operator art could not be prepared. No partial scene was generated.");
+                return;
+            }
+
             VerticalSliceSceneBuilder.Build();
             ProductionSliceEnhancer.EnhanceCurrentDeadCityScene();
             AttachProduction05RuntimeSystems();
@@ -65,7 +71,7 @@ namespace Kamilunavo.Deadreach.Editor
 
             DeadreachPlayModeStart.Configure();
             EditorSceneManager.OpenScene(DeadreachBuildSettings.BunkerScenePath, OpenSceneMode.Single);
-            Debug.Log("DEADREACH Production Slice 0.5 generated: post-apocalyptic Bunker Command Center + Arsenal/Operators/Campaign/Store UI + 50-level progression + boss gates + Production 0.4 Dead City baseline.");
+            Debug.Log("DEADREACH Production Slice 0.5 generated: post-apocalyptic Bunker + distinct Sam/Lis/Matt operators + Arsenal/Operators/Campaign/Store + 50-level progression + boss gates + Production 0.4 Dead City baseline.");
         }
 
         private static void AttachProduction05RuntimeSystems()
