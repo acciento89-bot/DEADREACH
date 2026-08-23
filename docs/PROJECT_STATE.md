@@ -2,7 +2,7 @@
 
 _Last updated: 2026-08-23_
 
-Canonical handoff for DEADREACH. Update after every major implementation/validation/merge.
+Canonical handoff for DEADREACH. Update after every major implementation, validation and merge. Do not rely on chat history alone.
 
 ## 1. Product identity
 
@@ -31,280 +31,262 @@ Merge `fd0dca0ece7d18ca005f2f4b52d65039904fad27`.
 ### Production 0.3 — MERGED / REAL UNITY VALIDATED
 PR #3 merge `924e8ff4ae250da13fd0d198b121802cf80131b0`.
 
-Locked presentation decision:
-- Quaternius `Characters_Sam_SingleWeapon.gltf` is the visible Survivor source
-- artist-authored embedded weapon is accepted on the **left hand**
-- muzzle/tracer is derived from that embedded weapon
-- never reintroduce the failed external Rifle hand-socket transform approach
+Locked weapon decision from 0.3:
+- use Quaternius `SingleWeapon` survivor exports
+- use their artist-authored embedded firearm
+- derive muzzle from that embedded firearm
+- **never reintroduce the failed external Rifle hand-socket transform path**
 
 ### Production 0.4 — MERGED / REAL UNITY VALIDATED
-PR #4 squash merge:
-
-`e86c067720f8f6badc6c8a29e41bcd856c29ffe6`
+PR #4 squash merge `e86c067720f8f6badc6c8a29e41bcd856c29ffe6`.
 
 Validated in real Unity:
-- 0 compiler errors after URP Core/import hardening
-- required Quaternius Dead City imports healthy
-- real street surfaces
-- green/red containers
-- pickup / sports / truck vehicle wrecks
-- barriers / barrels / pipes / trash / road props
+- 0 compiler errors
+- Dead City real streets / containers / vehicles / barriers / props
 - lighting / fog / post-processing / extraction beacon
-- DEADREACH-owned collision bounds on imported environment art
-- Play Mode starts from Bunker
-- extraction approach traversal safety gate
-- movement / aim / firing / loot / extraction / Bunker return regression passed
+- DEADREACH-owned environment collision bounds
+- Bunker-first Play Mode flow
+- extraction traversal safety
+- movement / aim / firing / loot / extraction / Bunker-return regression
 
-0.4 is the current stable visual/gameplay baseline on `main`.
+0.4 remains the stable merged gameplay/environment baseline on `main`.
 
 ## 3. Current Git state
 
 - `main`: validated 0.1 + 0.2 + 0.3 + 0.4
 - active branch: **`production/0.5-bunker-progression-boss-ui`**
-- Production 0.5 is a large systems/presentation pass
-- Production 0.5 **REAL-UNITY COMPILE GATE PASSED: 0 C# compiler errors confirmed by user on 2026-08-23**
-- Production 0.5 Bunker desktop/editor visual polish is now accepted as a good direction from real Unity screenshots
-- Production 0.5 runtime / progression / boss / combat acceptance is still pending
-- 0.5 must remain Draft until `docs/PRODUCTION_05_TEST.md` passes
+- PR #5 remains **Draft**
+- 0.5 first compile gate previously passed with **0 red C# errors** in real Unity
+- second Bunker UI polish is visually accepted as a good **Unity Editor/Desktop** direction
+- 0.5 has now been expanded once more before runtime acceptance:
+  - Arsenal weapon preview auto-orientation fix
+  - real distinct operator models
+  - automatic Quaternius operator-art bootstrap
+  - one consolidated **MEGA Runtime Gate**
+- because code changed after the earlier compile pass, require a fresh 0-error compile before the Mega Runtime Gate
 
-## 4. Production 0.5 — Big Update implemented on branch
+## 4. Production 0.5 — Big Update currently on branch
 
-### 4.1 Persistent progression — Save schema v4
+### 4.1 Save / progression
 
-`Assets/Deadreach/Runtime/Persistence/SaveService.cs`
-
-Added persistent:
-- highest unlocked campaign level
-- selected campaign level
+Save schema v4 persists:
+- secured Scrap / extractions / streaks
+- weapon stash + equipped primary
+- highest unlocked level
+- selected level
 - highest completed level
-- boss kill count
+- boss kills
 - selected operator
-- unlocked operator IDs
+- unlocked operators
 - owned-content entitlement IDs
-- migration from schema v3 without dropping existing stash/equipped weapon data
 
 Campaign cap: **50 levels**.
+Successful extraction can unlock the next level. Every tenth level is a boss operation.
 
-Successful extraction records the completed level and unlocks the next level. Every tenth completed level counts as a boss clear.
-
-### 4.2 Post-apocalyptic Bunker Command Center UI
-
-New:
+### 4.2 Bunker Command Center
 
 `Assets/Deadreach/Runtime/UI/BunkerCommandCenterUI.cs`
 
-The old Bunker prototype IMGUI panel is replaced in the 0.5 generator by a runtime uGUI command center with:
-- **OVERVIEW**
-- **ARSENAL**
-- **OPERATORS**
-- **CAMPAIGN**
-- **STORE**
+Tabs:
+- OVERVIEW
+- ARSENAL
+- OPERATORS
+- CAMPAIGN
+- STORE
 
-Visual direction: dark industrial bunker, rust/hazard accents, green readiness status, command-center framing.
+Second UI polish uses anchor-based layout and was accepted from real Unity screenshots as a good desktop/editor direction:
+- DEADREACH header visible
+- Overview no longer overlaps
+- Arsenal has dedicated list + inspector column
+- Operators has roster + 3D preview column
+- Campaign shows one 10-level sector at a time
+- Store cards / navigation / deploy framing coherent
 
-Overview shows next deployment, current operator/weapon, progress and Bunker intel.
+This is **not yet mobile acceptance**.
 
-### 4.3 Arsenal / affix inspection
+### 4.3 Arsenal / weapon preview
 
-Arsenal uses the existing real persistent weapon stash and shows:
+Arsenal shows:
+- persistent stash
 - rarity
-- display name
 - item power
-- all rolled affixes and values
+- all rolled affixes
 - equipped state
-- Equip action persisted through `SaveService`
-- rotating 3D production weapon inspector while the Arsenal tab is active
+- persistent Equip action
+- rotating 3D production weapon inspector
 
-### 4.4 Operator menu / character profiles
+Latest fix:
+`Assets/Deadreach/Runtime/UI/BunkerWeaponPreviewUI.cs`
 
-New:
+The 3D inspector no longer assumes an imported weapon axis. It evaluates orthogonal preview rotations and chooses the orientation that maximizes horizontal screen width while penalizing vertical/depth extent. This is **preview-only** and never changes gameplay weapon transforms or muzzle binding.
+
+Reason: real Unity screenshot showed the rifle standing vertically / effectively on its head in the Arsenal preview.
+
+### 4.4 Real distinct operators
 
 `Assets/Deadreach/Runtime/Progression/OperatorCatalog.cs`
+`Assets/Deadreach/Runtime/Presentation/ProductionAssetCatalog.cs`
+`Assets/Deadreach/Runtime/Presentation/ProductionVisualBinder.cs`
+`Assets/Deadreach/Runtime/UI/BunkerOperatorPreviewUI.cs`
 
-Three unlocked base profiles:
+Profiles remain:
 - **SAM / Ranger** — balanced
-- **RAVEN / Scout** — faster, less durable
-- **BRIGGS / Warden** — slower, tougher, slightly harder hitting
+- **RAVEN / Scout** — faster / less durable
+- **BRIGGS / Warden** — slower / tougher / harder hitting
 
-Selection persists. `OperatorRuntimeApplier` changes real health/mobility/damage values and applies mild body tint variation to the current validated production character while deliberately leaving the embedded weapon hierarchy alone.
+They now map to distinct Quaternius `SingleWeapon` characters from the same CC0 Zombie Apocalypse Kit:
+- **SAM → Characters_Sam_SingleWeapon**
+- **RAVEN → Characters_Lis_SingleWeapon**
+- **BRIGGS → Characters_Matt_SingleWeapon**
 
-Current limitation: 0.5 uses the validated Sam production mesh as the base visual for all three profiles with tint/stat variation. Separate authored character meshes can replace these profiles later without changing the persistence/UI architecture.
+This replaces the temporary three-recolored-Sam approach.
 
-### 4.5 50-level campaign
+Runtime selection now changes the actual survivor prefab used by `ProductionVisualBinder`, so the selected model must appear both in the Bunker operator preview and in Dead City gameplay.
 
-New:
+Do not tint these authored models in `OperatorRuntimeApplier`; preserve their real appearance. Stats still alter health / movement / weapon damage.
 
-`Assets/Deadreach/Runtime/Progression/RunDifficultyDirector.cs`
+The Operator preview is turned around to face the preview camera rather than permanently showing the back.
 
-Five 10-level sectors:
+### 4.5 Automatic operator-art bootstrap
+
+New editor system:
+
+`Assets/Deadreach/Editor/Production05OperatorArtSetup.cs`
+
+`DEADREACH > Build Production Slice 0.5` now automatically ensures Lis/Matt operator art is present.
+
+If missing, Unity Editor downloads the two known CC0 Quaternius `SingleWeapon` glTF files from the same public mirror already used for the project, normalizes the local `Zombie_Atlas.png` reference, imports them synchronously, builds production wrapper prefabs using the validated Sam animation controller/material family, and stores them in `ProductionAssetCatalog`.
+
+Therefore the user workflow remains **git pull + Unity build menu**; no manual transform/prefab setup is intended.
+
+Manual recovery menu if needed:
+
+`DEADREACH > Production > Repair 0.5 Operator Art`
+
+### 4.6 Campaign / sectors / enemies
+
+Five 10-level campaign sectors:
 1. Dead City
 2. Flooded Industrial
 3. Ash District
 4. Blackout Sector
 5. Ground Zero
 
-Current 0.5 uses the validated Dead City geometry as the common map foundation while each sector changes runtime atmosphere/fog/key-light color and difficulty. Distinct authored sector maps are future environment content, not falsely claimed as complete here.
+0.5 still uses the validated Dead City geometry as the common map foundation; sector identity currently changes difficulty + atmosphere. Separate authored sector maps are later content and must not be falsely claimed complete.
 
-### 4.6 Infected variety
-
-Existing validated Quaternius infected visuals are retained. Runtime archetypes now create materially different combat profiles:
+Runtime infected archetypes:
 - Walker
 - Runner
 - Brute
 - Stalker
 
-Profiles vary speed, health, damage and scale and continue using the existing production infected visual variants.
+They vary movement speed / health / damage / scale while retaining the validated Quaternius infected visual family.
 
 ### 4.7 Boss every 10 levels
 
-Levels **10 / 20 / 30 / 40 / 50** are boss runs.
+Boss operations:
+- Level 10
+- Level 20
+- Level 30
+- Level 40
+- Level 50
 
-The final infected is promoted to a large mutation-class boss with tier scaling and two mutation phases:
-- around 66% HP
-- around 33% HP
+Boss:
+- enlarged high-health infected
+- tier scaling
+- mutation/aggression phases around 66% and 33% HP
+- boss HUD/health bar
+- extraction sealed until boss death
 
-Boss phases increase speed/damage/attack rate and visual scale.
+Editor shortcut for acceptance:
 
-Extraction on boss levels is sealed until the boss is dead. `RunSession`, `ExtractionZone` and the field HUD expose the boss lock state.
+`DEADREACH > Dev > 0.5 Select Boss Level 10`
 
-Editor validation shortcuts:
-- `DEADREACH > Dev > 0.5 Unlock Through Boss Level 10`
-- `DEADREACH > Dev > 0.5 Select Boss Level 10`
-- `DEADREACH > Dev > 0.5 Unlock Full Campaign 50`
-
-### 4.8 Bunker environment redesign
-
-`Assets/Deadreach/Editor/BunkerHubSceneBuilder.cs`
-
-Main generator is now:
-
-**`DEADREACH > Build Production Slice 0.5`**
-
-Bunker shell now includes:
-- heavier industrial dark-metal palette
-- sealed blast door + frame + hazard strip
-- ceiling beams
-- exposed pipes
-- supply crate stacks
-- warning floor strips
-- cold command light
-- warm workshop light
-- generator green light
-- blast-door red emergency light
-
-The 0.5 generator preserves all required 0.4 environment/import/traversal gates and attaches the 0.5 campaign/operator runtime systems to Dead City.
-
-### 4.9 Combat presentation upgrade
+### 4.8 Combat presentation
 
 `Assets/Deadreach/Runtime/Feedback/CombatFeedbackPresenter.cs`
 
-Old prototype presentation removed/replaced:
-- no single plain white tracer presentation
-- no old large red billboard/square impact marker path
-
-New pooled combat VFX:
-- bright tracer core
-- wider transparent glow trail
-- damage/crit color response
-- muzzle flash particles
-- directional world impact sparks
-- directed infected gore streak particles
+0.5 replaces prototype combat presentation with:
+- pooled bright tracer core
+- glow trail
+- muzzle flash
+- directional environment sparks
+- directed infected gore/spark streaks
 - stronger critical feedback
+- no old large red square/billboard impact marker
 
-The accepted 0.3/0.4 embedded-weapon muzzle origin remains the source of shot feedback.
+The artist-authored embedded firearm remains the muzzle source for every operator.
 
-### 4.10 Field HUD
+### 4.9 Store surface
 
-`Assets/Deadreach/Runtime/UI/PrototypeHud.cs`
-
-Field HUD now shows:
-- campaign level
-- sector name
-- boss objective messaging
-- mutation boss HP bar
-- explicit `EXTRACTION SEALED` state while boss is alive
-- level-clear result messaging
-
-This field HUD is still IMGUI and is not yet the final production mobile HUD. The Bunker Command Center is the main UI replacement in 0.5.
-
-### 4.11 Store surface
-
-The Bunker STORE tab includes production-facing cards for:
+Store exposes production-facing cards for:
 - operator cosmetics
 - Bunker themes
 - weapon finishes
 - season content
 
-**No fake purchase is implemented.** Store buttons are non-purchasing placeholders in 0.5. `ownedContentIds` / `GrantContent` are entitlement hooks for a later verified StoreKit / Google Play integration.
+No fake purchase is allowed. StoreKit / Google Play verification remains a later integration gate.
 
 ## 5. Mandatory mobile UI release gate
 
-The accepted 0.5 Bunker screenshots are **Unity Editor/Desktop preview only**. They must not be treated as final mobile acceptance.
+Current accepted screenshots are **Unity Editor/Desktop preview only**.
 
-Before release, DEADREACH requires a dedicated landscape-mobile UI pass covering at minimum:
-- `Screen.safeArea` / notch / Dynamic Island / rounded-corner protection
-- iPhone and Android landscape aspect ratios, including very wide 19.5:9 / 20:9 devices
-- UI scaling at small physical screen sizes, not only Game View pixels
-- minimum touch-target sizing and spacing for all navigation / equip / operator / campaign / store / deploy controls
-- responsive Bunker layouts: panels may collapse/reflow rather than simply shrink
-- Arsenal 3D preview must not overlap the weapon list on narrow screens
-- Operator 3D preview and stats must remain readable without covering selection controls
-- Campaign sector + 10-level grid must fit through responsive sizing/scrolling rather than tiny buttons
-- Store cards must stack or scroll safely on narrow devices
-- all gameplay HUD/twin-stick controls must obey safe area independently of Bunker UI
-- real-device validation on at least one notched iPhone and one representative Android phone
+Before App Store / Play release, a separate landscape-mobile UI gate must cover at minimum:
+- `Screen.safeArea`
+- notch / Dynamic Island / rounded corners
+- representative iPhone + Android landscape aspect ratios
+- small physical screen readability
+- minimum touch target size/spacing
+- responsive reflow rather than only shrinking
+- Arsenal preview/list separation on narrow screens
+- Operator preview/selection readability
+- Campaign sector/grid usability
+- Store stacking/scrolling
+- gameplay HUD/twin-stick safe area
+- real-device validation on at least one notched iPhone and one Android phone
 
-Current anchor-based 0.5 layout is a better foundation for responsiveness, but **mobile layout is not validated yet**.
+Do **not** mark UI/release final until this mobile gate passes.
 
-Do not mark UI/release as final until this mobile gate passes.
+## 6. Next action — ONE MEGA Runtime Gate
 
-## 6. Immediate validation gate
+The user explicitly requested no sequence of tiny runtime approvals.
 
-### Compile gate — PASSED
-User confirmed **0 red C# compiler errors** in real Unity `6000.3.22f1` on 2026-08-23.
+Canonical test plan:
 
-### Bunker visual direction — EDITOR PASS
-Real Unity screenshots after the second layout-polish pass confirm the Bunker Command Center is now visually acceptable as a desktop/editor presentation direction:
-- DEADREACH header visible
-- Overview no longer overlaps
-- Arsenal uses a dedicated weapon list + 3D inspector column
-- Operators use a 3D character preview
-- Campaign shows one 10-level sector grid at a time
-- navigation / deploy framing is coherent
+`docs/PRODUCTION_05_TEST.md`
 
-This is **not mobile acceptance**; see mandatory mobile gate above.
+Workflow:
+1. `git pull`
+2. fresh Unity compile → require 0 red errors
+3. run `DEADREACH > Build Production Slice 0.5` once
+4. perform the complete Mega Runtime Gate in one session:
+   - Bunker/menu/persistence
+   - horizontal Arsenal weapon preview
+   - SAM/Lis/Matt distinct Operator previews
+   - non-Sam Level 1 gameplay model
+   - operator stat differences
+   - movement / aim / combat / Combat FX
+   - Walker/Runner/Brute/Stalker variety
+   - loot / extraction / Level 2 unlock
+   - cross-operator runtime swap
+   - abandon regression
+   - Level 10 boss / phase behavior / extraction seal
+   - boss clear / Level 11 unlock
+   - final regression sweep
+5. only after that full real-Unity pass may PR #5 be marked ready for merge
 
-### Next runtime gate
-Run `docs/PRODUCTION_05_TEST.md`:
-1. deploy Level 1 and verify movement/combat/loot/extraction
-2. validate new muzzle/tracer/impact FX
-3. validate infected archetype variety
-4. use the Level 10 Editor shortcut to validate boss + extraction seal
-5. re-run 0.4 regression locks
+If a blocker appears, fix the first actual blocker in branch and rerun the affected portion + final regression sweep.
 
-Do not claim 0.5 runtime works until the real Unity gameplay gate passes.
-
-## 7. Likely follow-up after 0.5 validation
-
-- separate authored operator meshes/animations
-- distinct authored sector maps and encounters beyond shared Dead City foundation
-- real StoreKit / Google Play products and receipt verification
-- dedicated mobile-responsive Bunker UI + production mobile field HUD
-- production NavMesh / more advanced infected behaviors
-- combat audio-content pass
-- physical-device profiling
-
-## 8. Handoff protocol
+## 7. Handoff protocol
 
 When resuming:
 1. read this file first
 2. treat 0.1–0.4 as merged/validated baselines
-3. never reintroduce the external Rifle hand-socket transform path
-4. left-hand artist-rigged embedded weapon remains accepted
+3. never reintroduce external rifle hand/socket transforms on production operators
+4. all three 0.5 operators must use artist-authored SingleWeapon rigs
 5. active work is `production/0.5-bunker-progression-boss-ui`
-6. 0.5 compile gate is PASSED in real Unity
-7. current Bunker visual direction is accepted in Unity Editor, but mobile UI acceptance remains explicitly pending
-8. next gate is Level 1 gameplay/combat FX, then Level 10 boss validation
-9. keep PR draft until real-Unity acceptance passes
-
-Do not rely on chat history alone.
+6. PR #5 remains Draft
+7. desktop/editor Bunker layout direction is accepted; mobile UI acceptance is still pending
+8. latest unvalidated additions are distinct Sam/Lis/Matt operators + automatic art bootstrap + weapon preview auto-orientation
+9. next step is fresh compile then the single `docs/PRODUCTION_05_TEST.md` Mega Runtime Gate
+10. update this file after runtime acceptance/merge
