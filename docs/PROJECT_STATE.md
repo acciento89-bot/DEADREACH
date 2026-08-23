@@ -84,13 +84,14 @@ Physical-device touch/haptics and iOS/Android builds are still separate validati
 - Production 0.3 real Unity compile + generator gate **PASSED**
 - Production 0.3 empty-catalog fallback runtime gate **PASSED**
 - Quaternius Zombie Apocalypse Kit selected as first production-art source
-- six selected Quaternius glTF model files + license evidence are committed on the 0.3 branch
-- real Survivor/Infected/Rifle assets load and replace prototypes in Play Mode
-- duplicate built-in Survivor weapon rack was reduced, but current mounted Rifle still uses an incorrect fallback socket and appears at head height
-- Survivor, Infected and Rifle prefabs still render white/gray, proving the problem exists at prefab/material setup level rather than only in the generated gameplay scene
-- explicit URP atlas-material assignment + robust right-hand/grip pivot correction are implemented on branch and require local Unity revalidation
+- real Survivor/Infected assets load and replace prototypes in Play Mode
+- old external Rifle/hand-socket transform path has now been removed from Survivor presentation
+- Survivor uses the weapon mesh already authored and rigged inside `Characters_Sam_SingleWeapon.gltf`
+- **artist-rigged Survivor weapon visual placement is now REAL UNITY VALIDATED**: user confirmed it sits perfectly on the character
+- current embedded weapon is on the **left hand**; this is accepted for the current 0.3 starter-art pass and must not be “fixed” with another transform hack
+- muzzle is derived directly from the embedded weapon mesh instead of from a separately mounted external Rifle
 
-Do not claim 0.3 production-art complete until corrected colored materials and weapon mounting are visually/runtime validated.
+Do not claim the complete 0.3 art pass finished until muzzle/tracer origin, animation alignment, materials and all remaining gameplay regression checks are validated.
 
 ## 6. Production Art / Presentation 0.3 — current implementation
 
@@ -100,7 +101,7 @@ Do not claim 0.3 production-art complete until corrected colored materials and w
 
 - Survivor prefab
 - one or more Infected prefabs
-- Primary Weapon prefab
+- Primary Weapon prefab (kept for catalog/progression architecture, but no longer instantiated as a second visible Survivor weapon in the current Sam starter-art path)
 - local transform offsets/scales for survivor/infected production visuals
 
 Expected asset path:
@@ -118,16 +119,17 @@ Editor menu:
 - production prefab assigned → prototype renderer hidden
 - CharacterController / Damageable / AI / weapon gameplay stay on validated root
 - Animator is rebound into existing animation drivers
-- Survivor `WeaponSocket` / `RightHandWeaponSocket` detected
-- Primary Weapon mounted on Survivor socket
-- weapon `MuzzleSocket` / `Muzzle` forwarded into `HitscanWeapon`
+- Survivor no longer instantiates the external `PrimaryWeaponPrefab` as a second visible gun
+- existing weapon mesh already authored inside the Survivor rig is located by weapon-name tokens and re-enabled
+- the artist-authored weapon transform is left untouched
+- a runtime `MuzzleSocket` is generated from the embedded weapon renderer bounds and forwarded into `HitscanWeapon`
 - missing production assets safely fall back to prototype visuals
 
 ### Production asset validator
 
 `DEADREACH > Production > Validate Asset Catalog`
 
-Checks Survivor/Infected/Weapon assignment, Animators, weapon socket and muzzle socket.
+Checks Survivor/Infected/Weapon assignment and animation/presentation contracts.
 
 ### Generated-scene integration
 
@@ -141,31 +143,24 @@ Main generator:
 
 `CombatFeedbackPresenter` uses a preallocated tracer pool (default 24) instead of per-shot GameObject creation/destruction.
 
-### Quaternius asset cleanup / material hardening
+### Quaternius starter art / weapon correction
 
-First real-art tests established:
+Earlier iterations proved that trying to mount `Weapon_Rifle.gltf` onto a discovered/fallback hand socket created unstable visual orientation and repeated transform fixes.
 
-1. actual glTF models load and replace prototype visuals correctly
-2. all imported production prefabs still render white/gray, including the standalone Rifle prefab
-3. current generated Survivor prefab shows `WeaponSocket` as a root sibling of `Model`, proving automatic right-hand lookup fell back instead of attaching to the hand bone
-4. current Rifle can therefore appear around head/upper-body height even though the equipment binder itself is working
+The corrected 0.3 strategy is now:
 
-Implemented correction now on branch:
+1. use Quaternius `Characters_Sam_SingleWeapon.gltf` as the Survivor source
+2. keep its artist-authored embedded weapon in the rig
+3. do **not** instantiate a second external Rifle for the visible Survivor weapon
+4. do **not** modify the embedded weapon local position/rotation/scale
+5. derive the gameplay muzzle directly from the embedded weapon mesh bounds
+6. keep the external Rifle asset only for catalog/progression/future weapon-presentation work until a proper matching rifle-hold rig/animation path exists
 
-- installer keeps `Zombie_Atlas.png` beside flattened glTF subset and normalizes atlas URIs
-- setup now additionally creates `Assets/Deadreach/Art/Production/Materials/Quaternius_ZombieAtlas.mat`
-- material uses URP/Lit (Standard fallback), explicit atlas BaseMap/MainTex, white base color, low smoothness and zero metallic
-- setup explicitly assigns that material to every active Survivor/Infected/Rifle renderer instead of trusting glTF material resolution
-- Survivor source remains Quaternius `Characters_Sam_SingleWeapon.gltf`
-- separately named embedded weapon renderers remain suppressed
-- right-hand resolution now tries Humanoid `HumanBodyBones.RightHand`, normalized transform/bone-name scoring, then a geometry-derived bone fallback
-- old root/head weapon fallback is replaced with hand-height geometry fallback if no bone is resolved
-- Rifle wrapper now rotates long-X geometry onto DEADREACH +Z forward, relocates wrapper origin to a calculated grip/trigger point and places `MuzzleSocket` at the barrel-forward bound
-- DEADREACH remains sole owner of equipped-weapon presentation
+Original-source inspection confirmed the SingleWeapon character exports contain weapon meshes parented directly into the hand/finger hierarchy. For Sam, the embedded weapon currently used by the export is a pistol-type weapon.
 
-Latest implementation commit for these fixes:
+Latest implementation commit for the strategy switch:
 
-`8852cf428847249c86e8da0908286554b62ed20d`
+`3cd7f4af2a1394869c84f0d1c0ab54e6fdcf0dcc`
 
 ## 7. Production 0.3 real Unity validation
 
@@ -189,20 +184,26 @@ Confirmed by the user:
 - validator runs without exception/red error
 - only expected yellow missing-asset warnings occur
 
-### Real-art visual gate — PARTIAL PASS / MATERIAL + SOCKET REVALIDATION REQUIRED
+### Real-art visual gate — PARTIAL PASS
 
-Confirmed by user screenshots in Play Mode and prefab view:
+Confirmed in Play Mode:
 
 - real Survivor model appears instead of Capsule
 - real Infected models appear instead of prototype enemies
-- real Rifle prefab loads
-- production visual binder therefore works with actual imported glTF assets
-- standalone Survivor, Infected and Rifle prefabs are still white/gray
-- current Survivor `WeaponSocket` is at wrapper root instead of right-hand bone
-- mounted Rifle appears at head/upper-body height
-- duplicate/multi-weapon problem is substantially reduced compared with first import
+- production visual binder works with actual imported glTF assets
+- external duplicate Rifle mount path has been removed
+- embedded artist-rigged weapon is visible
+- **weapon placement visually passes**: user confirmed it “sits perfectly”
+- weapon is currently attached on the **left hand**, which is accepted for this pass
 
-Explicit material and socket/grip fixes are implemented but **not yet revalidated in Unity**.
+Still to validate before 0.3 completion:
+
+- muzzle/tracer visibly originate from the embedded weapon
+- weapon remains aligned through movement/aim/fire animations
+- final material/atlas appearance is acceptable in gameplay
+- all infected variants remain aligned/animated
+- movement/combat/loot/extraction/Bunker return still have no regression with the corrected art path
+- no blocking Console errors
 
 ## 8. Selected first production-art source
 
@@ -210,7 +211,7 @@ Explicit material and socket/grip fixes are implemented but **not yet revalidate
 
 Initial DEADREACH subset:
 
-- Survivor Sam
+- Survivor Sam / Sam SingleWeapon
 - Zombie Basic
 - Zombie Chubby
 - Zombie Arm
@@ -236,31 +237,28 @@ Git LFS tracks `.gltf`, `.glb` and image/binary art assets.
 
 ## 9. Immediate next gate
 
-On local `production/0.3-art-presentation`:
+On local `production/0.3-art-presentation` with commit `3cd7f4af2a1394869c84f0d1c0ab54e6fdcf0dcc` or newer:
 
-1. `git pull`
-2. wait for Unity compile
-3. require **0 red compile errors**
-4. run `DEADREACH > Production > Setup Quaternius Starter Art` again to rebuild wrappers/material/controllers
-5. inspect `Survivor_Quaternius_Sam.prefab`: `WeaponSocket` should ideally be nested under a hand/bone hierarchy; root fallback is acceptable only if positioned at actual hand height
-6. inspect Survivor/Rifle prefab color: atlas texture should now be visible rather than plain white/gray
-7. run `DEADREACH > Production > Validate Asset Catalog`
-8. regenerate with `DEADREACH > Build Production Slice 0.3`
-9. Play → Deploy
-10. require colored Survivor + Infected + Rifle
-11. require exactly one DEADREACH-equipped Rifle at/near the right hand rather than the head
-12. validate muzzle/tracer origin, movement/combat/loot/extraction and no blocking Console errors
+1. keep the currently correct embedded weapon mount untouched
+2. Play → Deploy
+3. fire in several directions and confirm muzzle/tracer starts at the embedded weapon rather than hand/head/body
+4. move + aim + fire and confirm the weapon stays aligned during animation
+5. verify Survivor/Infected atlas/material appearance
+6. fight all visible infected variants
+7. collect weapon loot and extract back to Bunker
+8. require no blocking Console errors
 
 ## 10. After corrected real starter-art validation
 
-1. final weapon socket/orientation polish if visually required
+1. lock the validated Sam starter-art mount path; no further transform hacks
 2. proper muzzle flash / impact production VFX
 3. first real combat audio-content pass
 4. extend Quaternius kit into Dead City environment props
 5. URP post-processing / color grading / atmosphere
 6. replace prototype IMGUI with production HUD/loadout UI
 7. production NavMesh navigation
-8. physical-device mobile validation + iOS/Android build profiling
+8. later introduce a proper rifle-hold character/animation path for visible rifle equipment instead of forcing a foreign Rifle onto the current Sam rig
+9. physical-device mobile validation + iOS/Android build profiling
 
 ## 11. Handoff protocol
 
@@ -270,8 +268,10 @@ When resuming:
 2. inspect active branch / PR #3
 3. note compile/generator + empty-catalog fallback gates passed
 4. note real model binding works
-5. note latest screenshots proved white/gray prefab materials and root-level weapon socket/head placement
-6. note explicit URP atlas assignment + right-hand/grip wrapper fixes are implemented in commit `8852cf428847249c86e8da0908286554b62ed20d` but need Unity revalidation
-7. update this file after corrected art test
+5. note the external Rifle hand-socket transform approach was abandoned
+6. note commit `3cd7f4af2a1394869c84f0d1c0ab54e6fdcf0dcc` switched Survivor presentation to the embedded artist-rigged weapon
+7. note user visually validated the weapon placement as perfect, though it is on the left hand
+8. do not “correct” the left-hand mount by rotating/repositioning the embedded weapon
+9. continue with muzzle/tracer + animation/material/gameplay validation
 
 Do not rely on chat history alone.
