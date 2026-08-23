@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Kamilunavo.Deadreach.Combat;
+using Kamilunavo.Deadreach.Persistence;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Presentation
@@ -58,7 +59,7 @@ namespace Kamilunavo.Deadreach.Presentation
                 return false;
 
             var prefab = role == ProductionVisualRole.Survivor
-                ? catalog.SurvivorPrefab
+                ? catalog.GetSurvivorPrefab(SaveService.Data.selectedCharacterId)
                 : catalog.GetInfectedPrefab(variantIndex);
 
             if (prefab == null)
@@ -69,7 +70,9 @@ namespace Kamilunavo.Deadreach.Presentation
 
             var anchor = visualAnchor != null ? visualAnchor : transform;
             _instance = Instantiate(prefab, anchor, false);
-            _instance.name = $"ProductionVisual_{role}";
+            _instance.name = role == ProductionVisualRole.Survivor
+                ? $"ProductionVisual_{role}_{SaveService.Data.selectedCharacterId}"
+                : $"ProductionVisual_{role}";
 
             if (role == ProductionVisualRole.Survivor)
             {
@@ -103,10 +106,8 @@ namespace Kamilunavo.Deadreach.Presentation
             {
                 GetComponent<PlayerAnimationDriver>()?.SetAnimator(animator);
 
-                // Quaternius' Characters_Sam_SingleWeapon export already contains an artist-authored,
-                // rigged firearm. Previous 0.3 attempts hid that weapon and mounted a second standalone
-                // rifle onto an imported hand basis, which caused the repeated rotation/position errors.
-                // Keep the authored transform untouched and derive only the gameplay muzzle from it.
+                // Every production operator uses a Quaternius SingleWeapon character export.
+                // The firearm is artist-authored on the rig; never mount a second external rifle.
                 var muzzle = BindEmbeddedSingleWeaponMuzzle();
                 if (muzzle != null)
                 {
@@ -115,7 +116,7 @@ namespace Kamilunavo.Deadreach.Presentation
                 else
                 {
                     Debug.LogWarning(
-                        "DEADREACH could not find an embedded firearm renderer in the Quaternius SingleWeapon Survivor. " +
+                        "DEADREACH could not find an embedded firearm renderer in the selected SingleWeapon operator. " +
                         "No external rifle was mounted; HitscanWeapon will keep its safe fallback origin.");
                 }
             }
@@ -131,8 +132,6 @@ namespace Kamilunavo.Deadreach.Presentation
             if (firearmRenderer == null)
                 return null;
 
-            // Older locally generated 0.3 wrappers deliberately disabled the embedded weapon.
-            // Re-enable it at runtime so this fix works after git pull without regenerating prefabs.
             firearmRenderer.enabled = true;
 
             var existingMuzzle = FindNamedTransform(firearmRenderer.transform, "MuzzleSocket_Embedded");
@@ -152,8 +151,6 @@ namespace Kamilunavo.Deadreach.Presentation
             var center = localBounds.center;
             var size = localBounds.size;
 
-            // Use the longest mesh axis as the weapon/barrel axis, then choose the endpoint farther
-            // from the Survivor body. This keeps the artist-authored weapon rotation completely intact.
             var axis = 0;
             if (size.y > size.x && size.y >= size.z)
                 axis = 1;
@@ -182,7 +179,7 @@ namespace Kamilunavo.Deadreach.Presentation
             muzzle.localScale = Vector3.one;
 
             Debug.Log(
-                $"DEADREACH using artist-rigged embedded SingleWeapon '{firearmRenderer.name}'. " +
+                $"DEADREACH using artist-rigged embedded SingleWeapon '{firearmRenderer.name}' on operator '{SaveService.Data.selectedCharacterId}'. " +
                 $"External hand-mounted Rifle disabled; muzzle={muzzle.position}.");
 
             return muzzle;
