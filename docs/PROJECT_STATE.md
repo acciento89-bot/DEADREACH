@@ -66,7 +66,8 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - active branch: **`production/0.10-combat-impact`**
 - PR #10: Draft, targets `main`
 - Production 0.10 compile gate passed in real Unity with **0 red compiler errors**
-- next gate: `DEADREACH > Build Production Slice 0.10` → visual/runtime/mobile acceptance
+- `DEADREACH > Build Production Slice 0.10` completed successfully in real Unity
+- next gate: visual/runtime acceptance for operator VFX, infected-special VFX, hit/crit feedback and camera impact
 
 ## 4. Stable Production 0.9 baseline that must remain green
 
@@ -123,7 +124,7 @@ Goal: make combat feel materially less prototype-like without destabilizing the 
 - player damage / death / heavy abilities add subtle camera-lens impact rather than moving the camera transform
 
 ### Runtime architecture
-- `CombatFeedback` now exposes typed operator-ability and infected-special impact events
+- `CombatFeedback` exposes typed operator-ability and infected-special impact events
 - `OperatorAbilityController` emits presentation events only after successful ability activation
 - `InfectedCombatRoleBrain` emits presentation events after its accepted special movement/damage action
 - `CombatImpactPresentation` is a persistent runtime presenter
@@ -133,14 +134,16 @@ Goal: make combat feel materially less prototype-like without destabilizing the 
 ### Build gate
 - menu: `DEADREACH > Build Production Slice 0.10`
 - test plan: `docs/PRODUCTION_10_TEST.md`
+- compile: **PASSED 2026-08-23 — 0 red compiler errors**
+- build: **PASSED 2026-08-23 — Production Slice 0.10 completed**
 
 ## 6. Current 0.10 gate
 
 Green:
 1. Unity compile → **0 red compiler errors** ✅
+2. `DEADREACH > Build Production Slice 0.10` ✅
 
 Required next:
-2. `DEADREACH > Build Production Slice 0.10` completes
 3. SAM / RAVEN / BRIGGS VFX visible and readable
 4. Runner / Brute / Stalker impact VFX visible without obscuring gameplay
 5. hit marker visible on successful hits; critical presentation distinct
@@ -155,7 +158,7 @@ When resuming:
 1. read this file first
 2. stable baseline is Production 0.9 on `main`
 3. active work is Production 0.10 on `production/0.10-combat-impact`
-4. 0.10 compile gate is green; build/runtime/mobile gates remain
+4. 0.10 compile + build gates are green; visual/runtime/mobile gates remain
 5. preserve schema-v6 Workshop progression
 6. preserve fixed-zone mobile controls
 7. never reintroduce external gameplay hand-mounted Rifle transforms
