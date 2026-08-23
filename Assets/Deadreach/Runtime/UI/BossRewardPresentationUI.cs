@@ -15,6 +15,10 @@ namespace Kamilunavo.Deadreach.UI
         private Text _weapon;
         private Text _details;
         private Text _affixes;
+        private RectTransform _safeRoot;
+        private RectTransform _panelRect;
+        private Rect _lastSafeArea;
+        private Vector2Int _lastScreenSize;
         private Coroutine _routine;
         private RunSession _session;
 
@@ -26,6 +30,15 @@ namespace Kamilunavo.Deadreach.UI
 
             BuildCanvas();
             _session.BossRewardGranted += HandleReward;
+        }
+
+        private void Update()
+        {
+            if (_safeRoot == null)
+                return;
+
+            if (_lastSafeArea != Screen.safeArea || _lastScreenSize.x != Screen.width || _lastScreenSize.y != Screen.height)
+                ApplyResponsiveLayout();
         }
 
         private void OnDestroy()
@@ -40,20 +53,20 @@ namespace Kamilunavo.Deadreach.UI
             canvasObject.transform.SetParent(transform, false);
             var canvas = canvasObject.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 80;
+            canvas.sortingOrder = 82;
 
             var scaler = canvasObject.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1600f, 900f);
             scaler.matchWidthOrHeight = 0.5f;
 
+            var safeObject = new GameObject("BossRewardSafeArea", typeof(RectTransform));
+            safeObject.transform.SetParent(canvasObject.transform, false);
+            _safeRoot = safeObject.GetComponent<RectTransform>();
+
             var panelObject = new GameObject("BossRewardPanel", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
-            panelObject.transform.SetParent(canvasObject.transform, false);
-            var rect = panelObject.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.29f, 0.33f);
-            rect.anchorMax = new Vector2(0.71f, 0.67f);
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
+            panelObject.transform.SetParent(safeObject.transform, false);
+            _panelRect = panelObject.GetComponent<RectTransform>();
 
             _group = panelObject.GetComponent<CanvasGroup>();
             _group.alpha = 0f;
@@ -66,24 +79,54 @@ namespace Kamilunavo.Deadreach.UI
             var stripe = new GameObject("RewardStripe", typeof(RectTransform), typeof(Image));
             stripe.transform.SetParent(panelObject.transform, false);
             var stripeRect = stripe.GetComponent<RectTransform>();
-            stripeRect.anchorMin = new Vector2(0f, 0.965f);
+            stripeRect.anchorMin = new Vector2(0f, 0.968f);
             stripeRect.anchorMax = Vector2.one;
             stripeRect.offsetMin = Vector2.zero;
             stripeRect.offsetMax = Vector2.zero;
             stripe.GetComponent<Image>().color = new Color(1f, 0.32f, 0.05f, 1f);
 
             _title = CreateText(panelObject.transform, "RewardTitle", 30, FontStyle.Bold, TextAnchor.MiddleCenter,
-                new Vector2(0.04f, 0.73f), new Vector2(0.96f, 0.94f));
+                new Vector2(0.045f, 0.74f), new Vector2(0.955f, 0.94f));
             _title.text = "MUTATION RELIC SECURED";
 
             _weapon = CreateText(panelObject.transform, "RewardWeapon", 24, FontStyle.Bold, TextAnchor.MiddleCenter,
-                new Vector2(0.04f, 0.49f), new Vector2(0.96f, 0.73f));
+                new Vector2(0.045f, 0.51f), new Vector2(0.955f, 0.74f));
 
             _details = CreateText(panelObject.transform, "RewardDetails", 15, FontStyle.Bold, TextAnchor.MiddleCenter,
-                new Vector2(0.04f, 0.31f), new Vector2(0.96f, 0.5f));
+                new Vector2(0.05f, 0.32f), new Vector2(0.95f, 0.51f));
 
             _affixes = CreateText(panelObject.transform, "RewardAffixes", 13, FontStyle.Normal, TextAnchor.UpperCenter,
-                new Vector2(0.05f, 0.08f), new Vector2(0.95f, 0.31f));
+                new Vector2(0.055f, 0.075f), new Vector2(0.945f, 0.31f));
+
+            ApplyResponsiveLayout();
+        }
+
+        private void ApplyResponsiveLayout()
+        {
+            if (_safeRoot == null || _panelRect == null || Screen.width <= 0 || Screen.height <= 0)
+                return;
+
+            _lastSafeArea = Screen.safeArea;
+            _lastScreenSize = new Vector2Int(Screen.width, Screen.height);
+
+            var safeMin = Screen.safeArea.position;
+            var safeMax = Screen.safeArea.position + Screen.safeArea.size;
+            safeMin.x /= Screen.width;
+            safeMin.y /= Screen.height;
+            safeMax.x /= Screen.width;
+            safeMax.y /= Screen.height;
+            _safeRoot.anchorMin = safeMin;
+            _safeRoot.anchorMax = safeMax;
+            _safeRoot.offsetMin = Vector2.zero;
+            _safeRoot.offsetMax = Vector2.zero;
+
+            var aspect = Screen.safeArea.width / Mathf.Max(1f, Screen.safeArea.height);
+            if (aspect >= 2.05f)
+                SetAnchors(_panelRect, 0.33f, 0.14f, 0.67f, 0.52f);
+            else if (aspect <= 1.72f)
+                SetAnchors(_panelRect, 0.18f, 0.13f, 0.82f, 0.56f);
+            else
+                SetAnchors(_panelRect, 0.28f, 0.15f, 0.72f, 0.54f);
         }
 
         private void HandleReward(WeaponInstanceData reward)
@@ -117,7 +160,7 @@ namespace Kamilunavo.Deadreach.UI
         {
             var elapsed = 0f;
             const float fadeIn = 0.22f;
-            const float hold = 3.6f;
+            const float hold = 3.8f;
             const float fadeOut = 0.45f;
 
             while (elapsed < fadeIn)
@@ -157,21 +200,26 @@ namespace Kamilunavo.Deadreach.UI
                 if (builder.Length > 11)
                     builder.Append("   |   ");
 
-                builder.Append(affix.stat switch
-                {
-                    WeaponAffixStat.DamagePercent => "DAMAGE",
-                    WeaponAffixStat.FireRatePercent => "FIRE RATE",
-                    WeaponAffixStat.RangePercent => "RANGE",
-                    WeaponAffixStat.CritChancePercent => "CRIT CHANCE",
-                    WeaponAffixStat.CritDamagePercent => "CRIT DAMAGE",
-                    _ => affix.stat.ToString().ToUpperInvariant()
-                });
+                builder.Append(GetAffixLabel(affix.stat));
                 builder.Append(" +");
                 builder.Append(affix.value.ToString("0.#"));
                 builder.Append('%');
             }
 
             return builder.ToString();
+        }
+
+        private static string GetAffixLabel(WeaponAffixStat stat)
+        {
+            return stat switch
+            {
+                WeaponAffixStat.DamagePercent => "DAMAGE",
+                WeaponAffixStat.FireRatePercent => "FIRE RATE",
+                WeaponAffixStat.RangePercent => "RANGE",
+                WeaponAffixStat.CritChancePercent => "CRIT CHANCE",
+                WeaponAffixStat.CritDamagePercent => "CRIT DAMAGE",
+                _ => stat.ToString().ToUpperInvariant()
+            };
         }
 
         private static Text CreateText(Transform parent, string name, int size, FontStyle style, TextAnchor anchor, Vector2 min, Vector2 max)
@@ -193,6 +241,14 @@ namespace Kamilunavo.Deadreach.UI
             text.verticalOverflow = VerticalWrapMode.Truncate;
             text.raycastTarget = false;
             return text;
+        }
+
+        private static void SetAnchors(RectTransform rect, float minX, float minY, float maxX, float maxY)
+        {
+            rect.anchorMin = new Vector2(minX, minY);
+            rect.anchorMax = new Vector2(maxX, maxY);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
         }
     }
 }
