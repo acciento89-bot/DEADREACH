@@ -10,6 +10,7 @@ namespace Kamilunavo.Deadreach.UI
     public sealed class PrototypeHud : MonoBehaviour
     {
         private Damageable _playerHealth;
+        private HitscanWeapon _weapon;
         private GUIStyle _titleStyle;
         private GUIStyle _textStyle;
         private GUIStyle _centerStyle;
@@ -23,6 +24,7 @@ namespace Kamilunavo.Deadreach.UI
                 return;
 
             _playerHealth = player.GetComponent<Damageable>();
+            _weapon = player.GetComponent<HitscanWeapon>();
             if (_playerHealth != null)
                 _playerHealth.Damaged += HandlePlayerDamaged;
         }
@@ -45,14 +47,14 @@ namespace Kamilunavo.Deadreach.UI
             var safe = Screen.safeArea;
             var left = safe.x + 22f;
             var top = Screen.height - safe.yMax + 18f;
-            var width = Mathf.Min(430f, safe.width * 0.46f);
+            var width = Mathf.Min(470f, safe.width * 0.5f);
             var session = RunSession.Current;
             var profile = SaveService.Data;
             var inventory = RunInventory.Current;
 
             DrawDamageFlash(safe);
 
-            GUI.Box(new Rect(left, top, width, 204f), GUIContent.none);
+            GUI.Box(new Rect(left, top, width, 232f), GUIContent.none);
             GUI.Label(new Rect(left + 16f, top + 10f, width - 32f, 30f), "DEADREACH // FIELD OPS", _titleStyle);
 
             var hp = _playerHealth != null ? Mathf.CeilToInt(_playerHealth.CurrentHealth) : 0;
@@ -62,10 +64,11 @@ namespace Kamilunavo.Deadreach.UI
             GUI.Label(new Rect(left + 16f, top + 43f, width - 32f, 22f), $"VITALS   {hp}/{maxHp}", _textStyle);
             DrawBar(new Rect(left + 16f, top + 67f, width - 32f, 12f), healthNormalized, new Color(0.22f, 0.78f, 0.36f), new Color(0.75f, 0.15f, 0.12f));
 
-            GUI.Label(new Rect(left + 16f, top + 90f, width - 32f, 24f), $"CARRIED SCRAP   {session?.CarriedScrap ?? 0}", _textStyle);
-            GUI.Label(new Rect(left + 16f, top + 116f, width - 32f, 24f), $"WEAPON LOOT   {inventory?.Weapons.Count ?? 0}/{inventory?.WeaponCapacity ?? 0}", _textStyle);
-            GUI.Label(new Rect(left + 16f, top + 142f, width - 32f, 24f), $"SECURED   {profile.securedScrap}      STREAK   {profile.currentExtractionStreak}", _textStyle);
-            GUI.Label(new Rect(left + 16f, top + 168f, width - 32f, 24f), "Reach the green beacon with any loot to extract.", _textStyle);
+            DrawPrimaryWeapon(left + 16f, top + 88f, width - 32f);
+            GUI.Label(new Rect(left + 16f, top + 124f, width - 32f, 24f), $"CARRIED SCRAP   {session?.CarriedScrap ?? 0}", _textStyle);
+            GUI.Label(new Rect(left + 16f, top + 150f, width - 32f, 24f), $"WEAPON LOOT   {inventory?.Weapons.Count ?? 0}/{inventory?.WeaponCapacity ?? 0}", _textStyle);
+            GUI.Label(new Rect(left + 16f, top + 176f, width - 32f, 24f), $"SECURED   {profile.securedScrap}      STREAK   {profile.currentExtractionStreak}", _textStyle);
+            GUI.Label(new Rect(left + 16f, top + 202f, width - 32f, 24f), "Reach the green beacon with any loot to extract.", _textStyle);
 
             GUI.Label(new Rect(left, safe.yMax - 42f, width + 220f, 28f), "WASD / LEFT THUMB = MOVE   •   MOUSE / RIGHT THUMB = AIM + FIRE", _textStyle);
 
@@ -74,6 +77,24 @@ namespace Kamilunavo.Deadreach.UI
 
             DrawExtractionFeedback(safe, session);
             DrawRunResult(safe, session);
+        }
+
+        private void DrawPrimaryWeapon(float x, float y, float width)
+        {
+            if (_weapon == null)
+            {
+                GUI.Label(new Rect(x, y, width, 32f), "PRIMARY // FIELD DR-7", _textStyle);
+                return;
+            }
+
+            var instance = _weapon.EquippedInstance;
+            var stats = _weapon.RuntimeStats;
+            var name = instance != null ? instance.displayNameSnapshot : "Field DR-7 Rifle";
+            var power = instance != null ? $"PWR {instance.itemPower}" : "BASE";
+            GUI.Label(
+                new Rect(x, y, width, 32f),
+                $"PRIMARY // {name} // {power} // DMG {stats.Damage:0.#} // CRIT {stats.CritChance * 100f:0.#}%",
+                _textStyle);
         }
 
         private void DrawExtractionFeedback(Rect safe, RunSession session)
@@ -156,7 +177,7 @@ namespace Kamilunavo.Deadreach.UI
 
             _textStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 14
+                fontSize = 13
             };
 
             _centerStyle = new GUIStyle(GUI.skin.label)
