@@ -18,9 +18,14 @@ namespace Kamilunavo.Deadreach.Presentation
         [SerializeField] private Transform visualAnchor;
         [SerializeField] private bool hidePrototypeRenderers = true;
 
+        // Validated locally in Unity against Quaternius Survivor Sam.
+        // Keep this as a local hand-socket offset: do not overwrite it with a world-space
+        // LookRotation every frame, otherwise manual/prefab alignment becomes ineffective.
+        private static readonly Vector3 QuaterniusRifleLocalPosition = new(0f, -0.02084f, -0.00481f);
+        private static readonly Quaternion QuaterniusRifleLocalRotation = Quaternion.Euler(0f, 0f, 180f);
+
         private GameObject _instance;
         private GameObject _weaponInstance;
-        private Transform _weaponSocket;
 
         public bool HasProductionVisual => _instance != null;
         public GameObject VisualInstance => _instance;
@@ -28,12 +33,6 @@ namespace Kamilunavo.Deadreach.Presentation
         private void Start()
         {
             BindNow();
-        }
-
-        private void LateUpdate()
-        {
-            if (role == ProductionVisualRole.Survivor && _weaponInstance != null && _weaponSocket != null)
-                AlignMountedWeapon();
         }
 
         public void Configure(ProductionVisualRole newRole, int newVariantIndex = 0, ProductionAssetCatalog newCatalog = null)
@@ -100,21 +99,19 @@ namespace Kamilunavo.Deadreach.Presentation
                 GetComponent<PlayerAnimationDriver>()?.SetAnimator(animator);
 
                 Transform muzzle = null;
-                _weaponSocket = FindNamedTransform(_instance.transform, "WeaponSocket")
-                                ?? FindNamedTransform(_instance.transform, "RightHandWeaponSocket");
+                var weaponSocket = FindNamedTransform(_instance.transform, "WeaponSocket")
+                                   ?? FindNamedTransform(_instance.transform, "RightHandWeaponSocket");
 
-                if (catalog.PrimaryWeaponPrefab != null && _weaponSocket != null)
+                if (catalog.PrimaryWeaponPrefab != null && weaponSocket != null)
                 {
-                    _weaponInstance = Instantiate(catalog.PrimaryWeaponPrefab, _weaponSocket, false);
+                    _weaponInstance = Instantiate(catalog.PrimaryWeaponPrefab, weaponSocket, false);
                     _weaponInstance.name = "ProductionPrimaryWeapon";
 
-                    // Keep the grip at the animated right hand while DEADREACH owns the visual
-                    // weapon basis. Quaternius' imported rifle is authored with the opposite roll
-                    // convention to the gameplay basis, so it needs a 180-degree roll around its
-                    // own forward/barrel axis. This correction is applied here (and in LateUpdate)
-                    // instead of in the prefab, because runtime alignment intentionally overwrites
-                    // the prefab root rotation every frame.
-                    AlignMountedWeapon();
+                    // Exact hand mount validated by the real Unity visual test.
+                    // Rotation 0/0/180 is intentionally LOCAL to the animated hand socket.
+                    _weaponInstance.transform.localPosition = QuaterniusRifleLocalPosition;
+                    _weaponInstance.transform.localRotation = QuaterniusRifleLocalRotation;
+                    _weaponInstance.transform.localScale = Vector3.one;
 
                     muzzle = FindNamedTransform(_weaponInstance.transform, "MuzzleSocket")
                              ?? FindNamedTransform(_weaponInstance.transform, "Muzzle");
@@ -130,33 +127,6 @@ namespace Kamilunavo.Deadreach.Presentation
             {
                 GetComponent<InfectedAnimationDriver>()?.SetAnimator(animator);
             }
-        }
-
-        private void AlignMountedWeapon()
-        {
-            if (_weaponInstance == null || _weaponSocket == null)
-                return;
-
-            // Position stays locked to the animated hand/grip socket.
-            _weaponInstance.transform.position = _weaponSocket.position;
-
-            // DEADREACH combat is planar. Quaternius' rifle forward axis is already normalized
-            // to local +Z by the production wrapper, but its roll is inverted relative to Unity's
-            // world-up basis. Using world DOWN as the LookRotation up-vector is exactly a 180°
-            // roll around the barrel axis: same aim direction and hand position, rifle right-side-up.
-            var forward = transform.forward;
-            forward.y = 0f;
-
-            if (forward.sqrMagnitude < 0.0001f && _instance != null)
-            {
-                forward = _instance.transform.forward;
-                forward.y = 0f;
-            }
-
-            if (forward.sqrMagnitude < 0.0001f)
-                forward = Vector3.forward;
-
-            _weaponInstance.transform.rotation = Quaternion.LookRotation(forward.normalized, Vector3.down);
         }
 
         private static Transform FindNamedTransform(Transform root, string targetName)
