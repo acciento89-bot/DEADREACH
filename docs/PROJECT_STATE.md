@@ -64,8 +64,8 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - enemy-role runtime gate passed: Walker baseline, Runner burst, Brute slam and Stalker flank behavior accepted
 - operator active-ability gameplay passed on desktop: SAM Field Patch, RAVEN Vector Dash and BRIGGS Shockwave accepted
 - BRIGGS Shockwave dedicated FX remains non-blocking 0.10 visual debt
-- **mobile gate remains RED** after two rejected control attempts; 0.9 must not merge yet
-- second replacement mobile-control pass is now committed and requires fresh Unity compile + phone/Device Simulator validation
+- **mobile gate remains RED** after two rejected control implementations
+- current third mobile implementation uses fixed safe-area control centers and requires fresh Unity compile + phone/Device Simulator validation
 
 ## 4. Production 0.8 shipped baseline that must remain green
 
@@ -97,20 +97,26 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - **RAVEN / VECTOR DASH**
 - **BRIGGS / SHOCKWAVE** gameplay
 
-### Second replacement mobile-control pass — AWAITING REAL VALIDATION
-- controls now use **fixed safe-area centers**, not floating origins at the first finger position
-- lower-left fixed MOVE zone with generous circular capture radius
-- lower-right fixed AIM/FIRE zone with generous circular capture radius
-- MOVE uses full 360-degree X/Y vector, deadzone and shaped response
-- mobile `PlayerMotor` uses fast acceleration/deceleration for immediate direction changes
-- AIM/FIRE uses camera-relative directional input only; touch screen position is never a weapon world target
-- right stick fires as soon as its directional input leaves the deadzone
+### Mobile history
+- attempt 1 rejected: movement/aim not production usable; aim could pull toward Ability UI; HUD too small
+- attempt 2 rejected: firing improved but MOVE still used a floating first-touch origin and real mobile use remained unreliable; Ability lacked trustworthy visible confirmation
+- neither rejected implementation may be treated as accepted
+
+### Current fixed-zone mobile pass — AWAITING REAL VALIDATION
+- fixed lower-left MOVE center derived from `Screen.safeArea`
+- fixed lower-right AIM/FIRE center derived from `Screen.safeArea`
+- generous circular capture zones larger than the visible sticks
+- MOVE uses full 360-degree X/Y input with deadzone + shaped response
+- mobile movement acceleration/deceleration is fast for immediate direction changes
+- AIM/FIRE uses camera-relative directional input only
+- absolute touch coordinates are never converted to a weapon world target
+- right stick fires immediately once directional input leaves its deadzone
 - simulated mobile touch suppresses mirrored mouse-pointer aim
-- Ability uses a separate upper-right touch region with enlarged invisible hit target
-- Ability queues on touch-begin, not on release
-- Ability button now gives visible `FIRED`, `NO TARGET`, `FULL HP`, `BLOCKED` or `COOLDOWN` feedback
-- fixed stick visuals use the exact same centers as the input capture zones
-- mobile Field Ops, Vitals/HP bar, weapon/loot/scrap/objective, boss and extraction UI remain scaled up for phone readability
+- Ability is upper-right with an enlarged independent touch region
+- Ability queues on touch-begin
+- Ability shows `FIRED`, `NO TARGET`, `FULL HP`, `BLOCKED` or `COOLDOWN` feedback so the input result is visible
+- fixed stick visuals and fixed input capture share the exact same centers
+- phone HUD remains scaled up for readability
 
 ### Known 0.10 follow-up
 - BRIGGS Shockwave needs a dedicated expanding ring / ground pulse / impact VFX
@@ -119,17 +125,18 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 
 Already green:
 1. enemy roles ✅
-2. SAM / RAVEN / BRIGGS ability gameplay on desktop ✅
+2. SAM / RAVEN / BRIGGS gameplay on desktop ✅
 
 Fresh gate required now:
 3. `git pull` latest branch
 4. Unity compile → **0 red compiler errors**
-5. phone/Device Simulator: MOVE stick remains fixed lower-left and supports up/down/left/right/diagonal
+5. MOVE remains fixed lower-left and supports up/down/left/right/diagonal
 6. movement stops/changes direction quickly
-7. AIM/FIRE stick remains fixed lower-right; aiming and shooting work in every direction and never snap toward UI
-8. Ability upper-right touch shows immediate feedback and does not become move/aim/fire
-9. mobile HUD/HP/objective comfortably readable
-10. final 0.8 regression + **0 red runtime errors**
+7. AIM/FIRE remains fixed lower-right and both aiming + shooting work in every direction
+8. aim never snaps toward Ability/UI
+9. Ability upper-right gives immediate visible feedback and never becomes move/aim/fire
+10. mobile HUD remains comfortably readable
+11. final 0.8 regression + **0 red runtime errors**
 
 ## 7. Handoff protocol
 
