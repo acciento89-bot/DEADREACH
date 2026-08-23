@@ -209,6 +209,8 @@ After pulling latest branch:
 6. walk deliberately into all four map edges/end of the road and verify player cannot fall into the void; if an edge case gets below bounds, recovery must occur immediately
 7. final Console: 0 blocking red errors
 
+The detailed targeted checklist is in `docs/PRODUCTION_05_TEST.md`.
+
 If these five targeted fixes pass, mark PR #5 Ready and merge to `main`.
 
 ## 7. Handoff protocol
