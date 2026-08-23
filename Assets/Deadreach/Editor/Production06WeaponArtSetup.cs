@@ -57,7 +57,19 @@ namespace Kamilunavo.Deadreach.Editor
                 var smg = BuildPreviewPrefab(smgSource, "Weapon_Quaternius_SMG", atlasMaterial);
                 var shotgun = BuildPreviewPrefab(shotgunSource, "Weapon_Quaternius_Shotgun", atlasMaterial);
 
+                if (pistol == null || smg == null || shotgun == null)
+                {
+                    Debug.LogError("DEADREACH 0.6 weapon-family setup failed: one or more production weapon preview prefabs could not be generated. Catalog was not modified.");
+                    return false;
+                }
+
                 var catalog = ProductionArtBootstrap.EnsureCatalog();
+                if (catalog == null)
+                {
+                    Debug.LogError("DEADREACH 0.6 weapon-family setup failed: ProductionAssetCatalog could not be created or loaded.");
+                    return false;
+                }
+
                 catalog.ConfigureWeaponFamilies(riflePrefab, smg, pistol, shotgun);
                 EditorUtility.SetDirty(catalog);
                 AssetDatabase.SaveAssets();
@@ -90,29 +102,37 @@ namespace Kamilunavo.Deadreach.Editor
         private static GameObject BuildPreviewPrefab(GameObject source, string prefabName, Material material)
         {
             var root = new GameObject(prefabName);
-            var model = PrefabUtility.InstantiatePrefab(source) as GameObject ?? UnityEngine.Object.Instantiate(source);
-            model.name = "Model";
-            model.transform.SetParent(root.transform, false);
-
-            if (PrefabUtility.IsPartOfPrefabInstance(model))
-                PrefabUtility.UnpackPrefabInstance(model, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
-
-            foreach (var collider in model.GetComponentsInChildren<Collider>(true))
-                UnityEngine.Object.DestroyImmediate(collider);
-
-            foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
+            try
             {
-                var slots = Mathf.Max(1, renderer.sharedMaterials?.Length ?? 0);
-                var materials = new Material[slots];
-                for (var i = 0; i < slots; i++)
-                    materials[i] = material;
-                renderer.sharedMaterials = materials;
-            }
+                var model = PrefabUtility.InstantiatePrefab(source) as GameObject ?? UnityEngine.Object.Instantiate(source);
+                if (model == null)
+                    return null;
 
-            var prefabPath = $"{PrefabRoot}/{prefabName}.prefab";
-            var prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            UnityEngine.Object.DestroyImmediate(root);
-            return prefab;
+                model.name = "Model";
+                model.transform.SetParent(root.transform, false);
+
+                if (PrefabUtility.IsPartOfPrefabInstance(model))
+                    PrefabUtility.UnpackPrefabInstance(model, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+
+                foreach (var collider in model.GetComponentsInChildren<Collider>(true))
+                    UnityEngine.Object.DestroyImmediate(collider);
+
+                foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
+                {
+                    var slots = Mathf.Max(1, renderer.sharedMaterials?.Length ?? 0);
+                    var materials = new Material[slots];
+                    for (var i = 0; i < slots; i++)
+                        materials[i] = material;
+                    renderer.sharedMaterials = materials;
+                }
+
+                var prefabPath = $"{PrefabRoot}/{prefabName}.prefab";
+                return PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
         }
 
         private static string ToAbsolute(string assetPath)
