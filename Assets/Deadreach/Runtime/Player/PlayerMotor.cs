@@ -50,7 +50,14 @@ namespace Kamilunavo.Deadreach.Player
 
             var desiredDirection = Vector3.ClampMagnitude(forward * moveInput.y + right * moveInput.x, 1f);
             var desiredVelocity = desiredDirection * EffectiveMoveSpeed;
-            _planarVelocity = Vector3.MoveTowards(_planarVelocity, desiredVelocity, acceleration * Time.deltaTime);
+
+            // Mobile twin-stick movement must feel immediate. The old desktop acceleration made the
+            // player feel like it kept sliding after the thumb changed direction or returned to center.
+            var touchControl = input != null && input.TouchModeActive;
+            var response = touchControl
+                ? (desiredDirection.sqrMagnitude > 0.001f ? 52f : 72f)
+                : acceleration;
+            _planarVelocity = Vector3.MoveTowards(_planarVelocity, desiredVelocity, response * Time.deltaTime);
 
             if (_controller.isGrounded && _verticalVelocity < 0f)
                 _verticalVelocity = -2f;

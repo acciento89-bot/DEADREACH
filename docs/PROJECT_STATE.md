@@ -49,70 +49,99 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 
 ### Production 0.8 — MERGED / REAL UNITY VALIDATED
 - PR #8 squash merged to `main` at `876127fb9997951afcca738cd7251acd2f662014`
-- compile gates passed with **0 red compiler errors**
-- `DEADREACH > Build Production Slice 0.8` completed successfully
-- Workshop layout / Calibration / Item Power / Scrap spending validated
-- two-step Salvage and active-loadout protection validated
-- Workbench / Medbay / Cargo Rig / Scavenger purchases and persistence validated
-- expedition → extraction → Bunker return validated after lifecycle fix; WORKSHOP remains present
-- final runtime/regression check passed
+- compile/build/runtime gates passed
+- Workshop / Calibration / Salvage / permanent Bunker upgrades validated
+- expedition → extraction → Bunker lifecycle validated
 
 ## 3. Current Git state
 
 - stable branch: `main`
-- stable production level: **0.8**
-- stable merge: `876127fb9997951afcca738cd7251acd2f662014`
-- no active production branch is authoritative after the 0.8 merge
-- next production work must branch from current `main`
+- stable production level before promotion: **0.8**
+- stable merge before promotion: `876127fb9997951afcca738cd7251acd2f662014`
+- active branch: **`production/0.9-combat-depth`**
+- PR #9 targets `main`
+- Production 0.9 compile/build/runtime/mobile/final-regression gates are all green
+- PR #9 is ready for promotion to `main`
 
-## 4. Production 0.8 shipped baseline
+## 4. Production 0.8 baseline preserved in 0.9
 
-Production 0.8 closes the missing **Equip / Upgrade** half of the core loop with real persistent progression.
+### Workshop / progression
+- save schema v6 and existing profiles preserved
+- real Item Power combat scaling
+- weapon Calibration and two-step Salvage
+- Workbench / Medbay / Cargo Rig / Scavenger Network progression
+- Workshop remains available after every expedition → Bunker return
 
-### Progression engine
-- save schema **v6** with non-destructive migration from v5
-- per-weapon persistent `upgradeLevel`
-- Item Power contributes to real combat damage
-- calibration adds Item Power plus small range/crit handling gains
-- secured Scrap is the Workshop currency
-- weapon calibration spends Scrap, raises calibration and adds +8 Item Power
-- non-equipped weapons can be salvaged for secured Scrap
-- equipped weapon cannot be salvaged
-
-### Permanent Bunker systems
-- **Workbench** — raises weapon calibration ceiling
-- **Medbay** — +6% operator max HP per rank
-- **Cargo Rig** — +1 expedition weapon capacity per rank
-- **Scavenger Network** — +8% Scrap banked on extraction per rank
-- each track has five ranks with escalating Scrap costs
-
-### Workshop UI
-- dedicated **WORKSHOP** navigation entry in the Bunker
-- live rank / effect / cost / affordability cards
-- weapon cards show family / rarity / Item Power / calibration / affixes / real Item-Power damage contribution
-- Calibration and Salvage refresh immediately
-- Salvage uses two-step confirmation
-- active weapon shows `ACTIVE LOADOUT`
-- Scrap profile summary refreshes after transactions
-- `Production08WorkshopBootstrap` reinstalls Workshop after each scene load so expedition → Bunker return remains correct
-
-## 5. Production 0.7 presentation baseline that remains accepted
-
+### Presentation / content baseline
 - Arsenal Rifle / SMG / Pistol / Shotgun orientation and framing
-- Bunker layout at 4:3 / 16:10 / 16:9 / ~19:9 landscape
+- Bunker layouts at 4:3 / 16:10 / 16:9 / ~19:9 landscape
 - landscape-only mobile orientation
-- compact Field Ops HUD
+- accepted desktop/tablet combat presentation
 - slim boss health/identity strip and mutation-state chip
 - lower-right Relic reward toast
 - Bunker reward debrief → Arsenal transfer
-- Flooded Industrial rain / Ash District ash / Blackout dust / Ground Zero contamination FX
-- Bunker → expedition → combat → loot → return flow with no red runtime errors
+- sector atmosphere FX
 
-## 6. Next development entry point
+## 5. Production 0.9 — Combat Depth — FULLY REAL-UNITY VALIDATED
 
-1. `git switch main`
-2. `git pull`
-3. branch the next production pass from current `main`
-4. preserve schema-v6 Workshop progression and the accepted 0.7 presentation baseline
+### Infected combat roles
+- **WALKER** remains the readable baseline chaser
+- **RUNNER** has a timed medium-range burst
+- **BRUTE** has a separate close-range slam
+- **STALKER** has lateral flank/reposition movement
+- role-colored special telegraphs accepted
+- normal role specials do not override mutation-boss phase logic
+
+### Operator active abilities
+- **SAM / FIELD PATCH** — heal ability with cooldown protection at full HP
+- **RAVEN / VECTOR DASH** — collision-aware tactical dash
+- **BRIGGS / SHOCKWAVE** — close-range infected damage ability
+- desktop / gamepad inputs accepted
+- mobile Ability input accepted
+
+### Fixed-zone mobile controls — ACCEPTED
+- fixed lower-left MOVE center from `Screen.safeArea`
+- fixed lower-right AIM/FIRE center from `Screen.safeArea`
+- full 360-degree movement with deadzone/response shaping
+- faster mobile acceleration/deceleration for immediate twin-stick response
+- camera-relative directional aiming only
+- absolute touch coordinates never become weapon world targets
+- right stick fires outside deadzone and stops on release
+- simulated mobile touch suppresses mirrored mouse-pointer aim
+- upper-right Ability has an enlarged independent touch region
+- Ability queues on touch-begin and does not become move/aim/fire
+- Ability feedback includes `FIRED`, `NO TARGET`, `FULL HP`, `BLOCKED` or `COOLDOWN`
+- phone FIELD OPS / Vitals / HP / loot / scrap / objective readability accepted
+
+### Final 0.9 regression — PASSED 2026-08-23
+- Bunker → Workshop → Deploy → combat/loot → extraction → Bunker passed
+- Workshop remains present after scene reload
+- Calibration / Salvage / Bunker upgrade persistence remains intact
+- Arsenal / accepted presentation remain intact
+- enemy roles remain accepted
+- SAM / RAVEN / BRIGGS gameplay remains accepted
+- **0 red runtime errors**
+
+### Known 0.10 follow-up
+- BRIGGS Shockwave needs a dedicated visible expanding ring / ground pulse / impact VFX
+
+## 6. Promotion status
+
+Production 0.9 is fully validated and ready to merge to `main`.
+
+After merge:
+1. update this file on `main` with the actual PR #9 merge commit
+2. mark Production 0.9 as the stable baseline
+3. branch Production 0.10 from current `main`
+4. first 0.10 visual debt: dedicated BRIGGS Shockwave FX
+
+## 7. Handoff protocol
+
+When resuming after the merge:
+1. read this file first
+2. Production 0.9 is the intended stable baseline
+3. preserve schema-v6 Workshop progression and accepted presentation
+4. preserve fixed-zone mobile controls
 5. never reintroduce external gameplay hand-mounted Rifle transforms
 6. keep mobile landscape-only
+7. start 0.10 from current `main`

@@ -23,6 +23,12 @@ namespace Kamilunavo.Deadreach.Editor
             BuildInternal("0.8", "0.7 validated presentation + schema-v6 workshop economy + real Item Power + permanent Bunker progression");
         }
 
+        [MenuItem("DEADREACH/Build Production Slice 0.9", priority = 3)]
+        public static void Build09()
+        {
+            BuildInternal("0.9", "0.8 validated progression + distinct infected combat roles + active operator abilities + mobile ability input");
+        }
+
         private static void BuildInternal(string version, string featureSummary)
         {
             if (!Production06WeaponArtSetup.EnsureReady())
