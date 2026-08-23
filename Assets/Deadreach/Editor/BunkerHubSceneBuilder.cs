@@ -31,7 +31,7 @@ namespace Kamilunavo.Deadreach.Editor
             Debug.Log($"DEADREACH Bunker Hub generated at {ScenePath}");
         }
 
-        [MenuItem("DEADREACH/Build Production Slice 0.2", priority = 1)]
+        [MenuItem("DEADREACH/Build Production Slice 0.3", priority = 1)]
         public static void BuildCompleteSlice()
         {
             VerticalSliceSceneBuilder.Build();
@@ -42,7 +42,7 @@ namespace Kamilunavo.Deadreach.Editor
                 return;
 
             EditorSceneManager.OpenScene(DeadreachBuildSettings.BunkerScenePath, OpenSceneMode.Single);
-            Debug.Log("DEADREACH Production Slice 0.2 generated. Build Settings verified: Bunker first, Dead City second. Weapon loot + production presentation hooks included.");
+            Debug.Log("DEADREACH Production Slice 0.3 generated. Build Settings verified: Bunker first, Dead City second. Weapon loot + production asset catalog/binders included.");
         }
 
         private static void EnsureFolders()
