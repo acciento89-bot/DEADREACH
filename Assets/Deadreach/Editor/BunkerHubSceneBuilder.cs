@@ -31,18 +31,19 @@ namespace Kamilunavo.Deadreach.Editor
             Debug.Log($"DEADREACH Bunker Hub generated at {ScenePath}");
         }
 
-        [MenuItem("DEADREACH/Build Production Slice 0.3", priority = 1)]
+        [MenuItem("DEADREACH/Build Production Slice 0.4", priority = 1)]
         public static void BuildCompleteSlice()
         {
             VerticalSliceSceneBuilder.Build();
             ProductionSliceEnhancer.EnhanceCurrentDeadCityScene();
+            DeadCityEnvironmentPass.EnhanceCurrentDeadCityScene();
             Build();
 
             if (!DeadreachBuildSettings.ConfigureCompleteSlice())
                 return;
 
             EditorSceneManager.OpenScene(DeadreachBuildSettings.BunkerScenePath, OpenSceneMode.Single);
-            Debug.Log("DEADREACH Production Slice 0.3 generated. Build Settings verified: Bunker first, Dead City second. Weapon loot + production asset catalog/binders included.");
+            Debug.Log("DEADREACH Production Slice 0.4 generated. Build Settings verified: Bunker first, Dead City second. Validated 0.3 character/combat path + Quaternius environment dressing + URP atmosphere included.");
         }
 
         private static void EnsureFolders()
