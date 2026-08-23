@@ -15,6 +15,17 @@ Turn the expedition map from one repeated street into a true sector system with 
 5. Require no blocking red generation/build errors.
 6. Confirm the generated Dead City scene contains `Production_SectorNetwork_0_12` and `Production_SectorLayouts_0_12`.
 
+## Editor sector test override
+
+To test all four layouts without waiting for automatic rotation, use:
+- `DEADREACH > Dev > Sector 0.12 > AUTO`
+- `DEADREACH > Dev > Sector 0.12 > QUARANTINE WARD`
+- `DEADREACH > Dev > Sector 0.12 > TRANSIT COLLAPSE`
+- `DEADREACH > Dev > Sector 0.12 > INDUSTRIAL SPILL`
+- `DEADREACH > Dev > Sector 0.12 > BLACKOUT PLAZA`
+
+The override applies on the next expedition scene load and is compiled out of player builds; release/mobile builds always use automatic sector selection.
+
 ## World expansion gate
 
 The base Dead City now has a full east/west cross-street route in addition to the north/south main street.
@@ -29,7 +40,7 @@ Validate:
 
 ## Sector archetypes
 
-0.12 authors four complete sector layouts. Across multiple deployments, confirm the FIELD OPS sector line changes and the world geometry visibly matches the selected sector.
+0.12 authors four complete sector layouts. Use the editor override above for deterministic validation, then return it to `AUTO`.
 
 ### QUARANTINE WARD
 - FIELD OPS shows `QUARANTINE WARD`
@@ -71,6 +82,7 @@ For the active sector:
 - BLACKSITE vault stage relocates to the sector vault/objective anchor
 - optional BLACK CACHE relocates to a distant sector objective anchor
 - newly spawned Holdout / Blacksite / Black Cache reinforcements relocate to sector reinforcement anchors
+- ordinary Runner enemies remain on normal enemy anchors and are never mistaken for runtime reinforcements
 - no objective, loot, enemy or extraction target spawns outside the supported world
 
 ## Hazard gameplay / HUD gate
@@ -127,18 +139,19 @@ Use landscape Device Simulator / phone setup:
 
 ## Full regression
 
-1. Bunker → Workshop present.
-2. Arsenal orientation/framing intact.
-3. Deploy into a 0.12 sector.
-4. Traverse main street + at least one side spur.
-5. Trigger and leave one hazard.
-6. Complete Primary.
-7. Complete BLACK CACHE or deliberately skip it.
-8. Extract from the sector-specific extraction point.
-9. Return to Bunker.
-10. Workshop / progression persist.
-11. Optional cache reward banks only after successful extraction.
-12. Boss / reward / 0.10 combat impact presentation remains intact.
-13. Unity Console ends with **0 red runtime errors**.
+1. Return sector override to `AUTO`.
+2. Bunker → Workshop present.
+3. Arsenal orientation/framing intact.
+4. Deploy into a 0.12 sector.
+5. Traverse main street + at least one side spur.
+6. Trigger and leave one hazard.
+7. Complete Primary.
+8. Complete BLACK CACHE or deliberately skip it.
+9. Extract from the sector-specific extraction point.
+10. Return to Bunker.
+11. Workshop / progression persist.
+12. Optional cache reward banks only after successful extraction.
+13. Boss / reward / 0.10 combat impact presentation remains intact.
+14. Unity Console ends with **0 red runtime errors**.
 
 Production 0.12 remains Draft/unmerged until the full gate passes.
