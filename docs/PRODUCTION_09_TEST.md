@@ -33,47 +33,28 @@ Turn existing statistical enemy/operator variants into real gameplay identities 
 4. Run `DEADREACH > Build Production Slice 0.9`. ✅ 2026-08-23
 5. Require no blocking red build/setup error. ✅ 2026-08-23
 
-## Enemy-role runtime gate
+## Enemy-role runtime gate — PASSED 2026-08-23
 
-Use a normal non-boss expedition, ideally Level 1 or another early level.
+Runtime accepted:
+- existing encounter still spawns and moves normally ✅
+- RUNNER forward burst + cyan/blue telegraph ✅
+- BRUTE close-range slam + red/orange telegraph ✅
+- STALKER lateral flank/reposition + purple telegraph ✅
+- WALKER remains the predictable baseline ✅
+- no blocking role-runtime regression reported ✅
 
-1. Confirm existing encounter still spawns and moves normally.
-2. RUNNER:
-   - should occasionally burst forward from medium range
-   - short cyan/blue telegraph flash should accompany the burst
-3. BRUTE:
-   - should trigger a distinct close-range slam in addition to normal melee
-   - red/orange telegraph flash
-4. STALKER:
-   - should periodically side-step/flank instead of only taking the direct line
-   - purple telegraph flash
-5. WALKER remains the predictable baseline.
-6. No infected special should throw red runtime errors or move enemies through sealed world bounds in normal play.
+## Operator ability gate — PASSED 2026-08-23
 
-## Operator ability gate
+Runtime accepted:
+- SAM / FIELD PATCH heals and respects cooldown rules ✅
+- RAVEN / VECTOR DASH performs the intended tactical dash ✅
+- BRIGGS / SHOCKWAVE damages nearby infected and respects cooldown rules ✅
 
-Test all three operators from Bunker → Operators → Deploy.
+### Non-blocking visual debt for Production 0.10
+- BRIGGS Shockwave currently has no dedicated visible shockwave FX.
+- Gameplay behavior is accepted in 0.9; add a dedicated expanding ring / ground pulse / impact treatment in the next production patch.
 
-### SAM
-1. Take damage first.
-2. Press SPACE / ability control.
-3. Health must restore by roughly 32% of max HP, clamped at max.
-4. Ability enters cooldown.
-5. At full health, pressing ability must not consume cooldown.
-
-### RAVEN
-1. Move in a clear direction.
-2. Press ability.
-3. Raven should perform an immediate ~4.6m dash while respecting CharacterController collision.
-4. Ability enters cooldown.
-
-### BRIGGS
-1. Let multiple infected enter close range.
-2. Press ability.
-3. Infected within 4.6m should take immediate damage.
-4. If no infected is in range, Shockwave should not consume cooldown.
-
-## Mobile input gate
+## Mobile input gate — REMAINING
 
 On mobile / touchscreen simulation:
 - dedicated Ability control appears separately from move and aim/fire
@@ -81,7 +62,7 @@ On mobile / touchscreen simulation:
 - it must not claim the touch as move or aim/fire
 - READY/cooldown state remains readable inside Screen.safeArea
 
-## Regression
+## Regression — REMAINING
 
 - Workshop remains present after expedition → extraction → Bunker.
 - Calibration / Salvage / Bunker upgrades persist.
