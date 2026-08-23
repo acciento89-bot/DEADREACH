@@ -67,7 +67,8 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - PR #10: Draft, targets `main`
 - Production 0.10 compile gate passed in real Unity with **0 red compiler errors**
 - `DEADREACH > Build Production Slice 0.10` completed successfully in real Unity
-- next gate: visual/runtime acceptance for operator VFX, infected-special VFX, hit/crit feedback and camera impact
+- full operator / infected / hit / crit / camera-impact presentation gate passed in real Unity
+- remaining blockers: mobile regression + final Production 0.9 baseline regression + 0 red runtime errors
 
 ## 4. Stable Production 0.9 baseline that must remain green
 
@@ -104,29 +105,28 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 
 Goal: make combat feel materially less prototype-like without destabilizing the accepted 0.9 gameplay and mobile control layer.
 
-### Ability impact presentation implemented
-- **SAM / Field Patch**: dual green/cyan expanding rings + healing motes + light lens impulse
-- **RAVEN / Vector Dash**: blue/white directional dash trails + endpoint pulse + trail particles + lens impulse
-- **BRIGGS / Shockwave**: large orange/hot expanding ground rings + radial debris/energy particles + strong lens impulse
-- this closes the explicit 0.10 Shockwave visual debt from 0.9
+### Ability impact presentation — REAL RUNTIME ACCEPTED
+- **SAM / Field Patch**: dual green/cyan expanding rings + healing motes + light lens impulse ✅
+- **RAVEN / Vector Dash**: blue/white directional dash trails + endpoint pulse + trail particles + lens impulse ✅
+- **BRIGGS / Shockwave**: large orange/hot expanding ground rings + radial debris/energy particles + strong lens impulse ✅
+- explicit 0.9 Shockwave visual debt is closed ✅
 
-### Infected special impact presentation implemented
-- **Runner Burst**: cyan movement streak + endpoint pulse
-- **Brute Slam**: red/orange expanding slam rings + radial particles + stronger lens impulse
-- **Stalker Flank**: violet start/end pulses + flank trail
+### Infected special impact presentation — REAL RUNTIME ACCEPTED
+- **Runner Burst**: cyan movement streak + endpoint pulse ✅
+- **Brute Slam**: red/orange expanding slam rings + radial particles + stronger lens impulse ✅
+- **Stalker Flank**: violet start/end pulses + flank trail ✅
 - mutation-boss authority remains unchanged
 
-### Gunfight feedback added
-- existing tracer / muzzle / sparks / gore presenter remains authoritative
-- new short world-space hit marker appears on successful damage hits
-- critical hit marker uses stronger magenta presentation
-- critical hits add a small expanding impact ring
-- player damage / death / heavy abilities add subtle camera-lens impact rather than moving the camera transform
+### Gunfight feedback — REAL RUNTIME ACCEPTED
+- existing tracer / muzzle / sparks / gore presenter remains authoritative ✅
+- successful-hit marker accepted ✅
+- critical hit marker and critical pulse accepted ✅
+- player damage / death / heavy-ability lens impacts accepted ✅
 
 ### Runtime architecture
 - `CombatFeedback` exposes typed operator-ability and infected-special impact events
 - `OperatorAbilityController` emits presentation events only after successful ability activation
-- `InfectedCombatRoleBrain` emits presentation events after its accepted special movement/damage action
+- `InfectedCombatRoleBrain` emits presentation events after accepted special movement/damage actions
 - `CombatImpactPresentation` is a persistent runtime presenter
 - `RuntimeImpactRing` and `RuntimeImpactLine` are short-lived runtime renderers
 - effects use runtime URP-safe materials; no new external art dependency
@@ -136,21 +136,23 @@ Goal: make combat feel materially less prototype-like without destabilizing the 
 - test plan: `docs/PRODUCTION_10_TEST.md`
 - compile: **PASSED 2026-08-23 — 0 red compiler errors**
 - build: **PASSED 2026-08-23 — Production Slice 0.10 completed**
+- combat-impact runtime presentation: **PASSED 2026-08-23**
 
 ## 6. Current 0.10 gate
 
 Green:
 1. Unity compile → **0 red compiler errors** ✅
 2. `DEADREACH > Build Production Slice 0.10` ✅
+3. SAM / RAVEN / BRIGGS VFX ✅
+4. Runner / Brute / Stalker VFX ✅
+5. hit / critical feedback ✅
+6. camera-lens impact ✅
 
-Required next:
-3. SAM / RAVEN / BRIGGS VFX visible and readable
-4. Runner / Brute / Stalker impact VFX visible without obscuring gameplay
-5. hit marker visible on successful hits; critical presentation distinct
-6. camera-lens impulse noticeable but not uncomfortable
+Remaining:
 7. fixed-zone mobile controls remain fully correct
-8. final Bunker → Workshop → Deploy → combat/loot → extract → Bunker regression
-9. **0 red runtime errors**
+8. new VFX do not block or confuse mobile controls / HUD
+9. final Bunker → Workshop → Deploy → combat/loot → extract → Bunker regression
+10. **0 red runtime errors**
 
 ## 7. Handoff protocol
 
@@ -158,8 +160,9 @@ When resuming:
 1. read this file first
 2. stable baseline is Production 0.9 on `main`
 3. active work is Production 0.10 on `production/0.10-combat-impact`
-4. 0.10 compile + build gates are green; visual/runtime/mobile gates remain
-5. preserve schema-v6 Workshop progression
-6. preserve fixed-zone mobile controls
-7. never reintroduce external gameplay hand-mounted Rifle transforms
-8. keep mobile landscape-only
+4. 0.10 compile + build + combat-impact runtime gates are green
+5. mobile + final regression remain before promotion
+6. preserve schema-v6 Workshop progression
+7. preserve fixed-zone mobile controls
+8. never reintroduce external gameplay hand-mounted Rifle transforms
+9. keep mobile landscape-only
