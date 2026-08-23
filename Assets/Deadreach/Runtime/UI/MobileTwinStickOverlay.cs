@@ -11,12 +11,10 @@ namespace Kamilunavo.Deadreach.UI
         private static MobileTwinStickOverlay _instance;
 
         [SerializeField, Range(0.2f, 1f)] private float idleOpacity = 0.34f;
-        [SerializeField, Range(0.2f, 1f)] private float activeOpacity = 0.72f;
-        [SerializeField, Min(70f)] private float idleRadius = 88f;
+        [SerializeField, Range(0.2f, 1f)] private float activeOpacity = 0.78f;
 
         private Texture2D _outerTexture;
         private Texture2D _innerTexture;
-        private Texture2D _aimTexture;
         private GUIStyle _labelStyle;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -34,7 +32,6 @@ namespace Kamilunavo.Deadreach.UI
         {
             _outerTexture = CreateCircleTexture(128, 0.72f, 0.12f);
             _innerTexture = CreateCircleTexture(96, 0.95f, 0f);
-            _aimTexture = CreateReticleTexture(96);
         }
 
         private void OnGUI()
@@ -48,29 +45,21 @@ namespace Kamilunavo.Deadreach.UI
 
             EnsureStyle();
             var safe = Screen.safeArea;
-            var baseline = Mathf.Max(92f, safe.yMin + 105f);
-            var leftIdle = new Vector2(safe.xMin + 118f, baseline);
-            var rightIdle = new Vector2(safe.xMax - 118f, baseline);
+            var radius = input.VirtualStickRadius;
+            var bottomPadding = Mathf.Max(24f, safe.height * 0.035f);
+            var sidePadding = Mathf.Max(26f, safe.width * 0.018f);
+            var leftIdle = new Vector2(safe.xMin + radius + sidePadding, safe.yMin + radius + bottomPadding);
+            var rightIdle = new Vector2(safe.xMax - radius - sidePadding, safe.yMin + radius + bottomPadding);
 
             if (input.HasMoveTouch)
-            {
-                DrawMoveStick(input.MoveTouchOrigin, input.MoveTouchPosition, input.VirtualStickRadius, activeOpacity);
-            }
+                DrawStick(input.MoveTouchOrigin, input.MoveTouchPosition, radius, new Color(0.35f, 0.9f, 1f), "MOVE", activeOpacity);
             else
-            {
-                DrawRing(leftIdle, idleRadius, idleOpacity);
-                DrawHint(leftIdle, "MOVE", idleOpacity);
-            }
+                DrawStick(leftIdle, leftIdle, radius, new Color(0.35f, 0.9f, 1f), "MOVE", idleOpacity);
 
             if (input.HasAimTouch)
-            {
-                DrawAim(input.AimScreenPosition, idleRadius * 0.72f, activeOpacity);
-            }
+                DrawStick(input.AimTouchOrigin, input.AimTouchPosition, radius, new Color(1f, 0.62f, 0.18f), "AIM / FIRE", activeOpacity);
             else
-            {
-                DrawAim(rightIdle, idleRadius * 0.8f, idleOpacity);
-                DrawHint(rightIdle, "AIM / FIRE", idleOpacity);
-            }
+                DrawStick(rightIdle, rightIdle, radius, new Color(1f, 0.62f, 0.18f), "AIM / FIRE", idleOpacity);
         }
 
         private bool ShouldShow()
@@ -81,43 +70,27 @@ namespace Kamilunavo.Deadreach.UI
             return Application.isMobilePlatform || Touchscreen.current != null;
         }
 
-        private void DrawMoveStick(Vector2 origin, Vector2 current, float radius, float opacity)
+        private void DrawStick(Vector2 origin, Vector2 current, float radius, Color tint, string label, float opacity)
         {
             var delta = Vector2.ClampMagnitude(current - origin, radius);
-            DrawRing(origin, radius, opacity);
-            DrawDisc(origin + delta, radius * 0.42f, opacity);
-        }
-
-        private void DrawRing(Vector2 screenPosition, float radius, float opacity)
-        {
             var old = GUI.color;
-            GUI.color = new Color(0.46f, 0.91f, 1f, opacity);
-            GUI.DrawTexture(ToGuiRect(screenPosition, radius * 2f), _outerTexture, ScaleMode.StretchToFill, true);
+
+            GUI.color = new Color(tint.r, tint.g, tint.b, opacity * 0.74f);
+            GUI.DrawTexture(ToGuiRect(origin, radius * 2f), _outerTexture, ScaleMode.StretchToFill, true);
+
+            GUI.color = new Color(tint.r, tint.g, tint.b, opacity);
+            GUI.DrawTexture(ToGuiRect(origin + delta, radius * 0.72f), _innerTexture, ScaleMode.StretchToFill, true);
             GUI.color = old;
+
+            DrawHint(origin, radius, label, opacity);
         }
 
-        private void DrawDisc(Vector2 screenPosition, float radius, float opacity)
+        private void DrawHint(Vector2 origin, float radius, string text, float opacity)
         {
             var old = GUI.color;
-            GUI.color = new Color(0.78f, 0.97f, 1f, opacity);
-            GUI.DrawTexture(ToGuiRect(screenPosition, radius * 2f), _innerTexture, ScaleMode.StretchToFill, true);
-            GUI.color = old;
-        }
-
-        private void DrawAim(Vector2 screenPosition, float radius, float opacity)
-        {
-            var old = GUI.color;
-            GUI.color = new Color(1f, 0.67f, 0.25f, opacity);
-            GUI.DrawTexture(ToGuiRect(screenPosition, radius * 2f), _aimTexture, ScaleMode.StretchToFill, true);
-            GUI.color = old;
-        }
-
-        private void DrawHint(Vector2 screenPosition, string text, float opacity)
-        {
-            var old = GUI.color;
-            GUI.color = new Color(1f, 1f, 1f, opacity * 0.9f);
-            var guiY = Screen.height - screenPosition.y;
-            GUI.Label(new Rect(screenPosition.x - 80f, guiY + idleRadius + 4f, 160f, 24f), text, _labelStyle);
+            GUI.color = new Color(1f, 1f, 1f, opacity * 0.92f);
+            var guiY = Screen.height - origin.y;
+            GUI.Label(new Rect(origin.x - radius, guiY + radius + 8f, radius * 2f, 30f), text, _labelStyle);
             GUI.color = old;
         }
 
@@ -132,13 +105,14 @@ namespace Kamilunavo.Deadreach.UI
 
         private void EnsureStyle()
         {
-            if (_labelStyle != null)
+            var targetSize = Mathf.Clamp(Mathf.RoundToInt(Screen.safeArea.height * 0.023f), 14, 22);
+            if (_labelStyle != null && _labelStyle.fontSize == targetSize)
                 return;
 
             _labelStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 12,
+                fontSize = targetSize,
                 fontStyle = FontStyle.Bold
             };
         }
@@ -175,47 +149,12 @@ namespace Kamilunavo.Deadreach.UI
             return texture;
         }
 
-        private static Texture2D CreateReticleTexture(int size)
-        {
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
-            {
-                name = "Runtime_AimReticle",
-                filterMode = FilterMode.Bilinear,
-                wrapMode = TextureWrapMode.Clamp
-            };
-
-            var pixels = new Color32[size * size];
-            var center = (size - 1) * 0.5f;
-            var max = size * 0.5f;
-
-            for (var y = 0; y < size; y++)
-            {
-                for (var x = 0; x < size; x++)
-                {
-                    var dx = x - center;
-                    var dy = y - center;
-                    var distance = Mathf.Sqrt(dx * dx + dy * dy);
-                    var ring = distance > max * 0.48f && distance < max * 0.58f;
-                    var horizontal = Mathf.Abs(dy) < 1.5f && Mathf.Abs(dx) > max * 0.16f && Mathf.Abs(dx) < max * 0.78f;
-                    var vertical = Mathf.Abs(dx) < 1.5f && Mathf.Abs(dy) > max * 0.16f && Mathf.Abs(dy) < max * 0.78f;
-                    var visible = ring || horizontal || vertical;
-                    pixels[y * size + x] = visible ? new Color32(255, 255, 255, 255) : new Color32(255, 255, 255, 0);
-                }
-            }
-
-            texture.SetPixels32(pixels);
-            texture.Apply(false, true);
-            return texture;
-        }
-
         private void OnDestroy()
         {
             if (_outerTexture != null)
                 Destroy(_outerTexture);
             if (_innerTexture != null)
                 Destroy(_innerTexture);
-            if (_aimTexture != null)
-                Destroy(_aimTexture);
 
             if (_instance == this)
                 _instance = null;
