@@ -1,3 +1,4 @@
+using Kamilunavo.Deadreach.Audio;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Weapons
@@ -40,6 +41,8 @@ namespace Kamilunavo.Deadreach.Weapons
         [SerializeField, Range(0f, 1f)] private float hapticStrength = 0.2f;
         [SerializeField, Min(0f)] private float tracerDuration = 0.065f;
         [SerializeField, Min(0.005f)] private float tracerWidth = 0.035f;
+        [SerializeField] private AudioCue shotAudio;
+        [SerializeField] private AudioCue impactAudio;
 
         public string WeaponId => weaponId;
         public string DisplayName => displayName;
@@ -52,5 +55,7 @@ namespace Kamilunavo.Deadreach.Weapons
         public float HapticStrength => hapticStrength;
         public float TracerDuration => tracerDuration;
         public float TracerWidth => tracerWidth;
+        public AudioCue ShotAudio => shotAudio;
+        public AudioCue ImpactAudio => impactAudio;
     }
 }
