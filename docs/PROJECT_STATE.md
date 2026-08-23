@@ -55,7 +55,9 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 - active branch: **`production/0.8-workshop-progression`**
 - PR #8: Draft, targets `main`
 - Production 0.8 Phase A compile gate passed with **0 red compiler errors** on 2026-08-23
-- Production 0.8 Phase B Workshop UI is now implemented and requires the next real-Unity compile/build/runtime gate
+- Production 0.8 Phase B fresh compile gate passed with **0 red compiler errors** on 2026-08-23
+- `DEADREACH > Build Production Slice 0.8` completed successfully with no blocking red error on 2026-08-23
+- Workshop/economy UI runtime gate passed on 2026-08-23: calibration, Scrap spending, two-step salvage, active-loadout protection and all four permanent Bunker-system purchases behaved as designed
 - all new work must preserve the accepted 0.7 presentation/regression baseline
 
 ## 4. Production 0.8 goal
@@ -84,7 +86,7 @@ Close the missing **Equip / Upgrade** half of the core loop with real persistent
 - new `DEADREACH > Build Production Slice 0.8` gate
 - new 0.8 dev helpers for Scrap / weapon-family seeding / test profile setup
 
-### Phase B — Workshop UI implemented
+### Phase B — Workshop UI implemented / runtime accepted
 - new **WORKSHOP** entry is injected into the existing Bunker navigation without rewriting the validated 0.7 Bunker command-center implementation
 - Store navigation is shifted down and Bunker status is compacted to make room for the sixth navigation item
 - Workshop renders inside the validated Bunker content viewport so existing landscape/safe-area behavior is inherited
@@ -96,7 +98,8 @@ Close the missing **Equip / Upgrade** half of the core loop with real persistent
 - Salvage is two-step confirmed to prevent accidental destruction
 - active equipped weapon shows `ACTIVE LOADOUT` and remains unsalvageable
 - Scrap summary refreshes after calibration, salvage and Bunker upgrades
-- Item-Power damage multiplier is now exposed by `WeaponStatResolver` so Workshop presentation uses the same source of truth as combat
+- Item-Power damage multiplier is exposed by `WeaponStatResolver` so Workshop presentation uses the same source of truth as combat
+- real Unity runtime check confirmed the Workshop actions and displayed economy state behave as designed
 
 ## 5. Production 0.7 regression baseline that must stay green
 
@@ -114,15 +117,16 @@ Close the missing **Equip / Upgrade** half of the core loop with real persistent
 
 Run `docs/PRODUCTION_08_TEST.md`.
 
-Immediate next validation:
-1. pull latest `production/0.8-workshop-progression`
-2. Unity compile after Workshop UI → **0 red compiler errors**
-3. `DEADREACH > Build Production Slice 0.8`
-4. `DEADREACH > Dev > 0.8 Set Workshop Test Profile`
-5. Play → Bunker → WORKSHOP
-6. validate calibration / two-step salvage / four Bunker-system purchases
-7. validate actual Medbay / Cargo / Scavenger runtime effects
-8. final 0.7 regression + **0 red runtime errors**
+Completed:
+1. Phase A compile → **0 red compiler errors** ✅
+2. Phase B compile → **0 red compiler errors** ✅
+3. `DEADREACH > Build Production Slice 0.8` ✅
+4. Workshop calibration / salvage / active-loadout protection / four permanent purchases ✅
+
+Remaining before merge:
+1. validate actual Medbay / Cargo Rig / Scavenger Network effects in an expedition
+2. confirm calibrated Item Power remains active after leaving/re-entering the Bunker and during combat
+3. final 0.7 regression + **0 red runtime errors**
 
 ## 7. Handoff protocol
 
@@ -130,7 +134,7 @@ When resuming:
 1. read this file first
 2. treat Production 0.7 on `main` as the stable real-Unity-validated baseline
 3. active work is Production 0.8 on `production/0.8-workshop-progression`
-4. Phase A compile gate already passed; Phase B Workshop UI is implemented
-5. next required gate is fresh Unity compile + Build Production Slice 0.8
+4. Compile, Build 0.8 and Workshop/economy UI runtime gates are green
+5. next required gate is expedition runtime bonuses + final 0.7 regression
 6. never reintroduce external gameplay hand-mounted Rifle transforms
 7. keep mobile landscape-only
