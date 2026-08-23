@@ -43,24 +43,25 @@ namespace Kamilunavo.Deadreach.Editor
                 valid &= RequireAnySocket(catalog.PrimaryWeaponPrefab, "Primary weapon", "MuzzleSocket", "Muzzle");
             }
 
-            var infectedAssigned = false;
-            for (var i = 0; i < 16; i++)
-            {
-                var prefab = catalog.GetInfectedPrefab(i);
-                if (prefab == null)
-                    break;
-
-                infectedAssigned = true;
-                valid &= RequireAnimator(prefab, $"Infected variant {i}");
-
-                if (i > 0 && prefab == catalog.GetInfectedPrefab(0))
-                    break;
-            }
-
-            if (!infectedAssigned)
+            if (catalog.InfectedPrefabCount <= 0)
             {
                 Debug.LogWarning("DEADREACH production infected prefabs are not assigned yet. Prototype infected will remain visible.");
                 valid = false;
+            }
+            else
+            {
+                for (var i = 0; i < catalog.InfectedPrefabCount; i++)
+                {
+                    var prefab = catalog.GetInfectedPrefab(i);
+                    if (prefab == null)
+                    {
+                        Debug.LogError($"DEADREACH infected variant {i} is null in the production asset catalog.");
+                        valid = false;
+                        continue;
+                    }
+
+                    valid &= RequireAnimator(prefab, $"Infected variant {i}");
+                }
             }
 
             if (valid)
