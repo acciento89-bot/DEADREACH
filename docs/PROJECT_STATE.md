@@ -59,18 +59,47 @@ Long-term pillars:
 
 Graphics target: real 3D environments/characters, PBR, proper lighting/probes, post-processing, VFX, animation, audio and scalable mobile quality. Primitive prototype art must be replaced, not polished into final art.
 
-Runtime presets already exist: Performance / Balanced / Ultra.
+Runtime presets: Performance / Balanced / Ultra.
 
-## 4. Current Git state
+## 4. Milestone status
 
-- `main` — repository initialization only
-- `foundation/unity-6.3` — active development branch
-- Draft PR: **#1 — foundation: Unity 6.3 vertical slice 0.1**
-- PR remains unmerged until the last small runtime gates pass.
+### Vertical Slice 0.1 — ACCEPTED
 
-## 5. Foundation + gameplay implemented
+All editor-foundation gates passed in real Unity `6000.3.22f1` on 2026-08-23.
 
-Foundation:
+Confirmed:
+
+- clean compile with **0 C# errors**
+- complete Bunker + Dead City generation
+- deterministic Build Settings: Bunker index 0, Dead City index 1
+- Bunker starts
+- Deploy loads Dead City
+- movement / aiming / firing work
+- infected chase, melee and player death work
+- death registers failed run and returns to Bunker
+- Scrap collection works
+- extraction progress works
+- successful extraction returns to Bunker
+- secured Scrap increases
+- extraction streak increments
+- secured Scrap + streak persist after leaving/re-entering Play Mode
+- Pause → Resume works
+- Pause → Abandon Run returns to Bunker with failed-run accounting
+- Performance / Balanced / Ultra switching works without blocking Console errors
+
+Validated core loop:
+
+**Bunker → Deploy → Combat/Loot → Extraction / Death / Abandon → Bunker → persistent result**
+
+Unity-6.3 compatibility fixes found during live validation:
+
+- removed unsupported `AudioListener.pause` calls
+- removed inaccessible `UniversalRenderPipelineAsset.EnsureGlobalSettings()` call
+- centralized scene Build Settings registration to prevent Dead-City-only return failures
+
+Physical-device touch and iOS/Android builds are deferred to Production Pass 0.2/device validation and were not blockers for the foundation merge.
+
+## 5. Foundation implemented
 
 - Unity `.gitignore`
 - Git LFS rules
@@ -85,7 +114,7 @@ Foundation:
 - 60 FPS target, VSync off, sleep disabled
 - adaptive Performance/Balanced/Ultra quality service
 
-Gameplay:
+Gameplay currently implemented:
 
 - WASD / gamepad / mouse / touch input
 - CharacterController survivor movement
@@ -109,7 +138,7 @@ Primary command:
 
 `DEADREACH > Build Complete Vertical Slice 0.1`
 
-Dev-only generators are under:
+Dev-only generators:
 
 `DEADREACH > Dev > ...`
 
@@ -118,102 +147,49 @@ Generated scenes:
 - `Assets/Deadreach/Scenes/Bunker_Hub.unity`
 - `Assets/Deadreach/Scenes/DeadCity_VerticalSlice.unity`
 
-Central scene registration:
-
-`DeadreachBuildSettings.cs`
-
-Guaranteed build order:
-
-1. `Bunker_Hub`
-2. `DeadCity_VerticalSlice`
-
 Repair command:
 
 `DEADREACH > Project > Repair Scene Build Settings`
 
-## 7. Real Unity validation status
+## 7. Git / release state
 
-### Compile gate — PASSED
+- `foundation/unity-6.3` — Vertical Slice 0.1 foundation, fully validated and ready for merge
+- PR #1 — **foundation: Unity 6.3 vertical slice 0.1 — validated**
+- next branch after merge: `production/0.2-gamefeel`
 
-The project was opened in Unity `6000.3.22f1` and reached **0 C# errors** after fixing two Unity-6.3 API issues:
+## 8. Production Pass 0.2 — NEXT
 
-- removed `AudioListener.pause` calls that produced `CS0103`
-- removed inaccessible `UniversalRenderPipelineAsset.EnsureGlobalSettings()` call that produced `CS0122`
+Goal: stop looking like a systems prototype and establish the first production-quality gameplay presentation while preserving mobile performance.
 
-### Core runtime loop — PASSED
+Priority:
 
-Confirmed in the real Unity editor on 2026-08-23:
-
-- complete slice generation works
-- `Bunker_Hub` starts successfully
-- Deploy loads `DeadCity_VerticalSlice`
-- gameplay starts successfully
-- prototype enemies chase/attack and can kill the player
-- failed-run logic triggers after death
-- death → automatic return to `Bunker_Hub` works
-- player can collect Scrap
-- extraction-zone progress works
-- successful extraction completes
-- successful extraction → automatic return to `Bunker_Hub` works
-- secured Scrap increases after extraction
-- extraction streak increments
-- secured Scrap and streak remain after leaving and re-entering Play Mode
-- latest HUD/extraction hardening is therefore confirmed compiling/running in the real editor
-
-This validates the first complete DEADREACH gameplay loop:
-
-**Bunker → Deploy → Combat/Loot → Extraction or Death → Bunker → persistent result**
-
-### Remaining foundation merge gates
-
-Still to verify manually before PR #1 is merged:
-
-1. Pause → Resume during expedition.
-2. Pause → Abandon Run → return to Bunker, carried loot lost, failed-run accounting/streak reset correct.
-3. Switch Performance / Balanced / Ultra from the Bunker and confirm no blocking errors.
-
-Mobile touch on physical device and iOS/Android builds are important next-stage validation, but are no longer blockers for merging the editor foundation PR.
-
-## 8. Immediate next step
-
-### Finish Foundation Gate
-
-In the current generated slice:
-
-1. Deploy to Dead City.
-2. Open Pause and verify Resume.
-3. Open Pause again and choose Abandon Run; confirm return to Bunker and failed-run state.
-4. In Bunker switch Performance → Balanced → Ultra and confirm each selection works without Console errors.
-5. Report result.
-6. If all pass: mark PR #1 ready, merge to `main`, and create the first production/game-feel branch.
-
-### Production Pass 0.2 immediately after merge
-
-Priority order:
-
-1. production-grade mobile HUD / twin-stick visuals + haptics architecture
-2. real survivor character integration + animation controller
-3. real infected character integration + animation states
-4. weapon model and weapon presentation architecture
-5. muzzle flash / tracer / impact / hit feedback VFX
-6. audio framework and first combat audio pass
-7. Dead City environment-art replacement pass
+1. production mobile HUD / visible twin-stick controls + haptics architecture
+2. character presentation hooks + animation-state architecture for real survivor asset integration
+3. infected presentation/animation-state architecture
+4. data-driven weapon definitions and runtime weapon configuration
+5. muzzle flash / tracer / impact / hit-feedback VFX architecture
+6. audio event framework and first combat audio pass
+7. Dead City production environment replacement path
 8. URP post-processing / color grading / atmosphere
-9. data-driven weapon definitions, rarity and affixes
+9. rarity / affix model for weapons
 10. real run inventory/equipment
-11. deeper risk/reward choices and multiple extraction decisions
+11. deeper risk/reward decisions and multiple extraction choices
 12. bunker room upgrade architecture
 13. first boss encounter
 14. Addressables/content organization
 15. backend/accounts/leaderboards/events
 16. IAP cosmetics/season structure
-17. iOS/Android build pipeline + TestFlight/device profiling
+17. iOS/Android build pipeline + physical-device profiling
 
-## 9. Test runbook
+## 9. Immediate next step
 
-Detailed acceptance checklist:
+After PR #1 merge:
 
-`docs/VERTICAL_SLICE_01_TEST.md`
+1. create `production/0.2-gamefeel` from updated `main`
+2. add production gameplay/presentation architecture in a large pass
+3. keep generated primitive geometry only as fallback scaffolding
+4. require another clean Unity compile before merging Production Pass 0.2
+5. begin physical-device touch validation and mobile build preparation
 
 ## 10. Non-negotiables
 
@@ -221,7 +197,6 @@ Detailed acceptance checklist:
 - Primitive geometry is temporary scaffolding.
 - Mobile performance matters from the first production art/shader decisions.
 - Keep gameplay modular/data-driven.
-- Do not merge untested critical runtime behavior.
 - Update this file after every major pass.
 - Store name stays **DEADREACH**.
 - No advertising SDKs or ad-based rewards.
@@ -231,9 +206,8 @@ Detailed acceptance checklist:
 When resuming in another chat:
 
 1. Read this file first.
-2. Inspect latest commits and PR #1.
-3. Check whether Pause/Abandon + graphics presets have passed.
-4. If yes, merge PR #1 and begin Production Pass 0.2.
-5. Update this file before ending the next major pass.
+2. Inspect latest commits / open PRs / current production branch.
+3. Continue from **Immediate next step** or the newest recorded milestone.
+4. Update this file before ending a major pass.
 
 Do not rely on chat history alone.
