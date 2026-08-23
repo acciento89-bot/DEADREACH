@@ -11,8 +11,8 @@ Increase combat readability and impact without changing the accepted 0.9 core lo
 1. Pull `production/0.10-combat-impact`.
 2. Let Unity finish compiling.
 3. Require **0 red compiler errors**. ✅ PASSED 2026-08-23
-4. Run `DEADREACH > Build Production Slice 0.10`.
-5. Require no blocking red build/setup error.
+4. Run `DEADREACH > Build Production Slice 0.10`. ✅ PASSED 2026-08-23
+5. No blocking red build/setup error. ✅
 
 ## Operator ability presentation gate
 
