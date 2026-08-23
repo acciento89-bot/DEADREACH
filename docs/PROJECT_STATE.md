@@ -49,90 +49,111 @@ PR #5 squash merge `a066386f05c6593f1840ef6902f62c808cbdf319`.
 
 ### Production 0.8 — MERGED / REAL UNITY VALIDATED
 - PR #8 squash merged to `main` at `876127fb9997951afcca738cd7251acd2f662014`
-- compile/build/runtime gates passed
 - Workshop / Calibration / Salvage / permanent Bunker upgrades validated
-- expedition → extraction → Bunker lifecycle validated
 
 ### Production 0.9 — MERGED / REAL UNITY VALIDATED
 - PR #9 squash merged to `main` at `2f15df3b5ca7b15eeacea39928b63118700e2432`
-- compile/build/runtime/mobile/final-regression gates passed
-- Walker / Runner / Brute / Stalker gameplay identities validated
-- SAM / RAVEN / BRIGGS active abilities validated
+- combat roles + operator abilities validated
 - final fixed-zone mobile twin-stick controls validated
 - mobile HUD readability validated
-- final Bunker → Workshop → Deploy → combat/loot → extraction → Bunker regression passed
-- **0 red runtime errors** at final acceptance
+- final full regression passed with **0 red runtime errors**
 
 ## 3. Current Git state
 
 - stable branch: `main`
 - stable production level: **0.9**
 - stable merge: `2f15df3b5ca7b15eeacea39928b63118700e2432`
-- no active production branch is authoritative after the 0.9 merge
-- next production work must branch from current `main`
+- active branch: **`production/0.10-combat-impact`**
+- Production 0.10 is implemented in code but **not yet real-Unity validated**
+- next gate: fresh Unity compile → Build Production Slice 0.10 → visual/runtime acceptance
 
-## 4. Stable Production 0.9 baseline
+## 4. Stable Production 0.9 baseline that must remain green
 
-### Progression preserved
+### Progression
 - save schema v6
-- real Item Power combat scaling
-- Calibration + two-step Salvage
-- Workbench / Medbay / Cargo Rig / Scavenger Network progression
-- Workshop survives expedition → Bunker scene reload
+- Item Power / Calibration / Salvage
+- Workbench / Medbay / Cargo Rig / Scavenger Network
+- Workshop survives expedition → Bunker reload
 
-### Infected combat roles
-- **WALKER** baseline chaser
-- **RUNNER** timed medium-range burst
-- **BRUTE** close-range slam
-- **STALKER** lateral flank/reposition
-- role telegraphs accepted
-- normal role specials do not override mutation-boss phase logic
+### Combat identities
+- WALKER baseline
+- RUNNER burst
+- BRUTE slam
+- STALKER flank
+- SAM Field Patch
+- RAVEN Vector Dash
+- BRIGGS Shockwave gameplay
 
-### Operator active abilities
-- **SAM / FIELD PATCH**
-- **RAVEN / VECTOR DASH**
-- **BRIGGS / SHOCKWAVE**
-- desktop/gamepad/mobile input accepted
-
-### Mobile controls
-- fixed lower-left MOVE control
-- fixed lower-right AIM/FIRE control
+### Mobile
+- fixed lower-left MOVE
+- fixed lower-right AIM/FIRE
+- independent upper-right Ability
 - full 360-degree movement
-- fast stop/change response
-- camera-relative directional aiming only
-- absolute touch coordinates never become weapon world targets
-- right stick fires outside deadzone and stops on release
-- upper-right Ability has an independent touch region
-- Ability does not become move/aim/fire
-- mobile FIELD OPS / Vitals / HP / loot / scrap / objective readability accepted
+- direction-based aiming only
+- phone HUD readable
 
-### Presentation baseline preserved
-- Arsenal Rifle / SMG / Pistol / Shotgun orientation and framing
-- Bunker layouts at 4:3 / 16:10 / 16:9 / ~19:9 landscape
-- landscape-only mobile orientation
-- slim boss health/identity strip and mutation-state chip
-- lower-right Relic reward toast
-- Bunker reward debrief → Arsenal transfer
+### Presentation
+- accepted Arsenal orientation/framing
+- responsive Bunker layouts
+- boss/reward presentation
 - sector atmosphere FX
 
-## 5. Production 0.10 entry point
+## 5. Production 0.10 — Combat Impact / Presentation
 
-Branch Production 0.10 from current `main`.
+Goal: make combat feel materially less prototype-like without destabilizing the accepted 0.9 gameplay and mobile control layer.
 
-First confirmed 0.10 visual debt:
-- add a dedicated visible BRIGGS Shockwave VFX: expanding ring / ground pulse / impact treatment
+### Ability impact presentation implemented
+- **SAM / Field Patch**: dual green/cyan expanding rings + healing motes + light lens impulse
+- **RAVEN / Vector Dash**: blue/white directional dash trails + endpoint pulse + trail particles + lens impulse
+- **BRIGGS / Shockwave**: large orange/hot expanding ground rings + radial debris/energy particles + strong lens impulse
+- this closes the explicit 0.10 Shockwave visual debt from 0.9
 
-Potential next 0.10 work should preserve the accepted Production 0.9 combat and mobile-control stack.
+### Infected special impact presentation implemented
+- **Runner Burst**: cyan movement streak + endpoint pulse
+- **Brute Slam**: red/orange expanding slam rings + radial particles + stronger lens impulse
+- **Stalker Flank**: violet start/end pulses + flank trail
+- mutation-boss authority remains unchanged
 
-## 6. Handoff protocol
+### Gunfight feedback added
+- existing tracer / muzzle / sparks / gore presenter remains authoritative
+- new short world-space hit marker appears on successful damage hits
+- critical hit marker uses stronger magenta presentation
+- critical hits add a small expanding impact ring
+- player damage / death / heavy abilities add subtle camera-lens impact rather than moving the camera transform
+
+### Runtime architecture
+- `CombatFeedback` now exposes typed operator-ability and infected-special impact events
+- `OperatorAbilityController` emits presentation events only after successful ability activation
+- `InfectedCombatRoleBrain` emits presentation events after its accepted special movement/damage action
+- `CombatImpactPresentation` is a persistent runtime presenter
+- `RuntimeImpactRing` and `RuntimeImpactLine` are short-lived runtime renderers
+- effects use runtime URP-safe materials; no new external art dependency
+
+### Build gate
+- menu: `DEADREACH > Build Production Slice 0.10`
+- test plan: `docs/PRODUCTION_10_TEST.md`
+
+## 6. Current 0.10 gate
+
+Required:
+1. Unity compile → **0 red compiler errors**
+2. `DEADREACH > Build Production Slice 0.10` completes
+3. SAM / RAVEN / BRIGGS VFX visible and readable
+4. Runner / Brute / Stalker impact VFX visible without obscuring gameplay
+5. hit marker visible on successful hits; critical presentation distinct
+6. camera-lens impulse noticeable but not uncomfortable
+7. fixed-zone mobile controls remain fully correct
+8. final Bunker → Workshop → Deploy → combat/loot → extract → Bunker regression
+9. **0 red runtime errors**
+
+## 7. Handoff protocol
 
 When resuming:
 1. read this file first
 2. stable baseline is Production 0.9 on `main`
-3. stable merge is `2f15df3b5ca7b15eeacea39928b63118700e2432`
-4. branch the next production pass from current `main`
+3. active work is Production 0.10 on `production/0.10-combat-impact`
+4. 0.10 code is not accepted until real Unity compile/build/runtime gates pass
 5. preserve schema-v6 Workshop progression
 6. preserve fixed-zone mobile controls
 7. never reintroduce external gameplay hand-mounted Rifle transforms
 8. keep mobile landscape-only
-9. first 0.10 known visual debt is BRIGGS Shockwave VFX
