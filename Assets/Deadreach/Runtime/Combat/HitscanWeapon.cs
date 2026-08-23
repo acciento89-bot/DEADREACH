@@ -2,6 +2,7 @@ using System;
 using Kamilunavo.Deadreach.Audio;
 using Kamilunavo.Deadreach.Feedback;
 using Kamilunavo.Deadreach.Input;
+using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Weapons;
 using UnityEngine;
 
@@ -21,13 +22,17 @@ namespace Kamilunavo.Deadreach.Combat
         private Damageable _owner;
         private float _nextShotTime;
         private Vector3 _aimPoint;
+        private WeaponRuntimeStats _runtimeStats;
+        private WeaponInstanceData _equippedInstance;
 
         public Vector3 AimPoint => _aimPoint;
         public WeaponDefinition Definition => definition;
+        public WeaponInstanceData EquippedInstance => _equippedInstance;
+        public WeaponRuntimeStats RuntimeStats => _runtimeStats;
 
-        private float Damage => definition != null ? definition.Damage : damage;
-        private float RoundsPerSecond => definition != null ? definition.RoundsPerSecond : roundsPerSecond;
-        private float Range => definition != null ? definition.Range : range;
+        private float BaseDamage => definition != null ? definition.Damage : damage;
+        private float BaseRoundsPerSecond => definition != null ? definition.RoundsPerSecond : roundsPerSecond;
+        private float BaseRange => definition != null ? definition.Range : range;
         private float AimTurnSpeed => definition != null ? definition.AimTurnSpeed : aimTurnSpeed;
         private float TracerDuration => definition != null ? definition.TracerDuration : 0.065f;
         private float TracerWidth => definition != null ? definition.TracerWidth : 0.035f;
@@ -42,6 +47,7 @@ namespace Kamilunavo.Deadreach.Combat
         {
             _camera = Camera.main;
             _aimPoint = transform.position + transform.forward * 8f;
+            RefreshRuntimeStats();
         }
 
         private void Update()
@@ -54,7 +60,7 @@ namespace Kamilunavo.Deadreach.Combat
 
             if (input.FireHeld && Time.time >= _nextShotTime)
             {
-                _nextShotTime = Time.time + 1f / Mathf.Max(0.1f, RoundsPerSecond);
+                _nextShotTime = Time.time + 1f / Mathf.Max(0.1f, _runtimeStats.RoundsPerSecond);
                 Fire();
             }
         }
@@ -62,6 +68,13 @@ namespace Kamilunavo.Deadreach.Combat
         public void SetDefinition(WeaponDefinition newDefinition)
         {
             definition = newDefinition;
+            RefreshRuntimeStats();
+        }
+
+        public void RefreshRuntimeStats()
+        {
+            _equippedInstance = SaveService.GetEquippedPrimaryWeapon();
+            _runtimeStats = WeaponStatResolver.Resolve(BaseDamage, BaseRoundsPerSecond, BaseRange, _equippedInstance);
         }
 
         private void UpdateAim(DeadreachInput input)
@@ -99,11 +112,12 @@ namespace Kamilunavo.Deadreach.Combat
 
             AudioService.Play(definition != null ? definition.ShotAudio : null, origin);
 
-            var hits = Physics.RaycastAll(origin, direction, Range, hitMask, QueryTriggerInteraction.Ignore);
+            var hits = Physics.RaycastAll(origin, direction, _runtimeStats.Range, hitMask, QueryTriggerInteraction.Ignore);
             Array.Sort(hits, static (a, b) => a.distance.CompareTo(b.distance));
 
-            var endPoint = origin + direction * Range;
+            var endPoint = origin + direction * _runtimeStats.Range;
             var hitDamageable = false;
+            var critical = false;
 
             foreach (var hit in hits)
             {
@@ -115,15 +129,18 @@ namespace Kamilunavo.Deadreach.Combat
                 if (damageable != null)
                 {
                     var faction = _owner != null ? _owner.Faction : CombatFaction.Survivor;
-                    hitDamageable = damageable.TakeDamage(new DamageInfo(Damage, faction, hit.point, direction));
+                    var criticalRoll = UnityEngine.Random.value < _runtimeStats.CritChance;
+                    var shotDamage = _runtimeStats.Damage * (criticalRoll ? _runtimeStats.CritMultiplier : 1f);
+                    hitDamageable = damageable.TakeDamage(new DamageInfo(shotDamage, faction, hit.point, direction));
+                    critical = hitDamageable && criticalRoll;
                 }
 
                 AudioService.Play(definition != null ? definition.ImpactAudio : null, hit.point);
-                CombatFeedback.RaiseImpact(new ImpactFeedback(hit.point, hit.normal, hitDamageable));
+                CombatFeedback.RaiseImpact(new ImpactFeedback(hit.point, hit.normal, hitDamageable, critical));
                 break;
             }
 
-            CombatFeedback.RaiseShot(new ShotFeedback(origin, endPoint, hitDamageable, TracerDuration, TracerWidth, HapticStrength));
+            CombatFeedback.RaiseShot(new ShotFeedback(origin, endPoint, hitDamageable, critical, TracerDuration, TracerWidth, HapticStrength));
             Debug.DrawLine(origin, endPoint, Color.cyan, 0.12f);
         }
     }
