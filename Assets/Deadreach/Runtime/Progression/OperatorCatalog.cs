@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Kamilunavo.Deadreach.Combat;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Player;
