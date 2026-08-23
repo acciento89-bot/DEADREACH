@@ -1,6 +1,7 @@
 using Kamilunavo.Deadreach.Combat;
 using Kamilunavo.Deadreach.Core;
 using Kamilunavo.Deadreach.Inventory;
+using Kamilunavo.Deadreach.Missions;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Player;
 using Kamilunavo.Deadreach.Progression;
@@ -60,10 +61,11 @@ namespace Kamilunavo.Deadreach.UI
             var profile = SaveService.Data;
             var inventory = RunInventory.Current;
             var director = RunDifficultyDirector.Current;
+            var mission = ExpeditionDirector.Current;
 
             DrawDamageFlash(safe);
 
-            var panelHeight = mobile ? 252f * scale : 202f;
+            var panelHeight = mobile ? 264f * scale : 258f;
             GUI.Box(new Rect(left, top, width, panelHeight), GUIContent.none);
             GUI.Label(new Rect(left + 14f * scale, top + 8f * scale, width - 28f * scale, 29f * scale), "DEADREACH // FIELD OPS", _titleStyle);
             GUI.Label(new Rect(left + 14f * scale, top + 38f * scale, width - 28f * scale, 24f * scale),
@@ -78,14 +80,37 @@ namespace Kamilunavo.Deadreach.UI
                 new Color(0.22f, 0.78f, 0.36f), new Color(0.75f, 0.15f, 0.12f));
 
             DrawPrimaryWeapon(left + 14f * scale, top + 118f * scale, width - 28f * scale, scale);
-            GUI.Label(new Rect(left + 14f * scale, top + 151f * scale, width - 28f * scale, 24f * scale),
+            GUI.Label(new Rect(left + 14f * scale, top + 150f * scale, width - 28f * scale, 24f * scale),
                 $"CARRIED {session?.CarriedScrap ?? 0}   //   WEAPON LOOT {inventory?.Weapons.Count ?? 0}/{inventory?.WeaponCapacity ?? 0}", _textStyle);
-            GUI.Label(new Rect(left + 14f * scale, top + 178f * scale, width - 28f * scale, 24f * scale),
-                $"SECURED {profile.securedScrap}   //   STREAK {profile.currentExtractionStreak}", _textStyle);
-            GUI.Label(new Rect(left + 14f * scale, top + 207f * scale, width - 28f * scale, 38f * scale),
-                director != null && director.IsBossLevel && !director.BossGateCleared
-                    ? "OBJECTIVE // ELIMINATE MUTATION TARGET"
-                    : "OBJECTIVE // REACH EXTRACTION WITH LOOT", _objectiveStyle);
+
+            if (mission != null)
+            {
+                GUI.Label(new Rect(left + 14f * scale, top + 177f * scale, width - 28f * scale, 24f * scale),
+                    $"MISSION // {mission.MissionName} // THREAT {mission.ThreatLabel}", _textStyle);
+
+                var objectiveText = mission.PrimaryComplete && !mission.SecondaryComplete
+                    ? $"{mission.SecondaryObjectiveText} // EXTRACT AVAILABLE"
+                    : mission.PrimaryObjectiveText;
+                GUI.Label(new Rect(left + 14f * scale, top + 203f * scale, width - 28f * scale, 34f * scale), objectiveText, _objectiveStyle);
+
+                var objectiveProgress = mission.PrimaryComplete && !mission.SecondaryComplete
+                    ? mission.SecondaryProgressNormalized
+                    : mission.PrimaryProgressNormalized;
+                var objectiveColor = mission.PrimaryComplete
+                    ? new Color(1f, 0.62f, 0.08f)
+                    : new Color(0.12f, 0.82f, 1f);
+                DrawBar(new Rect(left + 14f * scale, top + 240f * scale, width - 28f * scale, (mobile ? 14f : 9f) * scale),
+                    objectiveProgress, objectiveColor, new Color(0.2f, 0.22f, 0.22f));
+            }
+            else
+            {
+                GUI.Label(new Rect(left + 14f * scale, top + 177f * scale, width - 28f * scale, 24f * scale),
+                    $"SECURED {profile.securedScrap}   //   STREAK {profile.currentExtractionStreak}", _textStyle);
+                GUI.Label(new Rect(left + 14f * scale, top + 205f * scale, width - 28f * scale, 38f * scale),
+                    director != null && director.IsBossLevel && !director.BossGateCleared
+                        ? "OBJECTIVE // ELIMINATE MUTATION TARGET"
+                        : "OBJECTIVE // REACH EXTRACTION WITH LOOT", _objectiveStyle);
+            }
 
             if (!mobile)
             {
@@ -96,10 +121,13 @@ namespace Kamilunavo.Deadreach.UI
             if (director != null && director.IsBossLevel && !director.BossGateCleared)
                 DrawBossBar(safe, director, mobile, scale);
 
+            if (mission != null && mission.HasActiveAlert)
+                DrawMissionAlert(safe, mission, director, mobile, scale);
+
             if (session == null)
                 return;
 
-            DrawExtractionFeedback(safe, session, mobile, scale);
+            DrawExtractionFeedback(safe, session, mission, mobile, scale);
             DrawRunResult(safe, session, mobile, scale);
         }
 
@@ -136,7 +164,22 @@ namespace Kamilunavo.Deadreach.UI
                 director.BossHealthNormalized, new Color(0.92f, 0.2f, 0.08f), new Color(0.35f, 0.02f, 0.01f));
         }
 
-        private void DrawExtractionFeedback(Rect safe, RunSession session, bool mobile, float scale)
+        private void DrawMissionAlert(Rect safe, ExpeditionDirector mission, RunDifficultyDirector director, bool mobile, float scale)
+        {
+            var width = mobile ? Mathf.Min(390f * scale, safe.width * 0.42f) : Mathf.Min(420f, safe.width * 0.36f);
+            var height = mobile ? 52f * scale : 42f;
+            var x = safe.center.x - width * 0.5f;
+            var bossOffset = director != null && director.IsBossLevel && !director.BossGateCleared ? (mobile ? 88f * scale : 68f) : 0f;
+            var y = Screen.height - safe.yMax + 14f * scale + bossOffset;
+
+            var previous = GUI.color;
+            GUI.color = new Color(0.04f, 0.055f, 0.06f, 0.92f);
+            GUI.Box(new Rect(x, y, width, height), GUIContent.none);
+            GUI.color = previous;
+            GUI.Label(new Rect(x + 10f * scale, y + 5f * scale, width - 20f * scale, height - 10f * scale), mission.AlertText, _centerStyle);
+        }
+
+        private void DrawExtractionFeedback(Rect safe, RunSession session, ExpeditionDirector mission, bool mobile, float scale)
         {
             if (!session.IsInExtractionZone || session.IsCompleted || session.IsFailed)
                 return;
@@ -146,26 +189,34 @@ namespace Kamilunavo.Deadreach.UI
                 : Mathf.Min(440f, safe.width - 40f);
             var x = safe.center.x - width * 0.5f;
             var y = Screen.height - safe.yMax + (mobile ? 104f * scale : 82f);
-            var height = mobile ? 96f * scale : 76f;
+            var height = mobile ? 104f * scale : 82f;
 
             GUI.Box(new Rect(x, y, width, height), GUIContent.none);
 
+            if (session.ExtractionBlockedByMission)
+            {
+                GUI.Label(new Rect(x + 16f * scale, y + 8f * scale, width - 32f * scale, 32f * scale), "EXTRACTION SEALED", _centerStyle);
+                GUI.Label(new Rect(x + 16f * scale, y + 47f * scale, width - 32f * scale, 32f * scale),
+                    mission != null ? mission.PrimaryObjectiveText : "Primary objective incomplete.", _smallCenterStyle);
+                return;
+            }
+
             if (session.ExtractionBlockedByBoss)
             {
-                GUI.Label(new Rect(x + 16f * scale, y + 10f * scale, width - 32f * scale, 32f * scale), "EXTRACTION SEALED", _centerStyle);
-                GUI.Label(new Rect(x + 16f * scale, y + 48f * scale, width - 32f * scale, 26f * scale), "Mutation target still active.", _smallCenterStyle);
+                GUI.Label(new Rect(x + 16f * scale, y + 8f * scale, width - 32f * scale, 32f * scale), "EXTRACTION SEALED", _centerStyle);
+                GUI.Label(new Rect(x + 16f * scale, y + 47f * scale, width - 32f * scale, 26f * scale), "Mutation target still active.", _smallCenterStyle);
                 return;
             }
 
             if (session.ExtractionBlockedByNoLoot)
             {
-                GUI.Label(new Rect(x + 16f * scale, y + 10f * scale, width - 32f * scale, 32f * scale), "EXTRACTION LOCKED", _centerStyle);
-                GUI.Label(new Rect(x + 16f * scale, y + 48f * scale, width - 32f * scale, 26f * scale), "Collect Scrap or weapon loot first.", _smallCenterStyle);
+                GUI.Label(new Rect(x + 16f * scale, y + 8f * scale, width - 32f * scale, 32f * scale), "EXTRACTION LOCKED", _centerStyle);
+                GUI.Label(new Rect(x + 16f * scale, y + 47f * scale, width - 32f * scale, 26f * scale), "Collect Scrap or weapon loot first.", _smallCenterStyle);
                 return;
             }
 
             GUI.Label(new Rect(x + 16f * scale, y + 8f * scale, width - 32f * scale, 30f * scale), "EXTRACTING // HOLD POSITION", _centerStyle);
-            DrawBar(new Rect(x + 24f * scale, y + 56f * scale, width - 48f * scale, (mobile ? 20f : 15f) * scale),
+            DrawBar(new Rect(x + 24f * scale, y + 58f * scale, width - 48f * scale, (mobile ? 20f : 15f) * scale),
                 session.ExtractionProgress, new Color(0.12f, 0.92f, 0.48f), new Color(0.12f, 0.92f, 0.48f));
         }
 
@@ -247,7 +298,7 @@ namespace Kamilunavo.Deadreach.UI
                 wordWrap = true
             };
             _centerStyle = new GUIStyle(GUI.skin.label) { fontSize = centerSize, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
-            _smallCenterStyle = new GUIStyle(GUI.skin.label) { fontSize = smallCenterSize, alignment = TextAnchor.MiddleCenter };
+            _smallCenterStyle = new GUIStyle(GUI.skin.label) { fontSize = smallCenterSize, alignment = TextAnchor.MiddleCenter, wordWrap = true };
         }
     }
 }
