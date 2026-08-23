@@ -155,6 +155,8 @@ Before merging PR #4, confirm in one short regression run:
 6. extraction returns to Bunker
 7. no blocking Console errors
 
+If all seven pass, mark PR #4 ready and squash-merge to `main` immediately.
+
 ## 8. After 0.4 merge
 
 Next priorities:
