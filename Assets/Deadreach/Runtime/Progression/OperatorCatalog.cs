@@ -1,10 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Kamilunavo.Deadreach.Combat;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Player;
-using Kamilunavo.Deadreach.Presentation;
 using UnityEngine;
 
 namespace Kamilunavo.Deadreach.Progression
@@ -70,52 +68,9 @@ namespace Kamilunavo.Deadreach.Progression
             GetComponent<PlayerMotor>()?.SetMoveSpeedMultiplier(definition.MoveMultiplier);
             GetComponent<HitscanWeapon>()?.SetOperatorDamageMultiplier(definition.DamageMultiplier);
 
-            StartCoroutine(ApplyVisualTintWhenReady(definition));
-        }
-
-        private IEnumerator ApplyVisualTintWhenReady(OperatorDefinition definition)
-        {
-            var binder = GetComponent<ProductionVisualBinder>();
-            if (binder == null)
-                yield break;
-
-            for (var frame = 0; frame < 12 && !binder.HasProductionVisual; frame++)
-                yield return null;
-
-            var visual = binder.VisualInstance;
-            if (visual == null)
-                yield break;
-
-            foreach (var renderer in visual.GetComponentsInChildren<Renderer>(true))
-            {
-                if (renderer == null || IsWeaponRenderer(renderer.transform))
-                    continue;
-
-                var materials = renderer.materials;
-                for (var i = 0; i < materials.Length; i++)
-                {
-                    var material = materials[i];
-                    if (material == null)
-                        continue;
-
-                    var tint = Color.Lerp(Color.white, definition.Accent, 0.22f);
-                    if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", tint);
-                    if (material.HasProperty("_Color")) material.SetColor("_Color", tint);
-                }
-            }
-        }
-
-        private static bool IsWeaponRenderer(Transform transform)
-        {
-            var current = transform;
-            for (var depth = 0; current != null && depth < 5; depth++, current = current.parent)
-            {
-                var name = current.name.ToLowerInvariant();
-                if (name.Contains("weapon") || name.Contains("pistol") || name.Contains("rifle") || name.Contains("gun"))
-                    return true;
-            }
-
-            return false;
+            // The selected profile now maps to a distinct production character prefab through
+            // ProductionVisualBinder. Do not recolor the body here; preserve the authored model.
+            Debug.Log($"DEADREACH operator active: {definition.Name} // {definition.Role}.");
         }
     }
 }
