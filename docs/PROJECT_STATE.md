@@ -18,7 +18,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
 - active production branch: `production/0.13-premium-bunker-ui`
-- Production 0.13 state: **0.13b visually rejected from real Unity screenshot; 0.13c single-system command-center rework implemented; fresh compile pending**
+- Production 0.13 state: **0.13b visually rejected; 0.13c single-system command-center rework implemented; fresh compile PASSED; Build 0.13 next**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -97,9 +97,7 @@ UI composition:
 - Production13BunkerScenePass still authors the generated Bunker scene, but its primitive presentation is hidden at runtime by 0.13c in favor of the authored Quaternius focal architecture
 
 ### Real-Unity validation state — CURRENT 0.13c
-- 0.13b compile/import: **PASSED, NOW STALE AFTER 0.13c RUNTIME CHANGE**
-- 0.13b Build Production Slice 0.13: **PASSED, NOW STALE AFTER 0.13c RUNTIME CHANGE**
-- current 0.13c fresh compile: **PENDING**
+- current 0.13c fresh compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24
 - current 0.13c Build Production Slice 0.13: **PENDING**
 - 0.13c Overview visual acceptance: **PENDING**
 - Overview / Arsenal / Operators / Campaign / Workshop / Supply screen pass: **PENDING**
@@ -123,10 +121,6 @@ UI composition:
 
 ## Next exact gate
 
-1. pull the current `production/0.13-premium-bunker-ui` head
-2. let Unity compile the 0.13c replacement
-3. require **0 red compiler errors**
-4. only then rerun `DEADREACH > Build Production Slice 0.13`
-5. inspect Overview again before any broader regression
+Run `DEADREACH > Build Production Slice 0.13`. Require stable 0.12 generation + accepted 0.12 layout polish + Production13BunkerScenePass to complete with no blocking red generation errors. After Bunker reopens, inspect Overview first before any broader regression.
 
 Test plan: `docs/PRODUCTION_13_TEST.md`
