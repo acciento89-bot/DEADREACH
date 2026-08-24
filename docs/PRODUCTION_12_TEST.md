@@ -45,31 +45,33 @@ Accepted in real Unity runtime:
 - ordinary infected remain on normal enemy geography
 - runtime reinforcements arrive from valid sector geography
 
-## INDUSTRIAL SPILL — NEXT
+## INDUSTRIAL SPILL — PASSED 2026-08-24 ✅
 
-Validate:
-- FIELD OPS shows `INDUSTRIAL SPILL`
-- amber industrial identity is obvious
-- containers/pipes/barrels create a distinct channelled layout
+Accepted in real Unity runtime:
+- INDUSTRIAL SPILL identity and amber industrial presentation
+- container / pipe / barrel channels visibly change traversal
 - north extraction is reachable and reversible
-- chemical and fire hazards are both visible and distinct
-- each hazard damages only while inside and clears on exit
+- chemical and fire hazards are visually distinct
+- both hazards damage only while inside and clear after exit
 - neither hazard physically traps the CharacterController
-- mission marker stays on supported geometry
-- loot/enemy placement remains reachable
+- mission marker remains on supported geometry
+- loot and enemy placement remain reachable
 
-## BLACKOUT PLAZA — PENDING
+## BLACKOUT PLAZA — NEXT
 
 Validate:
 - FIELD OPS shows `BLACKOUT PLAZA`
-- dark violet/red emergency atmosphere
+- dark violet/red emergency atmosphere is obvious
 - route blockers differ from the other sectors
-- east-side extraction reachable
-- arc + fire hazards remain readable during combat
+- east-side extraction is reachable and reversible
+- electrical arc and fire hazards are both readable during combat
+- each hazard damages only while inside and clears on exit
+- mission marker, loot and enemies remain on supported geometry
+- runtime reinforcements arrive from valid sector geography
 
 ## Sector-aware geography gate
 
-Q-WARD and TRANSIT have real-runtime coverage. Still broaden across INDUSTRIAL / BLACKOUT:
+Q-WARD, TRANSIT and INDUSTRIAL have real-runtime coverage. BLACKOUT remains:
 - player spawn uses layout spawn anchor
 - ExtractionZone + beacon presentation move to layout extraction anchor
 - ordinary infected reposition to enemy anchors
