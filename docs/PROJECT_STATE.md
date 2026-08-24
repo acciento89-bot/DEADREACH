@@ -14,17 +14,18 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - URP: 17.3
 - Bundle ID: `de.kamilunavo.deadzone`
 - Mobile: landscape only
-- stable `main`: Production 0.11 until PR #12 promotion completes
-- Production 0.11 merge: `5b1b40322e305b1546a9ca5a37c1f6b89eabea72`
-- active branch: `production/0.12-sector-expansion`
-- PR #12: fully validated, ready for promotion
+- stable branch: `main`
+- stable production level: **0.12**
+- Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
+- active production branch: **none**
+- next production work must branch from current `main`
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
 - derive muzzle from that embedded firearm
 - never reintroduce the failed external hand-mounted Rifle transform path
 
-## Production 0.12 — Sector Expansion — FULLY VALIDATED ✅
+## Production 0.12 — Sector Expansion — STABLE ✅
 
 ### Final real-Unity validation
 - fresh compile after 0.12b: **PASSED — 0 red compiler errors**
@@ -40,22 +41,22 @@ Permanent firearm rule:
 - 0.10 combat-impact / boss / reward presentation regression: **PASSED**
 - final Unity Console: **0 red runtime errors**
 
-### World / sector architecture
+### Stable world / sector architecture
 - expanded east/west cross-street network
 - four authored layouts: QUARANTINE WARD / TRANSIT COLLAPSE / INDUSTRIAL SPILL / BLACKOUT PLAZA
 - sector-specific player, extraction, enemy, loot, objective and reinforcement anchors
 - sector-specific fog / key-light identity
-- dynamic sector selection plus editor-only deterministic override
-- ordinary Runner enemies remain excluded from `_R##` reinforcement relocation
+- automatic sector selection with editor-only deterministic test override
+- ordinary Runner enemies excluded from `_R##` reinforcement relocation
 
-### Gameplay hazards
+### Stable gameplay hazards
 - Contamination / Electrical Arc / Fireline
 - trigger-only gameplay zones
 - periodic player damage while inside
 - HUD danger warning clears after exit
-- no control takeover / accepted CharacterController traversal
+- accepted CharacterController traversal / no control takeover
 
-### Sector risk/reward
+### Stable sector risk/reward
 Primary completion extra unsecured Scrap:
 - Quarantine +4
 - Transit +6
@@ -70,14 +71,14 @@ BLACK CACHE Item Power bonus:
 
 Successful-extraction banking behavior is accepted; unsecured run state remains risk-bearing.
 
-### 0.12b layout polish
-- Q-WARD intentionally unchanged
-- TRANSIT large wrecks and barrier moved outward; objective/hazard spacing improved
-- INDUSTRIAL props pushed out of core lanes; objective and hazard spacing improved
+### Accepted 0.12b layout polish
+- Q-WARD unchanged
+- TRANSIT large wrecks / barrier moved outward and objective/hazard spacing improved
+- INDUSTRIAL props pushed out of core lanes and objective/hazard spacing improved
 - BLACKOUT strongly decluttered with an open central HOLDOUT arena
-- moved/rotated prop `CollisionBounds` are refreshed after final pose to prevent stale invisible blocking
+- moved/rotated prop `CollisionBounds` refreshed after final pose to prevent stale invisible blocking
 
-### Stable systems preserved
+### Earlier stable systems that remain authoritative
 - 0.11 RECOVERY / PURGE / HOLDOUT / BLACKSITE
 - objective-gated extraction
 - BLACK CACHE risk/reward path
@@ -89,8 +90,8 @@ Successful-extraction banking behavior is accepted; unsecured run state remains 
 - 0.10 combat-impact VFX
 - accepted Arsenal / Bunker / boss / reward presentation
 
-## Promotion gate
+## Handoff
 
-Production 0.12 has passed all requested real-Unity gates. Next action is PR #12 Ready → verify mergeability → squash merge exact validated head → update this file on `main` to record the stable 0.12 merge SHA and clear the active production branch.
+Production 0.12 is the current stable `main` baseline. No active production branch exists. Any next production pass must branch from current `main` and preserve the complete validated 0.12 world/mission/mobile/progression baseline.
 
 Test plan: `docs/PRODUCTION_12_TEST.md`
