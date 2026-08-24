@@ -30,26 +30,34 @@ Permanent firearm rule:
 - fresh real-Unity compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24
 - `DEADREACH > Build Production Slice 0.12`: **PASSED** ✅ 2026-08-24
 - QUARANTINE WARD runtime gate: **PASSED** ✅ 2026-08-24
-- next: TRANSIT COLLAPSE
-- then: INDUSTRIAL SPILL
+- TRANSIT COLLAPSE runtime gate: **PASSED** ✅ 2026-08-24
+- next: INDUSTRIAL SPILL
 - then: BLACKOUT PLAZA
 - sector reward gate: pending
 - fixed-zone mobile regression: pending
 - full Bunker → mission/risk-reward → extraction → Bunker regression: pending
 - final Unity Console 0 red runtime errors: pending
 
-### QUARANTINE WARD accepted runtime behavior
+### Accepted real-runtime sector behavior
+
+QUARANTINE WARD:
 - Q-WARD / BIOHAZARD identity and green/teal atmosphere accepted
-- west spur out-and-back accepted
-- east spur out-and-back accepted
-- no world-safety snap-back on tested side routes
-- east-side extraction reachable
-- pre-Primary extraction remains sealed
-- mission marker works in expanded sector geography
-- contamination hazard warning appears on entry
-- contamination damage applies while inside
-- damage/warning clear after leaving
-- hazard / containers do not physically trap the CharacterController
+- west/east spur out-and-back accepted
+- east extraction reachable
+- pre-Primary extraction sealed
+- mission marker works in sector geography
+- contamination damage/warning clears on exit
+- no tested CharacterController trapping
+
+TRANSIT COLLAPSE:
+- cold/blue identity accepted
+- wreck cluster changes route choice
+- alternate route around wrecks traversable
+- west extraction reachable and reversible
+- electrical hazard damage/warning clears on exit
+- mission marker stays on supported geometry
+- ordinary infected remain on normal enemy geography
+- reinforcement geography accepted
 
 ### 0.12 implementation
 - expanded east/west cross-street network
@@ -78,17 +86,16 @@ Permanent firearm rule:
 ## Next exact test
 
 Select:
-`DEADREACH > Dev > Sector 0.12 > TRANSIT COLLAPSE`
+`DEADREACH > Dev > Sector 0.12 > INDUSTRIAL SPILL`
 
 Validate:
-- FIELD OPS TRANSIT COLLAPSE
-- cold blue identity
-- wreck cluster visibly changes route
-- alternate path around wrecks traversable
-- west extraction reachable and reversible
-- electrical hazard damages only while inside and clears on exit
-- mission marker remains on supported geometry
-- ordinary infected stay on normal enemy anchors
-- runtime reinforcements arrive from sector reinforcement anchors
+- FIELD OPS INDUSTRIAL SPILL
+- amber industrial identity
+- container/pipe/barrel channels visibly change movement
+- north extraction reachable and reversible
+- chemical hazard damages only while inside and clears on exit
+- fire hazard damages only while inside and clears on exit
+- hazards remain visually distinct and do not trap the CharacterController
+- mission marker / loot / enemy positions remain reachable
 
 Test plan: `docs/PRODUCTION_12_TEST.md`
