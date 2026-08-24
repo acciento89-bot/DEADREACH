@@ -27,22 +27,23 @@ Permanent firearm rule:
 ## Production 0.12 — Sector Expansion
 
 ### Current validation state
-- Q-WARD runtime gate: **PASSED / still accepted**; 0.12b does not modify Q-WARD
-- TRANSIT runtime gate: **must be repeated** after 0.12b geometry changes
-- INDUSTRIAL runtime gate: **must be repeated** after 0.12b geometry changes
-- BLACKOUT first layout: **rejected as too crowded**; 0.12b fix implemented and awaiting test
-- fresh compile: required again after code changes
-- Build Production Slice 0.12: required again after generator changes
+- Q-WARD runtime gate: **PASSED / still accepted** ✅ 2026-08-24
+- fresh compile after 0.12b: **PASSED — 0 red compiler errors** ✅ 2026-08-24
+- `Build Production Slice 0.12` after 0.12b: **PASSED** ✅ 2026-08-24
+- TRANSIT runtime revalidation after declutter: **PASSED** ✅ 2026-08-24
+- INDUSTRIAL runtime revalidation after declutter: **PASSED** ✅ 2026-08-24
+- BLACKOUT runtime revalidation after declutter: **PASSED** ✅ 2026-08-24
+- all four sector layouts now have accepted real-Unity runtime coverage
 - sector reward gate: pending
 - fixed-zone mobile regression: pending
 - full Bunker → mission/risk-reward → extraction → Bunker regression: pending
 - final Unity Console 0 red runtime errors: pending
 
-### 0.12b layout-polish implementation
+### 0.12b layout-polish implementation — ACCEPTED
 
 New editor pass: `Assets/Deadreach/Editor/Production12LayoutPolishPass.cs`.
 
-`Build Production Slice 0.12` now runs:
+`Build Production Slice 0.12` runs:
 1. accepted base scene generation
 2. normal Production 0.12 sector authoring
 3. Production 0.12b layout-polish pass
@@ -54,6 +55,7 @@ TRANSIT:
 - central HOLDOUT area opened
 - mission anchors redistributed
 - arc hazard moved away from objective center
+- moved/rotated collision bounds refreshed
 
 INDUSTRIAL:
 - barrels moved out of the central channel
@@ -61,6 +63,7 @@ INDUSTRIAL:
 - north barrier moved outward
 - mission anchors redistributed
 - chemical/fire hazard lanes separated from mission circles
+- moved/rotated collision bounds refreshed
 
 BLACKOUT:
 - both large vehicles moved to opposite lane edges
@@ -69,9 +72,7 @@ BLACKOUT:
 - mission anchors redistributed
 - nearby loot/enemy positions removed from the holdout circle
 - arc/fire hazards separated from the central objective arena
-
-Important collision hardening:
-- every moved-and-rotated production prop refreshes its generated `CollisionBounds` after the final pose so stale collider orientation cannot continue blocking a route after the visual object moved.
+- moved/rotated collision bounds refreshed
 
 ### Existing 0.12 systems preserved
 - expanded east/west cross-street network
@@ -98,13 +99,12 @@ Important collision hardening:
 
 ## Next exact gate
 
-1. `git pull` on `production/0.12-sector-expansion`
-2. fresh Unity compile → **0 red compiler errors**
-3. `DEADREACH > Build Production Slice 0.12`
-4. recheck TRANSIT
-5. recheck INDUSTRIAL
-6. recheck BLACKOUT
-7. return override to AUTO
-8. sector reward + mobile + full regression
+1. return Sector 0.12 override to `AUTO`
+2. validate sector Primary Scrap bonus
+3. validate BLACK CACHE Item Power bonus
+4. validate free-slot and full-inventory pending-reward paths
+5. validate fixed-zone mobile controls + HUD
+6. run full Bunker → Workshop/Arsenal → Deploy → mission/risk-reward → extraction → Bunker regression
+7. require final Unity Console **0 red runtime errors**
 
 Test plan: `docs/PRODUCTION_12_TEST.md`
