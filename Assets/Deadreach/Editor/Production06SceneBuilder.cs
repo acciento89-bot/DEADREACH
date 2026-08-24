@@ -47,19 +47,45 @@ namespace Kamilunavo.Deadreach.Editor
             if (!BuildInternal("0.12", "0.11 validated expedition director + multi-sector world expansion + route variants + hazards + sector-aware mission/reinforcement anchors"))
                 return;
 
+            if (!ApplyStable012World())
+                return;
+
+            Debug.Log("DEADREACH Production Slice 0.12 generated: four playable sector layouts + expanded side routes + sector hazards + dynamic geography + decluttered Transit / Industrial / Blackout objective arenas.");
+        }
+
+        [MenuItem("DEADREACH/Build Production Slice 0.13", priority = 7)]
+        public static void Build13()
+        {
+            if (!BuildInternal("0.13", "0.12 validated sector expansion + premium tactical command-center UI + cinematic bunker presentation + full menu chrome overhaul"))
+                return;
+
+            if (!ApplyStable012World())
+                return;
+
+            if (!Production13BunkerScenePass.Apply())
+            {
+                Debug.LogError("DEADREACH Production Slice 0.13 aborted: premium Bunker scene pass failed after stable 0.12 world generation.");
+                return;
+            }
+
+            Debug.Log("DEADREACH Production Slice 0.13 generated: stable 0.12 expedition world + cinematic premium Bunker command center + tactical animated menu design system.");
+        }
+
+        private static bool ApplyStable012World()
+        {
             if (!Production12SectorScenePass.Apply())
             {
-                Debug.LogError("DEADREACH Production Slice 0.12 aborted: sector world pass failed after base scene generation.");
-                return;
+                Debug.LogError("DEADREACH Production world generation aborted: Production 0.12 sector world pass failed after base scene generation.");
+                return false;
             }
 
             if (!Production12LayoutPolishPass.Apply())
             {
-                Debug.LogError("DEADREACH Production Slice 0.12 aborted: sector layout polish failed after world generation.");
-                return;
+                Debug.LogError("DEADREACH Production world generation aborted: accepted Production 0.12 layout polish failed after sector generation.");
+                return false;
             }
 
-            Debug.Log("DEADREACH Production Slice 0.12 generated: four playable sector layouts + expanded side routes + sector hazards + dynamic geography + decluttered Transit / Industrial / Blackout objective arenas.");
+            return true;
         }
 
         private static bool BuildInternal(string version, string featureSummary)

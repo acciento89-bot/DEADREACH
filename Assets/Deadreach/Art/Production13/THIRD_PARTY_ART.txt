@@ -1,0 +1,12 @@
+DEADREACH Production 0.13 third-party art attribution
+
+Quaternius — Modular SciFi MegaKit (Standard FREE version)
+License: CC0 1.0 Universal / Public Domain Dedication
+Source: https://quaternius.com
+Models by @Quaternius
+
+Kenney — UI Pack: Sci-fi (2.0)
+License: Creative Commons Zero (CC0)
+Source: https://kenney.nl
+
+Both sources permit commercial use. The licenses/source information are retained here for project provenance.
