@@ -18,7 +18,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
 - active production branch: `production/0.13-premium-bunker-ui`
-- Production 0.13 state: **0.13b real-asset command-center implementation complete; fresh compile/import validation pending**
+- Production 0.13 state: **0.13b real-asset command-center implementation complete; fresh compile/import passed; Build 0.13 next**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -55,6 +55,8 @@ Permanent firearm rule:
 - Kenney plates are applied behind header / content / navigation / Deploy elements
 - previous near-opaque tactical backdrop is disabled by the 0.13b runtime layer
 - Backdrop / ContentFrame / feature panels are opened up substantially so the real 3D Bunker remains visible
+- navigation is recomposed as a horizontal Operations strip instead of the permanent prototype-like left sidebar
+- Overview uses a dedicated visible 3D hero window between floating operations panels
 - decorative UI remains raycast-disabled
 - third-party license / provenance records are committed under `Assets/Deadreach/Art/Production13`
 
@@ -78,9 +80,7 @@ Permanent firearm rule:
 - 0.13b real-asset command-center layer loads its imported Resources when the generated Bunker runs
 
 ### Real-Unity validation state — CURRENT 0.13b
-- 0.13a fresh compile: **PASSED, NOW STALE AFTER 0.13b CODE/ASSET CHANGES**
-- 0.13a Build Production Slice 0.13: **PASSED, NOW STALE AFTER 0.13b CODE/ASSET CHANGES**
-- current 0.13b fresh compile + asset import: **PENDING**
+- current 0.13b fresh compile + asset import: **PASSED — 0 red compiler errors** ✅ 2026-08-24
 - current 0.13b Build Production Slice 0.13: **PENDING**
 - 0.13b real-asset shell visual acceptance: **PENDING**
 - Overview / Arsenal / Operators / Campaign / Workshop / Supply screen pass: **PENDING**
@@ -104,10 +104,6 @@ Permanent firearm rule:
 
 ## Next exact gate
 
-1. pull `production/0.13-premium-bunker-ui`
-2. let Unity import the new Quaternius OBJ/MTL and Kenney PNG assets
-3. fresh Unity compile → require **0 red compiler errors** and no blocking model-import errors
-4. only after that, rerun `DEADREACH > Build Production Slice 0.13`
-5. visual acceptance starts on Overview with explicit check that genuine Quaternius geometry and Kenney chrome are visible and that the 3D Bunker is no longer hidden behind the UI
+Run `DEADREACH > Build Production Slice 0.13`. Require stable 0.12 world generation + accepted layout polish + Production13BunkerScenePass to complete with no blocking red generation errors. After the build reopens Bunker, inspect Overview first for the genuine Quaternius command-center geometry, Kenney chrome and the new open 3D hero composition.
 
 Test plan: `docs/PRODUCTION_13_TEST.md`
