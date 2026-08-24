@@ -32,7 +32,7 @@ Observed visual problems from the real Unity screenshot:
 
 The 0.13b visual result is not accepted and must not be merged.
 
-### 0.13c — single-system command-center rework — IMPLEMENTED / VALIDATION PENDING
+### 0.13c — single-system command-center rework — IMPLEMENTED / VALIDATION ACTIVE
 
 The 0.13c runtime rework replaces the layered approach instead of adding another layer:
 - `Production13PremiumBunkerUI` is disabled when the 0.13c command-center component takes ownership
@@ -52,19 +52,15 @@ The 0.13c runtime rework replaces the layered approach instead of adding another
 - decorative UI remains raycast-disabled
 - imported geometry colliders remain removed
 
-Because 0.13c changes runtime code and presentation ownership, every previous 0.13a/0.13b validation result is stale for the current head.
+## Gate A — Fresh Unity compile — PASSED ✅
 
-## Gate A — Fresh Unity compile — PENDING
-
-After pulling the current 0.13c head, let Unity compile.
-
-Require:
+User-confirmed real Unity result on 2026-08-24:
 - **0 red compiler errors**
-- no blocking Resources / UI errors
+- no blocking Resources / UI compile errors reported
 
 ## Gate B — Build Production Slice 0.13 — PENDING
 
-Only after Gate A passes, run:
+Run:
 `DEADREACH > Build Production Slice 0.13`
 
 Require:
