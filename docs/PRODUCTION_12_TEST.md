@@ -2,10 +2,6 @@
 
 Production 0.12 branches from the fully real-Unity-validated Production 0.11 `main` baseline.
 
-## Goal
-
-Turn the expedition map from one repeated street into a true sector system with alternate routes, sector-specific layouts, hazards, spawn geography and mission placement while preserving the complete 0.11 mission/risk-reward loop.
-
 ## Compile / build gate
 
 1. Fresh real-Unity compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24.
@@ -25,44 +21,42 @@ The override applies on the next expedition scene load and is compiled out of pl
 
 ## QUARANTINE WARD — PASSED 2026-08-24 ✅
 
-Real Unity runtime acceptance confirmed:
-- FIELD OPS sector identity / BIOHAZARD presentation accepted
-- green/teal atmosphere accepted
-- central intersection → west spur → back accepted
-- central intersection → east spur → back accepted
-- no world-safety snap-back on the tested side routes
-- east-side extraction reachable
+Accepted in real Unity runtime:
+- Q-WARD / BIOHAZARD identity and green/teal atmosphere
+- west and east spur out-and-back traversal
+- no tested side-route world-safety snap-back
+- east extraction reachable
 - pre-Primary extraction remains sealed
-- mission marker appears in the sector geography
-- contamination hazard warning appears on entry
-- contamination hazard damages only while inside
-- hazard damage/warning clears after exit
-- hazard / containers do not trap the CharacterController
+- mission marker works in expanded sector geography
+- contamination warning/damage while inside
+- warning and damage clear after exit
+- no CharacterController trapping on tested hazard/container geometry
 
-This gives a first real-runtime pass for the expanded cross-street traversal, sector-specific extraction, mission geography and hazard enter/damage/exit behavior.
+## TRANSIT COLLAPSE — PASSED 2026-08-24 ✅
 
-## TRANSIT COLLAPSE — NEXT
-
-Validate:
-- FIELD OPS shows `TRANSIT COLLAPSE`
-- cold blue sector identity is obvious
-- wrecked truck/cars materially change route choice
-- alternate route around the wreck cluster remains traversable
+Accepted in real Unity runtime:
+- TRANSIT COLLAPSE sector identity and cold/blue presentation
+- wreck cluster materially changes the route
+- alternate path around the wrecks is traversable
 - west-side extraction is reachable and reversible
-- electrical hazard is visible and pulses damage only while inside
-- leaving the electrical field stops damage and clears the hazard warning
+- electrical hazard warning/damage works only while inside
+- hazard damage and warning clear after leaving
 - mission marker remains on supported sector geometry
-- ordinary infected use sector enemy anchors
-- runtime reinforcements arrive from sector reinforcement anchors
+- ordinary infected remain on normal enemy geography
+- runtime reinforcements arrive from valid sector geography
 
-## INDUSTRIAL SPILL — PENDING
+## INDUSTRIAL SPILL — NEXT
 
 Validate:
 - FIELD OPS shows `INDUSTRIAL SPILL`
+- amber industrial identity is obvious
 - containers/pipes/barrels create a distinct channelled layout
-- north extraction reachable
-- chemical + fire hazards visible and distinct
-- hazards never physically trap the CharacterController
+- north extraction is reachable and reversible
+- chemical and fire hazards are both visible and distinct
+- each hazard damages only while inside and clears on exit
+- neither hazard physically traps the CharacterController
+- mission marker stays on supported geometry
+- loot/enemy placement remains reachable
 
 ## BLACKOUT PLAZA — PENDING
 
@@ -75,15 +69,13 @@ Validate:
 
 ## Sector-aware geography gate
 
-Still requires broader acceptance across the remaining sectors:
+Q-WARD and TRANSIT have real-runtime coverage. Still broaden across INDUSTRIAL / BLACKOUT:
 - player spawn uses layout spawn anchor
-- ExtractionZone + both extraction beacon presentations move to layout extraction anchor
+- ExtractionZone + beacon presentation move to layout extraction anchor
 - ordinary infected reposition to enemy anchors
 - Scrap/weapon loot reposition to loot anchors
-- 0.11 Primary marker relocates to sector objective anchor
-- BLACKSITE vault stage relocates to sector vault/objective anchor
-- optional BLACK CACHE relocates to a distant sector objective anchor
-- Holdout / Blacksite / cache reinforcements relocate to sector reinforcement anchors
+- Primary / BLACKSITE / BLACK CACHE markers stay on supported sector anchors
+- Holdout / Blacksite / cache reinforcements use sector reinforcement geography
 - ordinary Runner enemies are never mistaken for `_R##` reinforcements
 - no target spawns outside supported world
 
