@@ -18,7 +18,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
 - active production branch: `production/0.13-premium-bunker-ui`
-- Production 0.13 state: **0.13b real-asset command-center implementation complete; fresh compile/import passed; Build 0.13 next**
+- Production 0.13 state: **0.13b visually rejected from real Unity screenshot; 0.13c single-system command-center rework implemented; fresh compile pending**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -28,61 +28,80 @@ Permanent firearm rule:
 ## Production 0.13 — Premium Bunker UI / Command Center Overhaul — ACTIVE
 
 ### Art-direction target
-- DEADREACH menu must read as a premium tactical extraction-game command center rather than a flat prototype / DEV UI
-- authored 3D environment should be a visible part of the menu composition
-- graphite / cold cyan / warning amber identity
-- strong hierarchy and real game-art silhouette rather than flat full-screen panels
-- visual effects must never steal touch input or reduce mobile-landscape readability
+- finished premium tactical extraction-game menu, not a DEV dashboard
+- authored 3D environment must read clearly through the UI
+- near-black / steel base with restrained cold cyan and warning amber accents
+- strong hierarchy without large colored panel fills
+- mobile-landscape readability and touch safety remain mandatory
 
-### 0.13a foundation — implemented / superseded visually
-- `Production13PremiumBunkerUI` tactical shell / dynamic style layer
-- header / navigation / content / deploy chrome
-- dynamic styling for Overview / Arsenal / Operators / Campaign / Store / Workshop
-- first `Production13BunkerScenePass` with command table / server banks / tactical wall / lighting
-- fresh compile passed with 0 red errors
-- Build Production Slice 0.13 passed in real Unity
-- final visual acceptance was rejected by user because the result still read too much like an embellished DEV menu
+### 0.13a — superseded
+- premium style shell compiled and built successfully
+- final visual result rejected because it remained an embellished DEV menu
 
-### 0.13b real-asset pass — implemented
-- new `Production13RealAssetCommandCenter`
-- runtime auto-install on Bunker scene load after the existing premium shell
-- real CC0 Quaternius Modular SciFi MegaKit authored meshes added to project
-- `Door_Frame_A` used as central and secondary command-deck bulkhead architecture
-- `Door_DarkMetal` used to build the central blast-door assembly
-- imported geometry is re-materialed to DEADREACH steel / graphite / cyan / amber
-- imported mesh colliders are removed so command-center decoration cannot affect validated gameplay/navigation
-- selected CC0 Kenney UI Pack: Sci-fi graphics added as runtime textures
-- Kenney plates are applied behind header / content / navigation / Deploy elements
-- previous near-opaque tactical backdrop is disabled by the 0.13b runtime layer
-- Backdrop / ContentFrame / feature panels are opened up substantially so the real 3D Bunker remains visible
-- navigation is recomposed as a horizontal Operations strip instead of the permanent prototype-like left sidebar
-- Overview uses a dedicated visible 3D hero window between floating operations panels
-- decorative UI remains raycast-disabled
-- third-party license / provenance records are committed under `Assets/Deadreach/Art/Production13`
+### 0.13b — real assets added, visual result rejected
+Implemented:
+- CC0 Quaternius Modular SciFi MegaKit `Door_Frame_A` and `Door_DarkMetal`
+- CC0 Kenney UI Pack: Sci-fi runtime textures
+- horizontal Operations navigation
+- more transparent UI / visible 3D center composition
 
-### Existing cinematic 3D support retained
-- structural command-center ribs
-- emissive cyan / amber architectural accents
-- rotating holographic command-table array
-- dual server banks with status LEDs
-- three-screen tactical wall
-- floor guidance markers
-- blast-door warning array
-- animated emergency / monitor / holo lighting through `Production13BunkerAtmosphere`
-- 0.13b layers genuine authored meshes over this supporting scene work instead of relying on primitives alone
+Real-Unity result:
+- fresh compile + imported assets: **PASSED — 0 red compiler errors**
+- Build Production Slice 0.13: **PASSED**
+- Overview screenshot: **VISUAL FAIL**
+
+Observed in screenshot:
+- old Bunker UI + 0.13a + 0.13b were visibly fighting each other
+- cyan translucent blocks dominated the presentation
+- 3D scene was too dark and visually intersected
+- blast-door geometry was doubled / too close to camera
+- Kenney chrome increased visual noise
+- result still read as a dashboard rather than a premium game screen
+
+0.13b is not acceptable for merge.
+
+### 0.13c — single-system command-center rework — IMPLEMENTED
+
+Runtime ownership:
+- `Production13RealAssetCommandCenter` is now the sole 0.13 presentation owner
+- existing `Production13PremiumBunkerUI` component is disabled by 0.13c
+- active `P13_` / `P13B_` UI decoration is removed
+- Kenney graphics remain licensed in the repository but are not active in the 0.13c visual presentation
+
+3D command center:
+- primitive `Production_BunkerVisual_0_13` runtime presentation is hidden
+- old DEV command-table / workshop / generator / primitive blast-door sightline objects are hidden
+- one Quaternius `Door_Frame_A` + one `Door_DarkMetal` form the focal rear blast door
+- secondary Quaternius frames form restrained side bulkheads
+- all imported decoration colliders are removed
+- camera is moved lower and aimed at the authored rear architecture
+- fog density and ambient light are reduced/rebalanced so geometry is readable instead of nearly black
+- cold and warm point-light accents remain restrained
+
+UI composition:
+- no cyan-filled feature panels
+- shell uses near-black glass with thin cyan / amber rails
+- horizontal Operations navigation remains but is compact and dark
+- Overview Bunker Intel block is hidden
+- Overview mission console occupies only the left side
+- campaign status is a compact right-side console
+- large center region remains unobstructed for the authored 3D Bunker
+- Deploy remains a dedicated bottom action strip
+- dynamic Arsenal / Operators / Campaign / Workshop / Supply panels receive dark-glass treatment without adding a second layout layer
+- decorative additions remain raycast-disabled
 
 ### Build pipeline
 - `DEADREACH > Build Production Slice 0.13`
-- Build 0.13 first regenerates the existing baseline
 - accepted Production 0.12 SectorScenePass remains in the pipeline
 - accepted Production 0.12 LayoutPolishPass remains in the pipeline
-- Production13BunkerScenePass runs only after stable 0.12 world generation succeeds
-- 0.13b real-asset command-center layer loads its imported Resources when the generated Bunker runs
+- Production13BunkerScenePass still authors the generated Bunker scene, but its primitive presentation is hidden at runtime by 0.13c in favor of the authored Quaternius focal architecture
 
-### Real-Unity validation state — CURRENT 0.13b
-- current 0.13b fresh compile + asset import: **PASSED — 0 red compiler errors** ✅ 2026-08-24
-- current 0.13b Build Production Slice 0.13: **PENDING**
-- 0.13b real-asset shell visual acceptance: **PENDING**
+### Real-Unity validation state — CURRENT 0.13c
+- 0.13b compile/import: **PASSED, NOW STALE AFTER 0.13c RUNTIME CHANGE**
+- 0.13b Build Production Slice 0.13: **PASSED, NOW STALE AFTER 0.13c RUNTIME CHANGE**
+- current 0.13c fresh compile: **PENDING**
+- current 0.13c Build Production Slice 0.13: **PENDING**
+- 0.13c Overview visual acceptance: **PENDING**
 - Overview / Arsenal / Operators / Campaign / Workshop / Supply screen pass: **PENDING**
 - mobile safe-area / touch regression: **PENDING**
 - full 0.12 expedition regression: **PENDING**
@@ -104,6 +123,10 @@ Permanent firearm rule:
 
 ## Next exact gate
 
-Run `DEADREACH > Build Production Slice 0.13`. Require stable 0.12 world generation + accepted layout polish + Production13BunkerScenePass to complete with no blocking red generation errors. After the build reopens Bunker, inspect Overview first for the genuine Quaternius command-center geometry, Kenney chrome and the new open 3D hero composition.
+1. pull the current `production/0.13-premium-bunker-ui` head
+2. let Unity compile the 0.13c replacement
+3. require **0 red compiler errors**
+4. only then rerun `DEADREACH > Build Production Slice 0.13`
+5. inspect Overview again before any broader regression
 
 Test plan: `docs/PRODUCTION_13_TEST.md`
