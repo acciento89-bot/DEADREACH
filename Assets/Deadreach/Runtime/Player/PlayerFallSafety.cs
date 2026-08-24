@@ -26,6 +26,12 @@ namespace Kamilunavo.Deadreach.Player
             _hasSafePosition = true;
         }
 
+        public void ConfigureBounds(Vector2 newXBounds, Vector2 newZBounds)
+        {
+            xBounds = new Vector2(Mathf.Min(newXBounds.x, newXBounds.y), Mathf.Max(newXBounds.x, newXBounds.y));
+            zBounds = new Vector2(Mathf.Min(newZBounds.x, newZBounds.y), Mathf.Max(newZBounds.x, newZBounds.y));
+        }
+
         private void LateUpdate()
         {
             var position = transform.position;

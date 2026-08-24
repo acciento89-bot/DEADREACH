@@ -5,6 +5,7 @@ using Kamilunavo.Deadreach.Missions;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Player;
 using Kamilunavo.Deadreach.Progression;
+using Kamilunavo.Deadreach.World;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -62,36 +63,44 @@ namespace Kamilunavo.Deadreach.UI
             var inventory = RunInventory.Current;
             var director = RunDifficultyDirector.Current;
             var mission = ExpeditionDirector.Current;
+            var sector = SectorDirector.Current;
 
             DrawDamageFlash(safe);
 
-            var panelHeight = mobile ? 264f * scale : 258f;
+            var panelHeight = mobile ? 294f * scale : 286f;
             GUI.Box(new Rect(left, top, width, panelHeight), GUIContent.none);
             GUI.Label(new Rect(left + 14f * scale, top + 8f * scale, width - 28f * scale, 29f * scale), "DEADREACH // FIELD OPS", _titleStyle);
             GUI.Label(new Rect(left + 14f * scale, top + 38f * scale, width - 28f * scale, 24f * scale),
                 $"LEVEL {session?.RunLevel ?? profile.selectedLevel:00} // {(director != null ? director.ZoneName : RunDifficultyDirector.GetZoneName(profile.selectedLevel))}", _textStyle);
 
+            var sectorText = sector == null
+                ? "SECTOR // LEGACY DEAD CITY"
+                : sector.PlayerInHazard
+                    ? $"SECTOR // {sector.SectorName} // DANGER {sector.ActiveHazardLabel}"
+                    : $"SECTOR // {sector.SectorName} // {sector.HazardProfile}";
+            GUI.Label(new Rect(left + 14f * scale, top + 64f * scale, width - 28f * scale, 24f * scale), sectorText, _textStyle);
+
             var hp = _playerHealth != null ? Mathf.CeilToInt(_playerHealth.CurrentHealth) : 0;
             var maxHp = _playerHealth != null ? Mathf.CeilToInt(_playerHealth.MaxHealth) : 0;
             var healthNormalized = _playerHealth != null ? _playerHealth.NormalizedHealth : 0f;
 
-            GUI.Label(new Rect(left + 14f * scale, top + 66f * scale, width - 28f * scale, 24f * scale), $"VITALS   {hp}/{maxHp}", _textStyle);
-            DrawBar(new Rect(left + 14f * scale, top + 92f * scale, width - 28f * scale, (mobile ? 18f : 10f) * scale), healthNormalized,
+            GUI.Label(new Rect(left + 14f * scale, top + 92f * scale, width - 28f * scale, 24f * scale), $"VITALS   {hp}/{maxHp}", _textStyle);
+            DrawBar(new Rect(left + 14f * scale, top + 118f * scale, width - 28f * scale, (mobile ? 18f : 10f) * scale), healthNormalized,
                 new Color(0.22f, 0.78f, 0.36f), new Color(0.75f, 0.15f, 0.12f));
 
-            DrawPrimaryWeapon(left + 14f * scale, top + 118f * scale, width - 28f * scale, scale);
-            GUI.Label(new Rect(left + 14f * scale, top + 150f * scale, width - 28f * scale, 24f * scale),
+            DrawPrimaryWeapon(left + 14f * scale, top + 144f * scale, width - 28f * scale, scale);
+            GUI.Label(new Rect(left + 14f * scale, top + 176f * scale, width - 28f * scale, 24f * scale),
                 $"CARRIED {session?.CarriedScrap ?? 0}   //   WEAPON LOOT {inventory?.Weapons.Count ?? 0}/{inventory?.WeaponCapacity ?? 0}", _textStyle);
 
             if (mission != null)
             {
-                GUI.Label(new Rect(left + 14f * scale, top + 177f * scale, width - 28f * scale, 24f * scale),
+                GUI.Label(new Rect(left + 14f * scale, top + 203f * scale, width - 28f * scale, 24f * scale),
                     $"MISSION // {mission.MissionName} // THREAT {mission.ThreatLabel}", _textStyle);
 
                 var objectiveText = mission.PrimaryComplete && !mission.SecondaryComplete
                     ? $"{mission.SecondaryObjectiveText} // EXTRACT AVAILABLE"
                     : mission.PrimaryObjectiveText;
-                GUI.Label(new Rect(left + 14f * scale, top + 203f * scale, width - 28f * scale, 34f * scale), objectiveText, _objectiveStyle);
+                GUI.Label(new Rect(left + 14f * scale, top + 229f * scale, width - 28f * scale, 34f * scale), objectiveText, _objectiveStyle);
 
                 var objectiveProgress = mission.PrimaryComplete && !mission.SecondaryComplete
                     ? mission.SecondaryProgressNormalized
@@ -99,14 +108,14 @@ namespace Kamilunavo.Deadreach.UI
                 var objectiveColor = mission.PrimaryComplete
                     ? new Color(1f, 0.62f, 0.08f)
                     : new Color(0.12f, 0.82f, 1f);
-                DrawBar(new Rect(left + 14f * scale, top + 240f * scale, width - 28f * scale, (mobile ? 14f : 9f) * scale),
+                DrawBar(new Rect(left + 14f * scale, top + 268f * scale, width - 28f * scale, (mobile ? 14f : 9f) * scale),
                     objectiveProgress, objectiveColor, new Color(0.2f, 0.22f, 0.22f));
             }
             else
             {
-                GUI.Label(new Rect(left + 14f * scale, top + 177f * scale, width - 28f * scale, 24f * scale),
+                GUI.Label(new Rect(left + 14f * scale, top + 203f * scale, width - 28f * scale, 24f * scale),
                     $"SECURED {profile.securedScrap}   //   STREAK {profile.currentExtractionStreak}", _textStyle);
-                GUI.Label(new Rect(left + 14f * scale, top + 205f * scale, width - 28f * scale, 38f * scale),
+                GUI.Label(new Rect(left + 14f * scale, top + 231f * scale, width - 28f * scale, 38f * scale),
                     director != null && director.IsBossLevel && !director.BossGateCleared
                         ? "OBJECTIVE // ELIMINATE MUTATION TARGET"
                         : "OBJECTIVE // REACH EXTRACTION WITH LOOT", _objectiveStyle);
@@ -123,6 +132,9 @@ namespace Kamilunavo.Deadreach.UI
 
             if (mission != null && mission.HasActiveAlert)
                 DrawMissionAlert(safe, mission, director, mobile, scale);
+
+            if (sector != null && sector.PlayerInHazard)
+                DrawSectorHazardAlert(safe, sector, director, mission, mobile, scale);
 
             if (session == null)
                 return;
@@ -177,6 +189,23 @@ namespace Kamilunavo.Deadreach.UI
             GUI.Box(new Rect(x, y, width, height), GUIContent.none);
             GUI.color = previous;
             GUI.Label(new Rect(x + 10f * scale, y + 5f * scale, width - 20f * scale, height - 10f * scale), mission.AlertText, _centerStyle);
+        }
+
+        private void DrawSectorHazardAlert(Rect safe, SectorDirector sector, RunDifficultyDirector director, ExpeditionDirector mission, bool mobile, float scale)
+        {
+            var width = mobile ? Mathf.Min(390f * scale, safe.width * 0.42f) : Mathf.Min(420f, safe.width * 0.36f);
+            var height = mobile ? 48f * scale : 38f;
+            var x = safe.center.x - width * 0.5f;
+            var bossOffset = director != null && director.IsBossLevel && !director.BossGateCleared ? (mobile ? 88f * scale : 68f) : 0f;
+            var missionOffset = mission != null && mission.HasActiveAlert ? (mobile ? 58f * scale : 48f) : 0f;
+            var y = Screen.height - safe.yMax + 14f * scale + bossOffset + missionOffset;
+
+            var previous = GUI.color;
+            GUI.color = new Color(0.35f, 0.055f, 0.02f, 0.94f);
+            GUI.Box(new Rect(x, y, width, height), GUIContent.none);
+            GUI.color = previous;
+            GUI.Label(new Rect(x + 10f * scale, y + 4f * scale, width - 20f * scale, height - 8f * scale),
+                $"HAZARD // {sector.ActiveHazardLabel} // MOVE CLEAR", _centerStyle);
         }
 
         private void DrawExtractionFeedback(Rect safe, RunSession session, ExpeditionDirector mission, bool mobile, float scale)

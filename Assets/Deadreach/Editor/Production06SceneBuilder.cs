@@ -41,12 +41,33 @@ namespace Kamilunavo.Deadreach.Editor
             BuildInternal("0.11", "0.10 validated combat impact + expedition director + mission variety + objective-gated extraction + optional risk/reward caches + reinforcement waves");
         }
 
-        private static void BuildInternal(string version, string featureSummary)
+        [MenuItem("DEADREACH/Build Production Slice 0.12", priority = 6)]
+        public static void Build12()
+        {
+            if (!BuildInternal("0.12", "0.11 validated expedition director + multi-sector world expansion + route variants + hazards + sector-aware mission/reinforcement anchors"))
+                return;
+
+            if (!Production12SectorScenePass.Apply())
+            {
+                Debug.LogError("DEADREACH Production Slice 0.12 aborted: sector world pass failed after base scene generation.");
+                return;
+            }
+
+            if (!Production12LayoutPolishPass.Apply())
+            {
+                Debug.LogError("DEADREACH Production Slice 0.12 aborted: sector layout polish failed after world generation.");
+                return;
+            }
+
+            Debug.Log("DEADREACH Production Slice 0.12 generated: four playable sector layouts + expanded side routes + sector hazards + dynamic geography + decluttered Transit / Industrial / Blackout objective arenas.");
+        }
+
+        private static bool BuildInternal(string version, string featureSummary)
         {
             if (!Production06WeaponArtSetup.EnsureReady())
             {
                 Debug.LogError($"DEADREACH Production Slice {version} aborted: weapon-family production art is not ready.");
-                return;
+                return false;
             }
 
             // Reuse the fully real-Unity-validated scene generation pipeline. Newer progression,
@@ -54,6 +75,7 @@ namespace Kamilunavo.Deadreach.Editor
             // destabilize the accepted scene authoring path.
             BunkerHubSceneBuilder.BuildCompleteSlice();
             Debug.Log($"DEADREACH Production Slice {version} generated: 0.5 validated baseline + {featureSummary}.");
+            return true;
         }
     }
 }
