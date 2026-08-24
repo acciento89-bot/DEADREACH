@@ -47,7 +47,7 @@ Permanent firearm rule:
 - pre-Primary extraction remains sealed
 - mission marker works in expanded sector geography
 - contamination hazard warning appears on entry
-- contamination damage applies only while inside
+- contamination damage applies while inside
 - damage/warning clear after leaving
 - hazard / containers do not physically trap the CharacterController
 
