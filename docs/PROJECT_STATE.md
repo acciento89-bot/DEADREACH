@@ -18,7 +18,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
 - active production branch: `production/0.13-premium-bunker-ui`
-- Production 0.13 state: implementation complete for first large premium-UI / Bunker-art block; **real Unity validation pending**
+- Production 0.13 state: first large premium-UI / Bunker-art block implemented; **fresh Unity compile passed, build/runtime validation pending**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -68,7 +68,7 @@ Permanent firearm rule:
 - Production13BunkerScenePass runs only after stable 0.12 world generation succeeds
 
 ### Real-Unity validation state
-- fresh compile: **PENDING**
+- fresh compile: **PASSED — 0 red compiler errors**
 - Build Production Slice 0.13: **PENDING**
 - premium shell visual acceptance: **PENDING**
 - Overview / Arsenal / Operators / Campaign / Workshop / Supply screen pass: **PENDING**
@@ -92,9 +92,6 @@ Permanent firearm rule:
 
 ## Next exact gate
 
-1. pull `production/0.13-premium-bunker-ui`
-2. fresh Unity compile → require **0 red compiler errors**
-3. only after compile passes, run `DEADREACH > Build Production Slice 0.13`
-4. first visual inspection starts on Bunker Overview before screen-by-screen regression
+Run `DEADREACH > Build Production Slice 0.13` in the freshly compiled branch. Require stable 0.12 world generation + layout polish + Production13BunkerScenePass to complete with no blocking red generation errors. After that, first visual acceptance starts on Bunker Overview.
 
 Test plan: `docs/PRODUCTION_13_TEST.md`
