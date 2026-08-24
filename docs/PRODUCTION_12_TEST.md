@@ -2,86 +2,85 @@
 
 Production 0.12 branches from the fully real-Unity-validated Production 0.11 `main` baseline.
 
-## Compile / build gate
+## Current validation state
 
-1. Fresh real-Unity compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24.
-2. `DEADREACH > Build Production Slice 0.12`: **PASSED** ✅ 2026-08-24.
-3. No blocking red generation/build errors reported ✅.
+- Q-WARD runtime gate: **PASSED / remains accepted** — the 0.12b polish pass does not touch Q-WARD.
+- TRANSIT COLLAPSE: previous runtime pass is **superseded** by the new declutter geometry and must be revalidated.
+- INDUSTRIAL SPILL: previous runtime pass is **superseded** by the new declutter geometry and must be revalidated.
+- BLACKOUT PLAZA: first runtime layout was rejected because vehicle / marker / hazard spacing was too crowded; must be revalidated after 0.12b polish.
+- fresh Unity compile: **required again** because build/editor code changed.
+- `DEADREACH > Build Production Slice 0.12`: **required again** because the generated scene now runs the layout-polish pass.
 
-## Editor sector test override
+## 0.12b layout polish
 
-Use:
-- `DEADREACH > Dev > Sector 0.12 > AUTO`
-- `DEADREACH > Dev > Sector 0.12 > QUARANTINE WARD`
-- `DEADREACH > Dev > Sector 0.12 > TRANSIT COLLAPSE`
-- `DEADREACH > Dev > Sector 0.12 > INDUSTRIAL SPILL`
-- `DEADREACH > Dev > Sector 0.12 > BLACKOUT PLAZA`
+`Production12LayoutPolishPass` runs after the normal sector scene pass. Q-WARD is intentionally unchanged.
 
-The override applies on the next expedition scene load and is compiled out of player builds; release/mobile builds always use automatic sector selection.
+### TRANSIT COLLAPSE
+- large wreck truck / sports wreck / pickup / barrier moved toward route edges
+- HOLDOUT arena moved to a deliberately open central point
+- RECOVERY / BLACKSITE / PURGE anchors redistributed to clearer authored spaces
+- electrical hazard moved away from the main objective circle
+- moved/rotated prop collision bounds are recalculated after their final pose
 
-## QUARANTINE WARD — PASSED 2026-08-24 ✅
+### INDUSTRIAL SPILL
+- central barrels moved toward the channel edges
+- service truck pushed farther onto the east spur
+- north barrier moved off the center lane
+- HOLDOUT / RECOVERY / BLACKSITE / PURGE anchors redistributed
+- chemical / fire hazards separated from mission-marker lanes
+- moved/rotated prop collision bounds are recalculated after their final pose
 
-Accepted in real Unity runtime:
-- Q-WARD / BIOHAZARD identity and green/teal atmosphere
-- west and east spur out-and-back traversal
-- no tested side-route world-safety snap-back
-- east extraction reachable
-- pre-Primary extraction remains sealed
-- mission marker works in expanded sector geography
-- contamination warning/damage while inside
-- warning and damage clear after exit
-- no CharacterController trapping on tested hazard/container geometry
+### BLACKOUT PLAZA
+- strongest declutter pass
+- both wrecked vehicles moved to opposite lane edges
+- barriers moved outward
+- HOLDOUT marker moved to a large open central plaza
+- BLACKSITE / RECOVERY / PURGE anchors redistributed
+- nearby loot/enemy spawn points moved out of the holdout circle
+- ARC hazard moved west; FIRE hazard moved north-east
+- emergency lights follow the new hazard positions
+- moved/rotated prop collision bounds are recalculated after their final pose
 
-## TRANSIT COLLAPSE — PASSED 2026-08-24 ✅
+## Exact revalidation order
 
-Accepted in real Unity runtime:
-- TRANSIT COLLAPSE sector identity and cold/blue presentation
-- wreck cluster materially changes the route
-- alternate path around the wrecks is traversable
-- west-side extraction is reachable and reversible
-- electrical hazard warning/damage works only while inside
-- hazard damage and warning clear after leaving
-- mission marker remains on supported sector geometry
-- ordinary infected remain on normal enemy geography
-- runtime reinforcements arrive from valid sector geography
+1. pull latest `production/0.12-sector-expansion`
+2. fresh Unity compile → require **0 red compiler errors**
+3. run `DEADREACH > Build Production Slice 0.12`
+4. require no blocking red generation/build errors
+5. TRANSIT COLLAPSE runtime recheck
+6. INDUSTRIAL SPILL runtime recheck
+7. BLACKOUT PLAZA runtime recheck
+8. return sector override to `AUTO`
+9. sector reward gate
+10. fixed-zone mobile regression
+11. full Bunker → Workshop/Arsenal → Deploy → mission/risk-reward → extraction → Bunker regression
+12. Unity Console ends with **0 red runtime errors**
 
-## INDUSTRIAL SPILL — PASSED 2026-08-24 ✅
+## Runtime sector criteria
 
-Accepted in real Unity runtime:
-- INDUSTRIAL SPILL identity and amber industrial presentation
-- container / pipe / barrel channels visibly change traversal
-- north extraction is reachable and reversible
-- chemical and fire hazards are visually distinct
-- both hazards damage only while inside and clear after exit
-- neither hazard physically traps the CharacterController
-- mission marker remains on supported geometry
-- loot and enemy placement remain reachable
+For each of TRANSIT / INDUSTRIAL / BLACKOUT:
+- sector identity / atmosphere is correct
+- main route and side route are clearly traversable
+- vehicles / containers / barriers do not make objective circles feel cramped
+- objective marker is on supported, reachable ground with useful combat space around it
+- sector extraction is reachable, reversible and still correctly sealed before Primary
+- hazard warning/damage works only while inside and clears on exit
+- no hazard or prop physically traps the CharacterController
+- loot / ordinary infected remain on reachable geography
+- runtime reinforcements arrive from valid sector anchors
+- 0.10 combat-impact VFX remain intact
 
-## BLACKOUT PLAZA — NEXT
+## Q-WARD accepted coverage
 
-Validate:
-- FIELD OPS shows `BLACKOUT PLAZA`
-- dark violet/red emergency atmosphere is obvious
-- route blockers differ from the other sectors
-- east-side extraction is reachable and reversible
-- electrical arc and fire hazards are both readable during combat
-- each hazard damages only while inside and clears on exit
-- mission marker, loot and enemies remain on supported geometry
-- runtime reinforcements arrive from valid sector geography
+The existing Q-WARD real-Unity pass remains accepted because 0.12b modifies no Q-WARD object or anchor:
+- west/east spur traversal
+- east extraction
+- pre-Primary extraction seal
+- mission marker geography
+- contamination hazard enter/damage/exit
+- no CharacterController trapping
 
-## Sector-aware geography gate
-
-Q-WARD, TRANSIT and INDUSTRIAL have real-runtime coverage. BLACKOUT remains:
-- player spawn uses layout spawn anchor
-- ExtractionZone + beacon presentation move to layout extraction anchor
-- ordinary infected reposition to enemy anchors
-- Scrap/weapon loot reposition to loot anchors
-- Primary / BLACKSITE / BLACK CACHE markers stay on supported sector anchors
-- Holdout / Blacksite / cache reinforcements use sector reinforcement geography
-- ordinary Runner enemies are never mistaken for `_R##` reinforcements
-- no target spawns outside supported world
-
-## Sector risk/reward gate — PENDING
+## Sector risk/reward gate — pending
 
 Primary completion additional unsecured Scrap:
 - Quarantine +4
@@ -99,42 +98,5 @@ Validate both reward paths:
 - free run-inventory slot: carried clone receives bonus
 - full inventory: pending reward retains bonus and banks only after successful extraction
 - death/abandon still loses unsecured state
-
-## Production 0.11 mission regression — PENDING FINAL PASS
-
-- Mission HUD appears
-- Objective marker appears at sector-specific location
-- pre-Primary extraction still shows `EXTRACTION SEALED`
-- RECOVERY / PURGE / HOLDOUT / BLACKSITE logic unchanged
-- Primary unlocks extraction
-- BLACK CACHE works
-- reinforcement roles / 0.10 VFX intact
-- successful extraction returns to Bunker
-
-## Mobile regression — PENDING
-
-- MOVE fixed lower-left, full 360°
-- AIM/FIRE fixed lower-right
-- Ability independent upper-right
-- enlarged FIELD OPS readable and outside control zones
-- east/west routes controllable without camera/input dead zones
-- hazard/objective alerts do not steal touch input
-
-## Full regression — PENDING
-
-1. Return sector override to `AUTO`.
-2. Bunker → Workshop present.
-3. Arsenal orientation/framing intact.
-4. Deploy into a 0.12 sector.
-5. Traverse main street + one side spur.
-6. Trigger and leave one hazard.
-7. Complete Primary.
-8. Complete BLACK CACHE or deliberately skip it.
-9. Extract from sector-specific extraction point.
-10. Return to Bunker.
-11. Workshop/progression persist.
-12. Optional cache reward banks only after successful extraction.
-13. Boss/reward/0.10 combat-impact presentation intact.
-14. Unity Console ends with **0 red runtime errors**.
 
 Production 0.12 remains Draft/unmerged until the full gate passes.
