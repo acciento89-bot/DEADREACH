@@ -5,13 +5,18 @@ Production 0.12 branches from the fully real-Unity-validated Production 0.11 `ma
 ## Current validation state
 
 - Q-WARD runtime gate: **PASSED / remains accepted** — the 0.12b polish pass does not touch Q-WARD.
-- TRANSIT COLLAPSE: previous runtime pass is **superseded** by the new declutter geometry and must be revalidated.
-- INDUSTRIAL SPILL: previous runtime pass is **superseded** by the new declutter geometry and must be revalidated.
-- BLACKOUT PLAZA: first runtime layout was rejected because vehicle / marker / hazard spacing was too crowded; must be revalidated after 0.12b polish.
-- fresh Unity compile: **required again** because build/editor code changed.
-- `DEADREACH > Build Production Slice 0.12`: **required again** because the generated scene now runs the layout-polish pass.
+- Fresh Unity compile after 0.12b: **PASSED — 0 red compiler errors** ✅ 2026-08-24.
+- `DEADREACH > Build Production Slice 0.12` after 0.12b: **PASSED** ✅ 2026-08-24.
+- TRANSIT COLLAPSE after 0.12b declutter: **PASSED** ✅ 2026-08-24.
+- INDUSTRIAL SPILL after 0.12b declutter: **PASSED** ✅ 2026-08-24.
+- BLACKOUT PLAZA after 0.12b declutter: **PASSED** ✅ 2026-08-24.
+- All four sector layouts now have accepted real-Unity runtime coverage.
+- sector reward gate: pending.
+- fixed-zone mobile regression: pending.
+- full Bunker → Workshop/Arsenal → Deploy → mission/risk-reward → extraction → Bunker regression: pending.
+- final Unity Console 0 red runtime errors: pending.
 
-## 0.12b layout polish
+## 0.12b layout polish — ACCEPTED
 
 `Production12LayoutPolishPass` runs after the normal sector scene pass. Q-WARD is intentionally unchanged.
 
@@ -21,6 +26,7 @@ Production 0.12 branches from the fully real-Unity-validated Production 0.11 `ma
 - RECOVERY / BLACKSITE / PURGE anchors redistributed to clearer authored spaces
 - electrical hazard moved away from the main objective circle
 - moved/rotated prop collision bounds are recalculated after their final pose
+- real-Unity runtime revalidation: **PASSED**
 
 ### INDUSTRIAL SPILL
 - central barrels moved toward the channel edges
@@ -29,6 +35,7 @@ Production 0.12 branches from the fully real-Unity-validated Production 0.11 `ma
 - HOLDOUT / RECOVERY / BLACKSITE / PURGE anchors redistributed
 - chemical / fire hazards separated from mission-marker lanes
 - moved/rotated prop collision bounds are recalculated after their final pose
+- real-Unity runtime revalidation: **PASSED**
 
 ### BLACKOUT PLAZA
 - strongest declutter pass
@@ -40,35 +47,7 @@ Production 0.12 branches from the fully real-Unity-validated Production 0.11 `ma
 - ARC hazard moved west; FIRE hazard moved north-east
 - emergency lights follow the new hazard positions
 - moved/rotated prop collision bounds are recalculated after their final pose
-
-## Exact revalidation order
-
-1. pull latest `production/0.12-sector-expansion`
-2. fresh Unity compile → require **0 red compiler errors**
-3. run `DEADREACH > Build Production Slice 0.12`
-4. require no blocking red generation/build errors
-5. TRANSIT COLLAPSE runtime recheck
-6. INDUSTRIAL SPILL runtime recheck
-7. BLACKOUT PLAZA runtime recheck
-8. return sector override to `AUTO`
-9. sector reward gate
-10. fixed-zone mobile regression
-11. full Bunker → Workshop/Arsenal → Deploy → mission/risk-reward → extraction → Bunker regression
-12. Unity Console ends with **0 red runtime errors**
-
-## Runtime sector criteria
-
-For each of TRANSIT / INDUSTRIAL / BLACKOUT:
-- sector identity / atmosphere is correct
-- main route and side route are clearly traversable
-- vehicles / containers / barriers do not make objective circles feel cramped
-- objective marker is on supported, reachable ground with useful combat space around it
-- sector extraction is reachable, reversible and still correctly sealed before Primary
-- hazard warning/damage works only while inside and clears on exit
-- no hazard or prop physically traps the CharacterController
-- loot / ordinary infected remain on reachable geography
-- runtime reinforcements arrive from valid sector anchors
-- 0.10 combat-impact VFX remain intact
+- real-Unity runtime revalidation: **PASSED**
 
 ## Q-WARD accepted coverage
 
@@ -80,7 +59,7 @@ The existing Q-WARD real-Unity pass remains accepted because 0.12b modifies no Q
 - contamination hazard enter/damage/exit
 - no CharacterController trapping
 
-## Sector risk/reward gate — pending
+## Sector risk/reward gate — NEXT
 
 Primary completion additional unsecured Scrap:
 - Quarantine +4
@@ -99,4 +78,30 @@ Validate both reward paths:
 - full inventory: pending reward retains bonus and banks only after successful extraction
 - death/abandon still loses unsecured state
 
-Production 0.12 remains Draft/unmerged until the full gate passes.
+## Mobile regression — PENDING
+
+- MOVE fixed lower-left, full 360°
+- AIM/FIRE fixed lower-right
+- Ability independent upper-right
+- enlarged FIELD OPS readable and outside control zones
+- east/west routes controllable without camera/input dead zones
+- hazard/objective alerts do not steal touch input
+
+## Full regression — PENDING
+
+1. Return sector override to `AUTO`.
+2. Bunker → Workshop present.
+3. Arsenal orientation/framing intact.
+4. Deploy into a 0.12 sector.
+5. Traverse main street + one side spur.
+6. Trigger and leave one hazard.
+7. Complete Primary and verify the sector Scrap bonus.
+8. Complete BLACK CACHE and verify the sector Item Power bonus.
+9. Extract from sector-specific extraction point.
+10. Return to Bunker.
+11. Workshop/progression persist.
+12. Optional cache reward banks only after successful extraction.
+13. Boss/reward/0.10 combat-impact presentation intact.
+14. Unity Console ends with **0 red runtime errors**.
+
+Production 0.12 remains Draft/unmerged until the reward, mobile and full regression gates pass.
