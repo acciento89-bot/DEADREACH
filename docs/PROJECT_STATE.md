@@ -26,52 +26,56 @@ Permanent firearm rule:
 
 ## Production 0.12 — Sector Expansion
 
-### Validation state
-- fresh real-Unity compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24
-- `DEADREACH > Build Production Slice 0.12`: **PASSED** ✅ 2026-08-24
-- QUARANTINE WARD runtime gate: **PASSED** ✅ 2026-08-24
-- TRANSIT COLLAPSE runtime gate: **PASSED** ✅ 2026-08-24
-- INDUSTRIAL SPILL runtime gate: **PASSED** ✅ 2026-08-24
-- next: BLACKOUT PLAZA
+### Current validation state
+- Q-WARD runtime gate: **PASSED / still accepted**; 0.12b does not modify Q-WARD
+- TRANSIT runtime gate: **must be repeated** after 0.12b geometry changes
+- INDUSTRIAL runtime gate: **must be repeated** after 0.12b geometry changes
+- BLACKOUT first layout: **rejected as too crowded**; 0.12b fix implemented and awaiting test
+- fresh compile: required again after code changes
+- Build Production Slice 0.12: required again after generator changes
 - sector reward gate: pending
 - fixed-zone mobile regression: pending
 - full Bunker → mission/risk-reward → extraction → Bunker regression: pending
 - final Unity Console 0 red runtime errors: pending
 
-### Accepted real-runtime sector behavior
+### 0.12b layout-polish implementation
 
-QUARANTINE WARD:
-- Q-WARD / BIOHAZARD identity and green/teal atmosphere accepted
-- west/east spur out-and-back accepted
-- east extraction reachable
-- pre-Primary extraction sealed
-- mission marker works in sector geography
-- contamination damage/warning clears on exit
-- no tested CharacterController trapping
+New editor pass: `Assets/Deadreach/Editor/Production12LayoutPolishPass.cs`.
 
-TRANSIT COLLAPSE:
-- cold/blue identity accepted
-- wreck cluster changes route choice
-- alternate route around wrecks traversable
-- west extraction reachable and reversible
-- electrical hazard damage/warning clears on exit
-- mission marker stays on supported geometry
-- ordinary infected remain on normal enemy geography
-- reinforcement geography accepted
+`Build Production Slice 0.12` now runs:
+1. accepted base scene generation
+2. normal Production 0.12 sector authoring
+3. Production 0.12b layout-polish pass
 
-INDUSTRIAL SPILL:
-- amber industrial identity accepted
-- container / pipe / barrel channel layout accepted
-- north extraction reachable and reversible
-- chemical and fire hazards visually distinct
-- both hazards damage only while inside and clear on exit
-- no hazard CharacterController trapping
-- mission marker / loot / enemy placement remain reachable
+Q-WARD is deliberately untouched.
 
-### 0.12 implementation
+TRANSIT:
+- large wreck bodies / barrier moved toward lane edges
+- central HOLDOUT area opened
+- mission anchors redistributed
+- arc hazard moved away from objective center
+
+INDUSTRIAL:
+- barrels moved out of the central channel
+- service truck moved farther east
+- north barrier moved outward
+- mission anchors redistributed
+- chemical/fire hazard lanes separated from mission circles
+
+BLACKOUT:
+- both large vehicles moved to opposite lane edges
+- barriers moved outward
+- central HOLDOUT plaza cleared
+- mission anchors redistributed
+- nearby loot/enemy positions removed from the holdout circle
+- arc/fire hazards separated from the central objective arena
+
+Important collision hardening:
+- every moved-and-rotated production prop refreshes its generated `CollisionBounds` after the final pose so stale collider orientation cannot continue blocking a route after the visual object moved.
+
+### Existing 0.12 systems preserved
 - expanded east/west cross-street network
-- four authored sector layouts: QUARANTINE WARD / TRANSIT COLLAPSE / INDUSTRIAL SPILL / BLACKOUT PLAZA
-- sector-specific player, extraction, enemy, loot, objective and reinforcement anchors
+- sector-specific player / extraction / enemy / loot / objective / reinforcement anchors
 - sector-specific fog / key-light identity
 - Contamination / Electrical Arc / Fireline hazards
 - FIELD OPS Sector + hazard status
@@ -92,20 +96,15 @@ INDUSTRIAL SPILL:
 - 0.10 combat-impact VFX
 - accepted Arsenal / Bunker / boss / reward presentation
 
-## Next exact test
+## Next exact gate
 
-Select:
-`DEADREACH > Dev > Sector 0.12 > BLACKOUT PLAZA`
-
-Validate:
-- FIELD OPS BLACKOUT PLAZA
-- violet/red blackout emergency identity
-- route blockers clearly differ from previous sectors
-- east extraction reachable and reversible
-- electrical arc hazard damages only while inside and clears on exit
-- fire hazard damages only while inside and clears on exit
-- both hazards remain readable during combat and do not trap the CharacterController
-- mission marker / loot / enemy positions remain reachable
-- runtime reinforcements use valid sector geography
+1. `git pull` on `production/0.12-sector-expansion`
+2. fresh Unity compile → **0 red compiler errors**
+3. `DEADREACH > Build Production Slice 0.12`
+4. recheck TRANSIT
+5. recheck INDUSTRIAL
+6. recheck BLACKOUT
+7. return override to AUTO
+8. sector reward + mobile + full regression
 
 Test plan: `docs/PRODUCTION_12_TEST.md`
