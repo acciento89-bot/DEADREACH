@@ -32,23 +32,19 @@ Implemented after the 0.13a review:
 - Kenney plates are installed behind header / content / navigation / deploy UI
 - the old nearly opaque tactical backdrop is disabled by the 0.13b layer
 - Backdrop / ContentFrame / feature panels are made substantially more transparent so the 3D command center is visibly part of the menu composition
+- horizontal Operations navigation and a freer Overview hero window replace the previous dashboard-heavy composition
 - all added UI graphics remain raycast-disabled
 - third-party provenance / CC0 licenses are retained in `Assets/Deadreach/Art/Production13`
 
-Because 0.13b adds runtime code and imported model/texture assets, all previous 0.13a compile/build results are **STALE for the current branch**.
+## Gate A — Fresh Unity compile / asset import — PASSED ✅
 
-## Gate A — Fresh Unity compile — PENDING AGAIN
-
-After pulling the current 0.13b branch, let Unity finish importing the new OBJ / MTL / PNG assets and compiling.
-
-Require:
+User-confirmed real Unity result on 2026-08-24:
 - **0 red compiler errors**
-- no blocking model-import errors
-- no blocking missing-type / Resources / UI errors
+- Quaternius OBJ / MTL and Kenney PNG import completed without a reported blocking error
 
-## Gate B — Build Production Slice 0.13 — PENDING AGAIN
+## Gate B — Build Production Slice 0.13 — PENDING
 
-Only after Gate A passes, run:
+Run:
 `DEADREACH > Build Production Slice 0.13`
 
 Require:
@@ -65,11 +61,13 @@ At Bunker Overview validate specifically:
 - the 3D Bunker is clearly visible through the UI rather than hidden behind an opaque full-screen treatment
 - the central Quaternius blast-door / authored bulkhead silhouettes are visibly real model geometry rather than Unity cube construction
 - Kenney sci-fi plates are visible in header / navigation / deploy treatment without covering text
+- horizontal Operations navigation reads cleanly and remains fully clickable
+- Overview leaves a genuine visible 3D hero window instead of filling the screen with dashboard panels
 - graphite / cyan / amber DEADREACH identity remains coherent
 - text remains readable despite the more open 3D composition
 - active navigation state remains obvious
 - navigation and Deploy remain clickable
-- real-asset geometry does not visually clip through the important foreground menu content
+- real-asset geometry does not visually clip through important foreground menu content
 
 ## Gate D — Screen-by-screen visual / interaction acceptance — PENDING
 
