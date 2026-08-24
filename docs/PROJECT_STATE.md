@@ -14,78 +14,70 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - URP: 17.3
 - Bundle ID: `de.kamilunavo.deadzone`
 - Mobile: landscape only
-- stable `main`: Production 0.11
+- stable `main`: Production 0.11 until PR #12 promotion completes
 - Production 0.11 merge: `5b1b40322e305b1546a9ca5a37c1f6b89eabea72`
 - active branch: `production/0.12-sector-expansion`
-- PR #12: Draft
+- PR #12: fully validated, ready for promotion
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
 - derive muzzle from that embedded firearm
 - never reintroduce the failed external hand-mounted Rifle transform path
 
-## Production 0.12 — Sector Expansion
+## Production 0.12 — Sector Expansion — FULLY VALIDATED ✅
 
-### Current validation state
-- Q-WARD runtime gate: **PASSED / still accepted** ✅ 2026-08-24
-- fresh compile after 0.12b: **PASSED — 0 red compiler errors** ✅ 2026-08-24
-- `Build Production Slice 0.12` after 0.12b: **PASSED** ✅ 2026-08-24
-- TRANSIT runtime revalidation after declutter: **PASSED** ✅ 2026-08-24
-- INDUSTRIAL runtime revalidation after declutter: **PASSED** ✅ 2026-08-24
-- BLACKOUT runtime revalidation after declutter: **PASSED** ✅ 2026-08-24
-- all four sector layouts now have accepted real-Unity runtime coverage
-- sector reward gate: pending
-- fixed-zone mobile regression: pending
-- full Bunker → mission/risk-reward → extraction → Bunker regression: pending
-- final Unity Console 0 red runtime errors: pending
+### Final real-Unity validation
+- fresh compile after 0.12b: **PASSED — 0 red compiler errors**
+- `DEADREACH > Build Production Slice 0.12`: **PASSED**
+- QUARANTINE WARD: **PASSED**
+- TRANSIT COLLAPSE after declutter: **PASSED**
+- INDUSTRIAL SPILL after declutter: **PASSED**
+- BLACKOUT PLAZA after declutter: **PASSED**
+- sector reward / BLACK CACHE Item Power behavior: **PASSED**
+- fixed-zone mobile controls: **PASSED**
+- full Bunker → Workshop/Arsenal → Deploy → mission/risk-reward → extraction → Bunker regression: **PASSED**
+- Workshop/progression persistence: **PASSED**
+- 0.10 combat-impact / boss / reward presentation regression: **PASSED**
+- final Unity Console: **0 red runtime errors**
 
-### 0.12b layout-polish implementation — ACCEPTED
-
-New editor pass: `Assets/Deadreach/Editor/Production12LayoutPolishPass.cs`.
-
-`Build Production Slice 0.12` runs:
-1. accepted base scene generation
-2. normal Production 0.12 sector authoring
-3. Production 0.12b layout-polish pass
-
-Q-WARD is deliberately untouched.
-
-TRANSIT:
-- large wreck bodies / barrier moved toward lane edges
-- central HOLDOUT area opened
-- mission anchors redistributed
-- arc hazard moved away from objective center
-- moved/rotated collision bounds refreshed
-
-INDUSTRIAL:
-- barrels moved out of the central channel
-- service truck moved farther east
-- north barrier moved outward
-- mission anchors redistributed
-- chemical/fire hazard lanes separated from mission circles
-- moved/rotated collision bounds refreshed
-
-BLACKOUT:
-- both large vehicles moved to opposite lane edges
-- barriers moved outward
-- central HOLDOUT plaza cleared
-- mission anchors redistributed
-- nearby loot/enemy positions removed from the holdout circle
-- arc/fire hazards separated from the central objective arena
-- moved/rotated collision bounds refreshed
-
-### Existing 0.12 systems preserved
+### World / sector architecture
 - expanded east/west cross-street network
-- sector-specific player / extraction / enemy / loot / objective / reinforcement anchors
+- four authored layouts: QUARANTINE WARD / TRANSIT COLLAPSE / INDUSTRIAL SPILL / BLACKOUT PLAZA
+- sector-specific player, extraction, enemy, loot, objective and reinforcement anchors
 - sector-specific fog / key-light identity
-- Contamination / Electrical Arc / Fireline hazards
-- FIELD OPS Sector + hazard status
-- Primary sector Scrap risk bonus
-- BLACK CACHE sector Item Power bonus
-- editor-only sector override AUTO / QUARANTINE / TRANSIT / INDUSTRIAL / BLACKOUT
-- ordinary Runner enemies excluded from `_R##` reinforcement relocation
+- dynamic sector selection plus editor-only deterministic override
+- ordinary Runner enemies remain excluded from `_R##` reinforcement relocation
 
-### Stable systems that must remain green
+### Gameplay hazards
+- Contamination / Electrical Arc / Fireline
+- trigger-only gameplay zones
+- periodic player damage while inside
+- HUD danger warning clears after exit
+- no control takeover / accepted CharacterController traversal
+
+### Sector risk/reward
+Primary completion extra unsecured Scrap:
+- Quarantine +4
+- Transit +6
+- Industrial +8
+- Blackout +10
+
+BLACK CACHE Item Power bonus:
+- Quarantine +2
+- Transit +3
+- Industrial +5
+- Blackout +6
+
+Successful-extraction banking behavior is accepted; unsecured run state remains risk-bearing.
+
+### 0.12b layout polish
+- Q-WARD intentionally unchanged
+- TRANSIT large wrecks and barrier moved outward; objective/hazard spacing improved
+- INDUSTRIAL props pushed out of core lanes; objective and hazard spacing improved
+- BLACKOUT strongly decluttered with an open central HOLDOUT arena
+- moved/rotated prop `CollisionBounds` are refreshed after final pose to prevent stale invisible blocking
+
+### Stable systems preserved
 - 0.11 RECOVERY / PURGE / HOLDOUT / BLACKSITE
 - objective-gated extraction
 - BLACK CACHE risk/reward path
@@ -97,14 +89,8 @@ BLACKOUT:
 - 0.10 combat-impact VFX
 - accepted Arsenal / Bunker / boss / reward presentation
 
-## Next exact gate
+## Promotion gate
 
-1. return Sector 0.12 override to `AUTO`
-2. validate sector Primary Scrap bonus
-3. validate BLACK CACHE Item Power bonus
-4. validate free-slot and full-inventory pending-reward paths
-5. validate fixed-zone mobile controls + HUD
-6. run full Bunker → Workshop/Arsenal → Deploy → mission/risk-reward → extraction → Bunker regression
-7. require final Unity Console **0 red runtime errors**
+Production 0.12 has passed all requested real-Unity gates. Next action is PR #12 Ready → verify mergeability → squash merge exact validated head → update this file on `main` to record the stable 0.12 merge SHA and clear the active production branch.
 
 Test plan: `docs/PRODUCTION_12_TEST.md`
