@@ -47,8 +47,9 @@ Permanent firearm rule:
 - PR #12: **Draft**
 - fresh real-Unity compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24
 - `DEADREACH > Build Production Slice 0.12`: **PASSED** ✅ 2026-08-24
-- next gate: four-sector world/runtime validation
-- mobile/full regression remains pending
+- QUARANTINE WARD runtime gate: **PASSED** ✅ 2026-08-24
+- next gate: **TRANSIT COLLAPSE**
+- INDUSTRIAL SPILL / BLACKOUT PLAZA / reward / mobile / full regression remain pending
 
 ## 4. Stable Production 0.11 baseline that must remain green
 
@@ -85,21 +86,35 @@ Permanent firearm rule:
 - death/abandon clears pending rewards
 - extraction trigger/egress hardening remains accepted
 
-## 5. Production 0.12 — Sector Expansion — COMPILE + BUILD PASSED / RUNTIME PENDING
+## 5. Production 0.12 — Sector Expansion
 
-### World expansion
-- `Production_SectorNetwork_0_12` adds east/west road spurs to the accepted north/south route
-- world-safety rectangle widened for the cross-street playspace
-- `PlayerFallSafety` widened accordingly
-- existing 0.11 north extraction support preserved
+### Compile / build — PASSED
+- static integration sanity pass complete
+- fresh real Unity compile: **0 red compiler errors** ✅
+- `Build Production Slice 0.12`: **PASSED** ✅
 
-### Four authored sector layouts
-1. **QUARANTINE WARD** — checkpoint/barrier layout, east extraction, contamination hazard, teal/green atmosphere
-2. **TRANSIT COLLAPSE** — wrecked-traffic route blockers, west extraction, electrical hazard, cold blue atmosphere
-3. **INDUSTRIAL SPILL** — container/pipes channel layout, north extraction, contamination + fire hazards, amber atmosphere
-4. **BLACKOUT PLAZA** — blackout wreck/barrier layout, east extraction, electrical + fire hazards, violet/red emergency atmosphere
+### QUARANTINE WARD — REAL UNITY VALIDATED ✅
+Accepted in runtime:
+- Q-WARD / BIOHAZARD identity and green/teal atmosphere
+- west spur out-and-back
+- east spur out-and-back
+- no world-safety snap-back on tested side routes
+- east-side extraction reachable
+- pre-Primary extraction remains sealed
+- mission marker uses the expanded sector geography
+- contamination hazard warning appears on entry
+- contamination damage applies while inside
+- warning/damage stop after leaving
+- hazard / containers do not trap the CharacterController
 
-### Sector runtime director
+This is the first real-runtime confirmation that the 0.12 expanded cross-street world, sector extraction movement, mission geography and hazard loop work together.
+
+### Remaining sector validation
+1. **TRANSIT COLLAPSE** — next
+2. **INDUSTRIAL SPILL** — pending
+3. **BLACKOUT PLAZA** — pending
+
+### Sector runtime architecture
 - deterministic automatic sector selection from run/campaign state
 - editor-only override: AUTO / QUARANTINE / TRANSIT / INDUSTRIAL / BLACKOUT
 - only one authored layout active per expedition
@@ -121,7 +136,7 @@ Permanent firearm rule:
 - damage and HUD warning stop on exit
 - no mobile-input takeover
 
-### Sector risk/reward
+### Sector risk/reward — NOT YET ACCEPTED
 Primary completion extra unsecured Scrap:
 - Quarantine +4
 - Transit +6
@@ -134,7 +149,7 @@ BLACK CACHE Item Power bonus:
 - Industrial +5
 - Blackout +6
 
-Both carried-inventory clone and full-inventory pending-reward paths are covered.
+Both carried-inventory clone and full-inventory pending-reward paths must still be validated in real runtime.
 
 ### FIELD OPS 0.12 HUD
 - enlarged mobile-readable panel
@@ -143,28 +158,22 @@ Both carried-inventory clone and full-inventory pending-reward paths are covered
 - centered `HAZARD // <type> // MOVE CLEAR` warning
 - accepted mission/vitals/weapon/loot information preserved
 
-### Build / validation
-- build menu: `DEADREACH > Build Production Slice 0.12`
-- test plan: `docs/PRODUCTION_12_TEST.md`
-- static integration sanity pass: complete
-- fresh real Unity compile: **PASSED — 0 red compiler errors** ✅
-- build generation: **PASSED** ✅
-- four-sector runtime validation: pending
-- hazard/reward/mobile/full regression: pending
-
 ## 6. Handoff protocol
 
 1. stay on `production/0.12-sector-expansion`
-2. compile + build gates are green
-3. use the editor override to validate QUARANTINE / TRANSIT / INDUSTRIAL / BLACKOUT
-4. validate side-route traversal and world bounds
-5. validate sector spawn / extraction / enemy / loot / objective / reinforcement geography
-6. validate hazard damage and clear-on-exit
+2. compile + build + Q-WARD are green
+3. next select `DEADREACH > Dev > Sector 0.12 > TRANSIT COLLAPSE`
+4. validate west extraction, wreck detour, electrical hazard and sector mission/reinforcement geography
+5. then validate INDUSTRIAL SPILL
+6. then validate BLACKOUT PLAZA
 7. validate sector Scrap / Item Power bonuses
 8. return override to AUTO
-9. preserve complete 0.11 mission / BLACK CACHE / extraction behavior
-10. preserve schema-v6 Workshop progression
-11. preserve fixed-zone mobile controls
-12. preserve Production 0.10 combat-impact presentation
-13. never reintroduce external gameplay hand-mounted Rifle transforms
-14. keep mobile landscape-only
+9. run fixed-zone mobile regression
+10. run full Bunker → mission/risk-reward → extraction → Bunker regression
+11. require 0 red runtime errors
+12. preserve complete 0.11 mission / BLACK CACHE / extraction behavior
+13. preserve schema-v6 Workshop progression
+14. preserve fixed-zone mobile controls
+15. preserve Production 0.10 combat-impact presentation
+16. never reintroduce external gameplay hand-mounted Rifle transforms
+17. keep mobile landscape-only
