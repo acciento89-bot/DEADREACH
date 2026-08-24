@@ -45,9 +45,10 @@ Permanent firearm rule:
 - stable merge: **`5b1b40322e305b1546a9ca5a37c1f6b89eabea72`**
 - active branch: **`production/0.12-sector-expansion`**
 - PR #12: **Draft**
-- Production 0.12 fresh real-Unity compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24
-- next gate: **`DEADREACH > Build Production Slice 0.12`**
-- runtime/world/mobile validation remains pending
+- fresh real-Unity compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24
+- `DEADREACH > Build Production Slice 0.12`: **PASSED** ✅ 2026-08-24
+- next gate: four-sector world/runtime validation
+- mobile/full regression remains pending
 
 ## 4. Stable Production 0.11 baseline that must remain green
 
@@ -84,7 +85,7 @@ Permanent firearm rule:
 - death/abandon clears pending rewards
 - extraction trigger/egress hardening remains accepted
 
-## 5. Production 0.12 — Sector Expansion — COMPILE PASSED / BUILD + RUNTIME PENDING
+## 5. Production 0.12 — Sector Expansion — COMPILE + BUILD PASSED / RUNTIME PENDING
 
 ### World expansion
 - `Production_SectorNetwork_0_12` adds east/west road spurs to the accepted north/south route
@@ -147,24 +148,23 @@ Both carried-inventory clone and full-inventory pending-reward paths are covered
 - test plan: `docs/PRODUCTION_12_TEST.md`
 - static integration sanity pass: complete
 - fresh real Unity compile: **PASSED — 0 red compiler errors** ✅
-- build generation: pending
+- build generation: **PASSED** ✅
 - four-sector runtime validation: pending
 - hazard/reward/mobile/full regression: pending
 
 ## 6. Handoff protocol
 
 1. stay on `production/0.12-sector-expansion`
-2. compile gate is already green
-3. next run `DEADREACH > Build Production Slice 0.12`
-4. require no blocking red generation errors
-5. validate all four sectors using the editor override, then return to AUTO
-6. validate side-route traversal and world bounds
-7. validate sector spawn / extraction / enemy / loot / objective / reinforcement geography
-8. validate hazard damage and clear-on-exit
-9. validate sector Scrap / Item Power bonuses
-10. preserve complete 0.11 mission / BLACK CACHE / extraction behavior
-11. preserve schema-v6 Workshop progression
-12. preserve fixed-zone mobile controls
-13. preserve Production 0.10 combat-impact presentation
-14. never reintroduce external gameplay hand-mounted Rifle transforms
-15. keep mobile landscape-only
+2. compile + build gates are green
+3. use the editor override to validate QUARANTINE / TRANSIT / INDUSTRIAL / BLACKOUT
+4. validate side-route traversal and world bounds
+5. validate sector spawn / extraction / enemy / loot / objective / reinforcement geography
+6. validate hazard damage and clear-on-exit
+7. validate sector Scrap / Item Power bonuses
+8. return override to AUTO
+9. preserve complete 0.11 mission / BLACK CACHE / extraction behavior
+10. preserve schema-v6 Workshop progression
+11. preserve fixed-zone mobile controls
+12. preserve Production 0.10 combat-impact presentation
+13. never reintroduce external gameplay hand-mounted Rifle transforms
+14. keep mobile landscape-only
