@@ -11,9 +11,9 @@ Turn the expedition map from one repeated street into a true sector system with 
 1. Pull `production/0.12-sector-expansion`.
 2. Let Unity finish compiling.
 3. Fresh real-Unity compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24.
-4. Next: run `DEADREACH > Build Production Slice 0.12`.
-5. Require no blocking red generation/build errors.
-6. Confirm the generated Dead City scene contains `Production_SectorNetwork_0_12` and `Production_SectorLayouts_0_12`.
+4. `DEADREACH > Build Production Slice 0.12`: **PASSED** ✅ 2026-08-24.
+5. No blocking red generation/build errors reported ✅.
+6. Runtime/world validation is the next gate.
 
 ## Editor sector test override
 
