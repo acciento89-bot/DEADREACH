@@ -27,11 +27,11 @@ Implemented first large block:
 - `DEADREACH > Build Production Slice 0.13`
 - Build 0.13 preserves the accepted 0.12 sector scene + declutter passes before authoring the new Bunker
 
-## Gate A — Fresh Unity compile — PENDING
+## Gate A — Fresh Unity compile — PASSED ✅
 
-Require:
-- 0 red compiler errors
-- no blocking missing-type / UI / editor API errors
+User-confirmed real Unity result on 2026-08-24:
+- **0 red compiler errors**
+- no blocking missing-type / UI / editor API errors observed
 
 ## Gate B — Build Production Slice 0.13 — PENDING
 
