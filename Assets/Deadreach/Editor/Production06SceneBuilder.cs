@@ -53,7 +53,13 @@ namespace Kamilunavo.Deadreach.Editor
                 return;
             }
 
-            Debug.Log("DEADREACH Production Slice 0.12 generated: four playable sector layouts + expanded side routes + sector hazards + dynamic objective/enemy/loot/extraction/reinforcement geography.");
+            if (!Production12LayoutPolishPass.Apply())
+            {
+                Debug.LogError("DEADREACH Production Slice 0.12 aborted: sector layout polish failed after world generation.");
+                return;
+            }
+
+            Debug.Log("DEADREACH Production Slice 0.12 generated: four playable sector layouts + expanded side routes + sector hazards + dynamic geography + decluttered Transit / Industrial / Blackout objective arenas.");
         }
 
         private static bool BuildInternal(string version, string featureSummary)
