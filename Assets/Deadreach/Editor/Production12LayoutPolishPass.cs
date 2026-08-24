@@ -47,8 +47,6 @@ namespace Kamilunavo.Deadreach.Editor
 
         private static void PolishTransit(Scene scene)
         {
-            // Keep the wreck identity, but park the large bodies on the lane edges instead of across
-            // objective circles and the central route.
             SetPose(scene, "TC_Wreck_Truck", new Vector3(3.8f, 0.04f, 5.8f), 8f);
             SetPose(scene, "TC_Wreck_Sports", new Vector3(-3.8f, 0.04f, 12.6f), -10f);
             SetPose(scene, "TC_Wreck_Pickup", new Vector3(9.2f, 0.04f, 2.1f), 92f);
@@ -56,12 +54,11 @@ namespace Kamilunavo.Deadreach.Editor
             SetPosition(scene, "TC_Wheels", new Vector3(4.7f, 0.03f, 10.8f));
             SetPosition(scene, "TC_Pallet", new Vector3(-4.7f, 0.03f, 7.7f));
 
-            // Each mission family gets an intentionally open authored point.
-            SetPosition(scene, "TC_Objective_01", new Vector3(10f, 0.12f, 3.2f));      // BLACKSITE terminal
-            SetPosition(scene, "TC_Objective_02", new Vector3(0f, 0.12f, 9f));        // HOLDOUT arena
-            SetPosition(scene, "TC_Objective_03", new Vector3(-10.2f, 0.12f, 3.2f));  // RECOVERY
-            SetPosition(scene, "TC_Objective_04", new Vector3(0f, 0.12f, 16.2f));     // BLACKSITE vault
-            SetPosition(scene, "TC_Objective_05", new Vector3(0f, 0.12f, 1f));        // PURGE
+            SetPosition(scene, "TC_Objective_01", new Vector3(10f, 0.12f, 3.2f));
+            SetPosition(scene, "TC_Objective_02", new Vector3(0f, 0.12f, 9f));
+            SetPosition(scene, "TC_Objective_03", new Vector3(-10.2f, 0.12f, 3.2f));
+            SetPosition(scene, "TC_Objective_04", new Vector3(0f, 0.12f, 16.2f));
+            SetPosition(scene, "TC_Objective_05", new Vector3(0f, 0.12f, 1f));
 
             SetPosition(scene, "TC_ArcField", new Vector3(-3.8f, 0f, 5.2f));
             SetPosition(scene, "TC_ArcLight", new Vector3(-3.8f, 2.2f, 5.2f));
@@ -69,18 +66,17 @@ namespace Kamilunavo.Deadreach.Editor
 
         private static void PolishIndustrial(Scene scene)
         {
-            // Preserve the container-channel silhouette while clearing the actual center lane.
             SetPosition(scene, "IS_Barrel_A", new Vector3(-4.6f, 0.03f, 10.2f));
             SetPosition(scene, "IS_Barrel_B", new Vector3(-4.4f, 0.03f, 11.2f));
             SetPosition(scene, "IS_Barrel_C", new Vector3(4.6f, 0.03f, 5.9f));
             SetPose(scene, "IS_ServiceTruck", new Vector3(12f, 0.04f, 3.2f), 92f);
             SetPose(scene, "IS_Barrier", new Vector3(4.2f, 0.05f, 15.8f), -5f);
 
-            SetPosition(scene, "IS_Objective_01", new Vector3(-10.2f, 0.12f, 3.2f)); // BLACKSITE terminal
-            SetPosition(scene, "IS_Objective_02", new Vector3(0f, 0.12f, 4.4f));     // HOLDOUT arena
-            SetPosition(scene, "IS_Objective_03", new Vector3(0f, 0.12f, 12f));      // RECOVERY
-            SetPosition(scene, "IS_Objective_04", new Vector3(0f, 0.12f, 16.8f));    // BLACKSITE vault
-            SetPosition(scene, "IS_Objective_05", new Vector3(8.2f, 0.12f, 3.2f));   // PURGE
+            SetPosition(scene, "IS_Objective_01", new Vector3(-10.2f, 0.12f, 3.2f));
+            SetPosition(scene, "IS_Objective_02", new Vector3(0f, 0.12f, 4.4f));
+            SetPosition(scene, "IS_Objective_03", new Vector3(0f, 0.12f, 12f));
+            SetPosition(scene, "IS_Objective_04", new Vector3(0f, 0.12f, 16.8f));
+            SetPosition(scene, "IS_Objective_05", new Vector3(8.2f, 0.12f, 3.2f));
 
             SetPosition(scene, "IS_ChemicalSpill", new Vector3(-3.8f, 0f, 8.2f));
             SetPosition(scene, "IS_SpillLight", new Vector3(-3.8f, 2f, 8.2f));
@@ -89,8 +85,6 @@ namespace Kamilunavo.Deadreach.Editor
 
         private static void PolishBlackout(Scene scene)
         {
-            // Blackout gets the strongest change: keep the wrecked-plaza look but create a large clear
-            // center arena for HOLDOUT / combat instead of surrounding the marker with hard colliders.
             SetPosition(scene, "BP_Container_West", new Vector3(-10.2f, 0.02f, 5.1f));
             SetPose(scene, "BP_Wreck_A", new Vector3(4f, 0.04f, 7.2f), -8f);
             SetPose(scene, "BP_Wreck_B", new Vector3(-4f, 0.04f, 14.8f), 8f);
@@ -98,13 +92,12 @@ namespace Kamilunavo.Deadreach.Editor
             SetPose(scene, "BP_Barrier_B", new Vector3(4.3f, 0.05f, 13.6f), -5f);
             SetPosition(scene, "BP_Wheels", new Vector3(-4.7f, 0.03f, 10f));
 
-            SetPosition(scene, "BP_Objective_01", new Vector3(-10.4f, 0.12f, 3.2f)); // BLACKSITE terminal
-            SetPosition(scene, "BP_Objective_02", new Vector3(0f, 0.12f, 10.5f));    // HOLDOUT open plaza
-            SetPosition(scene, "BP_Objective_03", new Vector3(9.8f, 0.12f, 3.2f));   // RECOVERY
-            SetPosition(scene, "BP_Objective_04", new Vector3(0f, 0.12f, 17.4f));    // BLACKSITE vault
-            SetPosition(scene, "BP_Objective_05", new Vector3(0f, 0.12f, 5.5f));     // PURGE
+            SetPosition(scene, "BP_Objective_01", new Vector3(-10.4f, 0.12f, 3.2f));
+            SetPosition(scene, "BP_Objective_02", new Vector3(0f, 0.12f, 10.5f));
+            SetPosition(scene, "BP_Objective_03", new Vector3(9.8f, 0.12f, 3.2f));
+            SetPosition(scene, "BP_Objective_04", new Vector3(0f, 0.12f, 17.4f));
+            SetPosition(scene, "BP_Objective_05", new Vector3(0f, 0.12f, 5.5f));
 
-            // Pull non-blocking pickups/spawns out of the holdout circle so the arena reads clearly.
             SetPosition(scene, "BP_Loot_04", new Vector3(4.4f, 0.58f, 9f));
             SetPosition(scene, "BP_Enemy_05", new Vector3(-4.2f, 1f, 8f));
             SetPosition(scene, "BP_Enemy_06", new Vector3(4.2f, 1f, 12.2f));
@@ -138,6 +131,51 @@ namespace Kamilunavo.Deadreach.Editor
 
             target.position = position;
             target.rotation = Quaternion.Euler(0f, yaw, 0f);
+            RefreshCollisionBounds(target);
+        }
+
+        private static void RefreshCollisionBounds(Transform target)
+        {
+            var collision = target.Find("CollisionBounds")?.GetComponent<BoxCollider>();
+            if (collision == null)
+                return;
+
+            var renderers = target.GetComponentsInChildren<Renderer>(true);
+            var hasBounds = false;
+            var localBounds = default(Bounds);
+
+            foreach (var renderer in renderers)
+            {
+                if (renderer == null)
+                    continue;
+
+                var bounds = renderer.bounds;
+                for (var x = 0; x < 2; x++)
+                for (var y = 0; y < 2; y++)
+                for (var z = 0; z < 2; z++)
+                {
+                    var worldPoint = new Vector3(
+                        x == 0 ? bounds.min.x : bounds.max.x,
+                        y == 0 ? bounds.min.y : bounds.max.y,
+                        z == 0 ? bounds.min.z : bounds.max.z);
+                    var localPoint = target.InverseTransformPoint(worldPoint);
+                    if (!hasBounds)
+                    {
+                        localBounds = new Bounds(localPoint, Vector3.zero);
+                        hasBounds = true;
+                    }
+                    else
+                    {
+                        localBounds.Encapsulate(localPoint);
+                    }
+                }
+            }
+
+            if (!hasBounds)
+                return;
+
+            collision.center = localBounds.center;
+            collision.size = localBounds.size;
         }
 
         private static Transform FindSceneTransform(Scene scene, string objectName)
