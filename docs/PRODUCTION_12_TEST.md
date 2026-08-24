@@ -8,16 +8,13 @@ Turn the expedition map from one repeated street into a true sector system with 
 
 ## Compile / build gate
 
-1. Pull `production/0.12-sector-expansion`.
-2. Let Unity finish compiling.
-3. Fresh real-Unity compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24.
-4. `DEADREACH > Build Production Slice 0.12`: **PASSED** ✅ 2026-08-24.
-5. No blocking red generation/build errors reported ✅.
-6. Runtime/world validation is the next gate.
+1. Fresh real-Unity compile: **PASSED — 0 red compiler errors** ✅ 2026-08-24.
+2. `DEADREACH > Build Production Slice 0.12`: **PASSED** ✅ 2026-08-24.
+3. No blocking red generation/build errors reported ✅.
 
 ## Editor sector test override
 
-To test all four layouts without waiting for automatic rotation, use:
+Use:
 - `DEADREACH > Dev > Sector 0.12 > AUTO`
 - `DEADREACH > Dev > Sector 0.12 > QUARANTINE WARD`
 - `DEADREACH > Dev > Sector 0.12 > TRANSIT COLLAPSE`
@@ -26,42 +23,50 @@ To test all four layouts without waiting for automatic rotation, use:
 
 The override applies on the next expedition scene load and is compiled out of player builds; release/mobile builds always use automatic sector selection.
 
-## World expansion gate
+## QUARANTINE WARD — PASSED 2026-08-24 ✅
+
+Real Unity runtime acceptance confirmed:
+- FIELD OPS sector identity / BIOHAZARD presentation accepted
+- green/teal atmosphere accepted
+- central intersection → west spur → back accepted
+- central intersection → east spur → back accepted
+- no world-safety snap-back on the tested side routes
+- east-side extraction reachable
+- pre-Primary extraction remains sealed
+- mission marker appears in the sector geography
+- contamination hazard warning appears on entry
+- contamination hazard damages only while inside
+- hazard damage/warning clears after exit
+- hazard / containers do not trap the CharacterController
+
+This gives a first real-runtime pass for the expanded cross-street traversal, sector-specific extraction, mission geography and hazard enter/damage/exit behavior.
+
+## TRANSIT COLLAPSE — NEXT
 
 Validate:
-- central intersection → west spur → back
-- central intersection → east spur → back
-- expanded world-safety bounds do not pull the player back on side routes
-- outer boundaries still stop leaving the playable rectangle
-- north extraction support from 0.11 remains solid and reversible
-- camera follows cleanly across the wider map
-
-## Sector archetypes
-
-Use the editor override for deterministic validation, then return it to `AUTO`.
-
-### QUARANTINE WARD
-- FIELD OPS shows `QUARANTINE WARD`
-- green/teal atmosphere
-- checkpoint barriers / quarantine containers alter route silhouette
-- east-side extraction reachable
-- contamination hazard damages only while inside and clears on exit
-
-### TRANSIT COLLAPSE
 - FIELD OPS shows `TRANSIT COLLAPSE`
+- cold blue sector identity is obvious
 - wrecked truck/cars materially change route choice
-- west-side extraction reachable
-- electrical hazard damages only while inside
-- alternate route around wreck cluster remains traversable
+- alternate route around the wreck cluster remains traversable
+- west-side extraction is reachable and reversible
+- electrical hazard is visible and pulses damage only while inside
+- leaving the electrical field stops damage and clears the hazard warning
+- mission marker remains on supported sector geometry
+- ordinary infected use sector enemy anchors
+- runtime reinforcements arrive from sector reinforcement anchors
 
-### INDUSTRIAL SPILL
+## INDUSTRIAL SPILL — PENDING
+
+Validate:
 - FIELD OPS shows `INDUSTRIAL SPILL`
 - containers/pipes/barrels create a distinct channelled layout
 - north extraction reachable
 - chemical + fire hazards visible and distinct
 - hazards never physically trap the CharacterController
 
-### BLACKOUT PLAZA
+## BLACKOUT PLAZA — PENDING
+
+Validate:
 - FIELD OPS shows `BLACKOUT PLAZA`
 - dark violet/red emergency atmosphere
 - route blockers differ from the other sectors
@@ -70,7 +75,7 @@ Use the editor override for deterministic validation, then return it to `AUTO`.
 
 ## Sector-aware geography gate
 
-For the active sector:
+Still requires broader acceptance across the remaining sectors:
 - player spawn uses layout spawn anchor
 - ExtractionZone + both extraction beacon presentations move to layout extraction anchor
 - ordinary infected reposition to enemy anchors
@@ -82,17 +87,7 @@ For the active sector:
 - ordinary Runner enemies are never mistaken for `_R##` reinforcements
 - no target spawns outside supported world
 
-## Hazard gameplay / HUD gate
-
-- FIELD OPS includes `SECTOR`
-- sector hazard profile readable on mobile
-- entering hazard switches to live danger state
-- center warning shows `HAZARD // ... // MOVE CLEAR`
-- hazard damage uses normal player damage feedback
-- warning/damage stop after exit
-- hazard presentation does not steal touch input
-
-## Sector risk/reward gate
+## Sector risk/reward gate — PENDING
 
 Primary completion additional unsecured Scrap:
 - Quarantine +4
@@ -111,7 +106,7 @@ Validate both reward paths:
 - full inventory: pending reward retains bonus and banks only after successful extraction
 - death/abandon still loses unsecured state
 
-## Production 0.11 mission regression
+## Production 0.11 mission regression — PENDING FINAL PASS
 
 - Mission HUD appears
 - Objective marker appears at sector-specific location
@@ -122,7 +117,7 @@ Validate both reward paths:
 - reinforcement roles / 0.10 VFX intact
 - successful extraction returns to Bunker
 
-## Mobile regression
+## Mobile regression — PENDING
 
 - MOVE fixed lower-left, full 360°
 - AIM/FIRE fixed lower-right
@@ -131,7 +126,7 @@ Validate both reward paths:
 - east/west routes controllable without camera/input dead zones
 - hazard/objective alerts do not steal touch input
 
-## Full regression
+## Full regression — PENDING
 
 1. Return sector override to `AUTO`.
 2. Bunker → Workshop present.
