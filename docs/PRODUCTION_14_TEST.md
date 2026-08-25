@@ -2,7 +2,7 @@
 
 Production 0.14 branches directly from the fully validated Production 0.12 `main` baseline. It does not inherit the rejected Production 0.13 presentation stack.
 
-## Pass 1 scope — Premium Overview / Command Center reboot
+## Pass 1 scope — Premium Command Center reboot
 
 Implemented:
 - one runtime presentation owner: `Production14CommandCenterUI`
@@ -21,8 +21,7 @@ Implemented:
 - hologram decoration has no gameplay colliders
 - authored Quaternius `Door_Frame_A` / `Door_DarkMetal` geometry is loaded by Production 0.14 for the Bunker rear architecture
 - `DEADREACH > Build Production Slice 0.14` keeps the accepted 0.12 sector and layout passes in the build pipeline
-
-Pass 1 deliberately validates Overview before the remaining tabs are rebuilt. Arsenal / Operators / Campaign / Workshop / Supply are visually marked pending and must not fall back to the legacy DEV dashboard.
+- post-screenshot navigation pass adds native 0.14 Arsenal / Operators / Campaign / Workshop / Supply content without resurrecting the legacy DEV dashboard
 
 ## Recovery checkpoint — COMPLETED ✅
 
@@ -41,61 +40,74 @@ Build setup was also hardened before the recovery commit:
 - 0.5 operator setup reuses validated production prefabs instead of destructively rebuilding them when already present
 - 0.6 weapon-family setup reuses validated production prefabs instead of re-downloading/re-importing standalone glTF files when already present
 
-## Gate A — Fresh Unity compile / asset import — PASSED ✅
+## Gate A — Fresh Unity compile / asset import — RETEST REQUIRED
 
-Current user-confirmed real-Unity result after the recovery commit and 0.5 / 0.6 build-gate hardening:
-- recovered production assets loaded
-- fresh asset import completed
-- fresh script compile completed
-- **0 red Unity errors**
+The post-recovery compile was user-confirmed with **0 red Unity errors**. That result is now stale only for the newest runtime navigation/screen code added after the successful 0.14 build screenshot.
 
-## Gate B — Build Production Slice 0.14 — PENDING RETRY
+Current requirement:
+- pull the latest branch
+- allow Unity to compile the new 0.14 screen code
+- require **0 red Unity errors**
 
-The first attempt failed in the old 0.6 weapon-family import path before scene generation completed. That path has now been hardened to reuse the recovered validated prefabs.
+No scene rebuild is required solely for this runtime UI navigation change.
 
-Run:
-`DEADREACH > Build Production Slice 0.14`
+## Gate B — Build Production Slice 0.14 — PASSED ✅
 
-Require:
-- validated operator / weapon prefabs are reused without standalone repair glTF import failures
-- accepted base scene generation completes
-- accepted Production 0.12 sector world pass completes
-- accepted Production 0.12 layout polish completes
-- Bunker scene reopens
-- no blocking red generation error
+User-confirmed real-Unity result after recovery/build-gate hardening:
+- validated production assets loaded
+- old standalone weapon glTF repair path did not block generation
+- `DEADREACH > Build Production Slice 0.14` completed
+- Bunker scene reopened
+- Play Mode reached the new 0.14 Overview
 
-## Gate C — Overview visual acceptance — PENDING
+The later navigation code change is runtime UI only and does not invalidate the successful scene-generation gate.
 
-In Play Mode validate the Overview against the approved art-direction reference:
-- no left-side DEV navigation
-- no large flat prototype dashboard filling the screen
-- header reads as physical / industrial sci-fi UI rather than plain rectangles
+## Gate C — Overview visual acceptance — NOT ACCEPTED YET
+
+User screenshot verdict: **“nah dran aber nicht ganz”**.
+
+Current positive direction:
+- physical segmented header/nav language is substantially closer to the approved reference
 - resource counters are separate modules
-- navigation reads as six segmented metal tabs
-- mission panel reads as a physical console/card, not a flat colored rectangle
-- campaign status is compact and subordinate
-- center is the visual hero area
-- command table + holographic city/map are clearly visible in the center
-- authored Quaternius Bunker architecture is visible in the rear composition
-- 3D Bunker remains readable behind the UI
-- footer / Deploy reads as a premium action console
-- restrained gunmetal + cyan + amber palette
-- no 0.13 layered UI artifacts
+- left mission and right campaign consoles read more like game UI than the old DEV dashboard
+- central hologram/command-table composition is visible
 
-Pass only if the screen clearly reads as a finished game command center rather than a DEV menu.
+Still requires another visual polish pass before acceptance:
+- center composition needs more authored richness / less sparse technical-block appearance
+- overall screen still needs the final premium material/detail density of the reference
 
-## Gate D — Pass 1 interaction sanity — PENDING
+Pass only when the screen clearly reads as a finished premium command center rather than a stylized prototype.
 
-Require:
-- Overview remains readable in landscape
-- Deploy button is clickable and loads the expedition
-- decorative UI does not consume touches
-- hologram colliders cannot block gameplay/navigation
-- non-Overview tabs do not expose the old DEV dashboard during Pass 1
+## Gate D — Command-center interaction — FIX IMPLEMENTED / RETEST PENDING
+
+Observed failure on the successful build screenshot:
+- Arsenal / Operators / Campaign / Workshop / Supply buttons received clicks
+- only the header title changed
+- Overview content remained visible
+
+Root cause confirmed in code: `HandleNav` intentionally treated Production 0.14 Pass 1 as Overview-only and never built another screen.
+
+Fix now implemented on branch:
+- dedicated `ScreenContent` layer is swapped per tab
+- active nav visual state follows the selected tab
+- hologram is visible only on Overview
+- Arsenal opens a secured-inventory/loadout screen and can equip weapons
+- Operators opens roster/details and can select the active operator
+- Campaign opens sector/level selection and persists selected level
+- Workshop opens bunker-system upgrades + equipped-weapon calibration
+- Supply opens its own content screen
+- legacy DEV dashboard is not restored
+
+Retest after fresh compile:
+1. click all six tabs
+2. verify content actually changes on every tab
+3. return to Overview and verify hologram returns
+4. change Operator or Campaign level and verify footer updates
+5. Arsenal equip / Workshop actions must remain clickable
 
 ## Gate E — Stable 0.12 regression — PENDING AFTER VISUAL ACCEPTANCE
 
-Only after Overview is accepted:
+Only after Overview and command-center interaction are accepted:
 1. Deploy from the new command center.
 2. Validate fixed MOVE / AIM-FIRE / Ability controls.
 3. Validate selected 0.12 sector layout and hazards.
@@ -105,4 +117,4 @@ Only after Overview is accepted:
 7. Confirm rewards/progression persistence.
 8. Confirm final Unity Console has 0 red runtime errors.
 
-Production 0.14 remains Draft/unmerged until the current Pass 1 visual direction is accepted and follow-up screen passes are completed.
+Production 0.14 remains Draft/unmerged until the visual direction, command-center interactions and stable expedition regression are accepted.
