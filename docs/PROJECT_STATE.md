@@ -18,7 +18,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
 - active production branch: `production/0.14-premium-command-center`
-- Production 0.14 state: **Pass 1 premium Overview / Command Center reboot implemented; fresh Unity compile pending**
+- Production 0.14 state: **Pass 1 premium Overview / Command Center reboot implemented; fresh Unity compile + asset import PASSED; build gate next**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -45,8 +45,9 @@ Permanent firearm rule:
 - compact campaign status console on the right
 - center remains open as the main hero composition
 - `Production14HoloDiorama` builds an animated tactical command table / projected city with objective markers, rings and cyan/amber lighting
+- authored Quaternius `Door_Frame_A` / `Door_DarkMetal` geometry is loaded from `Resources/Production14/Quaternius` for rear Bunker architecture
 - Bunker camera is lowered and reframed around the central command-table presentation
-- old primitive sightline props around the legacy command table are hidden by the 0.14 hero pass
+- old primitive sightline props and primitive Blastdoor geometry are hidden by the 0.14 hero pass
 - premium bottom Ready / Deploy console
 - decorative UI has raycast disabled
 - holographic decorative objects have colliders removed
@@ -59,8 +60,8 @@ Permanent firearm rule:
 - accepted Production 0.12 LayoutPolishPass remains authoritative
 - 0.14 command center bootstraps at runtime in the Bunker
 
-### Current real-Unity validation — PENDING
-- fresh Production 0.14 compile: **PENDING**
+### Current real-Unity validation
+- fresh Production 0.14 compile + asset import after Git LFS recovery: **PASSED — 0 red Unity errors**
 - Build Production Slice 0.14: **PENDING**
 - Overview visual acceptance against premium command-center reference: **PENDING**
 - Deploy interaction: **PENDING**
@@ -100,6 +101,6 @@ Permanent firearm rule:
 
 ## Next exact gate
 
-Pull the current Production 0.14 branch and let Unity complete a fresh script compile. Require **0 red compiler errors** before running `DEADREACH > Build Production Slice 0.14`.
+Run `DEADREACH > Build Production Slice 0.14`. Require accepted base generation + Production 0.12 sector/layout passes to complete and the Bunker scene to reopen with no blocking red generation error. Then enter Play Mode and capture the Overview for visual acceptance.
 
 Test plan: `docs/PRODUCTION_14_TEST.md`
