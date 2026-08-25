@@ -11,17 +11,23 @@ Implemented:
 - runtime-generated industrial nine-slice skin with brushed gunmetal, clipped corners, bevel rails, rivets and restrained cyan/amber accents
 - premium header with separate SCRAP / EXTRACTS / BOSS KILLS counter modules
 - six segmented horizontal operations tabs
-- compact physical-style mission console on the left
-- compact glass campaign console on the right
-- large unobstructed center composition
-- central animated tactical hologram / city diorama with objective markers and command-table base
-- lower cinematic Bunker camera aimed through the hero center
+- native 0.14 Overview / Arsenal / Operators / Campaign / Workshop / Supply screens
+- compact physical-style mission console on Overview
+- compact glass campaign console on Overview
+- central command-table / holographic city hero composition
+- authored Quaternius `Door_Frame_A` / `Door_DarkMetal` rear Bunker architecture
 - premium footer / Deploy action strip
 - decorative UI is raycast-disabled
 - hologram decoration has no gameplay colliders
-- authored Quaternius `Door_Frame_A` / `Door_DarkMetal` geometry is loaded by Production 0.14 for the Bunker rear architecture
 - `DEADREACH > Build Production Slice 0.14` keeps the accepted 0.12 sector and layout passes in the build pipeline
-- post-screenshot navigation pass adds native 0.14 Arsenal / Operators / Campaign / Workshop / Supply content without resurrecting the legacy DEV dashboard
+
+Latest hero polish implemented after the first screenshot:
+- denser holographic city with district plates, roads, more varied buildings and four objective markers
+- wider layered command table with front rail, side console wings and illuminated table edges
+- separate projector pod with animated projector core
+- rear command-wall consoles, emissive cyan displays and amber alert rails
+- stronger Bunker ambient/fill lighting and a tighter cinematic camera
+- slower subtler hologram animation so the center reads like a tactical display rather than a spinning prototype
 
 ## Recovery checkpoint — COMPLETED ✅
 
@@ -40,16 +46,18 @@ Build setup was also hardened before the recovery commit:
 - 0.5 operator setup reuses validated production prefabs instead of destructively rebuilding them when already present
 - 0.6 weapon-family setup reuses validated production prefabs instead of re-downloading/re-importing standalone glTF files when already present
 
-## Gate A — Fresh Unity compile / asset import — RETEST REQUIRED
+## Gate A — Fresh Unity compile / asset import — RETEST REQUIRED AFTER HERO POLISH
 
-The post-recovery compile was user-confirmed with **0 red Unity errors**. That result is now stale only for the newest runtime navigation/screen code added after the successful 0.14 build screenshot.
+Confirmed before the newest hero-presentation change:
+- post-recovery compile: **PASSED — 0 red Unity errors**
+- navigation/screen runtime change compiled and entered Play Mode successfully because all six screens were user-tested
 
-Current requirement:
-- pull the latest branch
-- allow Unity to compile the new 0.14 screen code
+The latest `Production14HoloDiorama` visual-polish commit changes runtime C# again, so require one fresh compile before visual judgment:
+- pull latest branch
+- allow Unity to compile
 - require **0 red Unity errors**
 
-No scene rebuild is required solely for this runtime UI navigation change.
+No scene rebuild is required solely for this runtime hero-polish change.
 
 ## Gate B — Build Production Slice 0.14 — PASSED ✅
 
@@ -60,54 +68,52 @@ User-confirmed real-Unity result after recovery/build-gate hardening:
 - Bunker scene reopened
 - Play Mode reached the new 0.14 Overview
 
-The later navigation code change is runtime UI only and does not invalidate the successful scene-generation gate.
+Later command-center changes are runtime UI/presentation only and do not invalidate the successful scene-generation gate.
 
-## Gate C — Overview visual acceptance — NOT ACCEPTED YET
+## Gate C — Overview visual acceptance — NOT ACCEPTED YET / NEW POLISH PENDING SCREENSHOT
 
-User screenshot verdict: **“nah dran aber nicht ganz”**.
+First 0.14 screenshot verdict: **“nah dran aber nicht ganz”**.
 
-Current positive direction:
+Accepted direction from that screenshot:
 - physical segmented header/nav language is substantially closer to the approved reference
 - resource counters are separate modules
 - left mission and right campaign consoles read more like game UI than the old DEV dashboard
 - central hologram/command-table composition is visible
 
-Still requires another visual polish pass before acceptance:
-- center composition needs more authored richness / less sparse technical-block appearance
-- overall screen still needs the final premium material/detail density of the reference
+Still missing in that screenshot:
+- center composition was too sparse / technical
+- overall 3D scene lacked the material/detail density of the approved reference
+
+A new center/room polish pass is now implemented as listed above. Visual acceptance remains pending until the user sees the new Overview in Play Mode.
 
 Pass only when the screen clearly reads as a finished premium command center rather than a stylized prototype.
 
-## Gate D — Command-center interaction — FIX IMPLEMENTED / RETEST PENDING
+## Gate D — Command-center navigation — PASSED ✅ / DEEP ACTIONS STILL PENDING
 
-Observed failure on the successful build screenshot:
+Initial failure:
 - Arsenal / Operators / Campaign / Workshop / Supply buttons received clicks
-- only the header title changed
-- Overview content remained visible
+- only the header title changed because `HandleNav` was intentionally Overview-only
 
-Root cause confirmed in code: `HandleNav` intentionally treated Production 0.14 Pass 1 as Overview-only and never built another screen.
-
-Fix now implemented on branch:
-- dedicated `ScreenContent` layer is swapped per tab
-- active nav visual state follows the selected tab
+Fix implemented:
+- dedicated `ScreenContent` layer swaps per tab
+- active nav visual state follows selected tab
 - hologram is visible only on Overview
-- Arsenal opens a secured-inventory/loadout screen and can equip weapons
-- Operators opens roster/details and can select the active operator
-- Campaign opens sector/level selection and persists selected level
-- Workshop opens bunker-system upgrades + equipped-weapon calibration
-- Supply opens its own content screen
-- legacy DEV dashboard is not restored
+- native 0.14 Arsenal / Operators / Campaign / Workshop / Supply screens are built without restoring the legacy DEV dashboard
 
-Retest after fresh compile:
-1. click all six tabs
-2. verify content actually changes on every tab
-3. return to Overview and verify hologram returns
-4. change Operator or Campaign level and verify footer updates
-5. Arsenal equip / Workshop actions must remain clickable
+User-confirmed retest:
+- **Overview → Arsenal → Operators → Campaign → Workshop → Supply → Overview all switch correctly**
+
+Still to validate later:
+- Arsenal equip action
+- Operator selection persistence
+- Campaign level selection + footer refresh
+- Workshop upgrade/calibration actions
+- Supply interactions when commerce is wired
+- Deploy button
 
 ## Gate E — Stable 0.12 regression — PENDING AFTER VISUAL ACCEPTANCE
 
-Only after Overview and command-center interaction are accepted:
+Only after Overview visual direction is accepted:
 1. Deploy from the new command center.
 2. Validate fixed MOVE / AIM-FIRE / Ability controls.
 3. Validate selected 0.12 sector layout and hazards.
@@ -117,4 +123,4 @@ Only after Overview and command-center interaction are accepted:
 7. Confirm rewards/progression persistence.
 8. Confirm final Unity Console has 0 red runtime errors.
 
-Production 0.14 remains Draft/unmerged until the visual direction, command-center interactions and stable expedition regression are accepted.
+Production 0.14 remains Draft/unmerged until the visual direction, deeper command-center actions and stable expedition regression are accepted.
