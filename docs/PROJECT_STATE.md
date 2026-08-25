@@ -5,7 +5,6 @@ _Last updated: 2026-08-25_
 Canonical handoff for DEADREACH. Update after major implementation, validation and merge.
 
 ## Product / stable baseline
-
 - Game: DEADREACH
 - Studio: Kamilunavo
 - Repository: `acciento89-bot/DEADREACH`
@@ -25,115 +24,83 @@ Permanent firearm rule:
 - derive muzzle from that embedded firearm
 - never reintroduce the failed external hand-mounted Rifle transform path
 
-## Production 0.14 — Premium Command Center Reboot — ACTIVE
+## Production 0.14 — Premium Command Center Reboot — RELEASE-HARDENING ACTIVE
 
-### Stable accepted foundation
-
+### Accepted foundation
 - branches directly from validated Production 0.12 `main`
 - no rejected 0.13 presentation stack
-- `Production14CommandCenterUI` owns one command-center presentation
+- one `Production14CommandCenterUI` presentation owner
 - six native screens: Overview / Arsenal / Operators / Campaign / Workshop / Supply
-- user-confirmed six-tab switch test: **PASSED**
-- `DEADREACH > Build Production Slice 0.14`: **PASSED after recovery**
-- overall layout / composition direction accepted; final visual art is not yet accepted
+- six-tab switching: **PASSED**
+- Production Slice 0.14 build after recovery: **PASSED**
+- current Wenrexa + restored-hologram Overview: **VISUALLY ACCEPTED**
+- user explicitly requested stopping visual iteration and moving rapidly toward completion
 
-### Current screen architecture
-
-- premium header with SCRAP / EXTRACTS / BOSS KILLS modules
-- six horizontal operations tabs
-- mission console left
-- campaign console right
-- central 3D command-table / holographic city hero
+### Current UI/presentation
+- Wenrexa `UI Minimalism SciFi` CC0 authored panel/button family
+- graphite generator retained only as offline fallback
+- mission console left, campaign status right, command-table/hologram center
+- Quaternius rear Bunker architecture
+- `Production14HoloVisibilityGuard` restores inactive/missing hero on Overview
 - Ready / Deploy footer
-- Quaternius authored rear Bunker architecture
-- hologram only shown on Overview
 
-### UI-art decisions
+Rejected art history remains documented:
+- procedural plate baseline — too DEV-like
+- Devdog HUD experiment — visual fail
+- graphite fallback — visual fail / effectively unchanged
 
-Rejected:
-- first procedural industrial plates: too DEV/placeholder-like
-- Devdog HUD sprite experiment: **VISUAL FAIL** — wrong radial/partial HUD pieces produced white wireframes, star/hex counters and diagonal footer artifact
-- clean graphite fallback: **VISUAL FAIL** — technically clean but user verdict **“Ist ja wie vorher....”**
-
-Current pass:
-- **Wenrexa “Assets: UI Minimalism SciFi” CC0** selected as a coherent UI family
-- original source: `https://opengameart.org/content/assets-ui-minimalism-scifi`
-- individual PNG mirror: `Bamjr/Delivery-Espacio-space-shooter-game/WenrexaAssetsUI_SciFI/PNG`
-- editor setup downloads only semantically matching authored components:
-  - `MainPanel` for main cards
-  - `SelectPanel` for compact cards
-  - `TitlePanel` for strips
-  - `Button` for tabs / Deploy / tags
-- no radial HUD or partial HUD art is mapped into rectangular panels
-- runtime `Production14IndustrialSkin` prefers the Wenrexa sprites and uses the graphite generator only as offline fallback
-- license/provenance notice is written into the prepared Resources folder
-
-### Hologram visibility bug — FIX IMPLEMENTED
-
-Latest clean-baseline screenshot showed an empty center.
-
-Root cause:
-- non-Overview tab disabled `P14_HoloDiorama`
-- return path used `GameObject.Find`, which cannot resolve inactive objects
-
-Fix:
-- new `Production14HoloVisibilityGuard`
-- resolves inactive scene hero roots
-- restores the hero when Overview becomes active
-- rebuilds the hero if it is unexpectedly missing
-- keeps it hidden on other tabs
-
-### Overview hero / room implementation
-
-`Production14HoloDiorama` currently provides:
-- projected city with district plates, roads, 18 varied buildings and four objective markers
-- layered command table, front rail and side console wings
-- projector pod with animated core/rings
-- rear command-wall consoles with cyan screens / amber alert rails
-- Bunker ambient/fill lighting and cinematic camera framing
-- subtle hologram animation
-
-### Recovery / reproducibility checkpoint — COMPLETE ✅
-
+### Recovery / reproducibility — COMPLETE ✅
 Recovery commit:
 - `6ed8bf5e292f3430300fcb98ce13641885e7a309`
 
-Versioned after recovery:
-- `Assets/Deadreach/Scenes/Bunker_Hub.unity`
-- `Assets/Deadreach/Scenes/DeadCity_VerticalSlice.unity`
-- production Sam / Shaun / Matt prefabs
-- production Rifle / SMG / Pistol / Shotgun prefabs
-- infected prefabs
-- materials/controllers/volume profile
-- `ProductionAssetCatalog.asset`
-- Unity `.meta` GUIDs
-- URP / package lock / ProjectSettings
+Versioned production scenes, operator/weapon/infected prefabs, materials/controllers/volume, catalog, GUID metas, URP/package/project settings. Build hardening reuses validated production prefabs before legacy import/repair paths.
 
-Build hardening:
-- 0.5 operator gate reuses validated production prefabs
-- 0.6 weapon gate reuses validated production prefabs
-- old standalone glTF repair no longer blocks an already-valid production build
+### Release-hardening mega block — IMPLEMENTED
+New runtime partial:
+- `Assets/Deadreach/Runtime/UI/Production14ReleaseBlock.cs`
+
+Implemented:
+- `Screen.safeArea` normalized root handling
+- adaptive landscape `CanvasScaler`
+- mobile minimum touch targets
+- hardened Arsenal scroll behavior
+- guarded Deploy / double-tap protection
+- deployment validation for selected level/operator
+- save-before-deploy
+- save on pause/focus loss/quit
+- live profile-state detection and command-center action feedback
+- live header/footer refresh after profile changes
+- Arsenal salvage buttons for unequipped secured weapons
+- Scrap update after salvage
+
+New editor validator:
+- `DEADREACH > Validate Production 0.14 Release Readiness`
+- validates required scenes, Build Settings, Quaternius resources, Wenrexa preparation/fallback and landscape orientation compatibility
+- expected success: `DEADREACH 0.14 RELEASE STATIC CHECK: PASS`
+
+One-pass final QA document:
+- `docs/PRODUCTION_14_RELEASE_GATE.md`
 
 ### Current real-Unity validation
+Already passed:
+- recovered assets committed/verified
+- post-recovery compile before latest hardening
+- Production Slice 0.14 build
+- Bunker / Play Mode
+- six-screen navigation
+- current Overview visual acceptance
 
-- recovery committed + verified: **PASSED**
-- post-recovery compile: **PASSED — 0 red Unity errors**
-- Build Production Slice 0.14: **PASSED**
-- Bunker / Play Mode Overview: **PASSED before latest UI changes**
-- six-screen navigation: **PASSED**
-- Devdog external-HUD art: **VISUAL FAIL**
-- clean graphite art: **VISUAL FAIL — “Ist ja wie vorher....”**
-- Wenrexa CC0 art integration: **IMPLEMENTED / FRESH COMPILE PENDING**
-- Holo visibility guard: **IMPLEMENTED / FRESH COMPILE PENDING**
-- new Overview visual screenshot: **PENDING**
-- deeper per-screen actions: **PENDING**
-- Deploy interaction: **PENDING**
-- mobile landscape / safe-area: **PENDING**
-- full stable 0.12 expedition regression: **PENDING**
-- final Unity Console 0 red runtime errors: **PENDING**
+Pending because latest runtime/editor release block changed code:
+- fresh Unity compile with **0 red errors**
+- release static validator PASS
+- deep Arsenal/operator/campaign/workshop interactions
+- mobile safe-area/touch sweep
+- guarded Deploy interaction
+- full stable 0.12 expedition regression
+- return-to-Bunker persistence
+- final Unity Console **0 red runtime errors**
 
 ## Production 0.12 — Sector Expansion — STABLE ✅
-
 Final accepted real-Unity state:
 - fresh compile: PASSED
 - Production Slice 0.12 build: PASSED
@@ -157,7 +124,4 @@ Stable systems remain authoritative:
 - accepted combat-impact VFX and boss/reward behavior
 
 ## Next exact gate
-
-Pull latest `production/0.14-premium-command-center` and let Unity compile. Confirm the Wenrexa setup log and **0 red errors**. No Production Slice rebuild is required for this runtime/editor UI pass. Then enter Play Mode on Overview and capture a screenshot verifying both the new panel/button art and the restored central hologram.
-
-Test plan: `docs/PRODUCTION_14_TEST.md`
+Pull latest `production/0.14-premium-command-center`, allow Unity to compile and require **0 red errors**. Then run `DEADREACH > Validate Production 0.14 Release Readiness`. If PASS, execute `docs/PRODUCTION_14_RELEASE_GATE.md` as one consolidated run instead of reopening small UI iterations.
