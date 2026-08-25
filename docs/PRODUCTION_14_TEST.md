@@ -19,17 +19,18 @@ Implemented:
 - premium footer / Deploy action strip
 - decorative UI is raycast-disabled
 - hologram decoration has no gameplay colliders
+- authored Quaternius `Door_Frame_A` / `Door_DarkMetal` geometry is loaded by Production 0.14 for the Bunker rear architecture
 - `DEADREACH > Build Production Slice 0.14` keeps the accepted 0.12 sector and layout passes in the build pipeline
 
 Pass 1 deliberately validates Overview before the remaining tabs are rebuilt. Arsenal / Operators / Campaign / Workshop / Supply are visually marked pending and must not fall back to the legacy DEV dashboard.
 
-## Gate A — Fresh Unity compile — PENDING
+## Gate A — Fresh Unity compile / asset import — PASSED ✅
 
-After pulling the current branch:
-- allow asset database / script compilation to finish
-- require **0 red compiler errors**
-
-Do not run the 0.14 build until this gate passes.
+User-confirmed after resetting to the remote Production 0.14 branch and resolving Git LFS assets:
+- Git LFS-backed PNG / OBJ / glTF assets import without the previous pointer-file failures
+- fresh asset database import completed
+- fresh script compile completed
+- **0 red Unity errors**
 
 ## Gate B — Build Production Slice 0.14 — PENDING
 
@@ -55,6 +56,7 @@ In Play Mode validate the Overview against the approved art-direction reference:
 - campaign status is compact and subordinate
 - center is the visual hero area
 - command table + holographic city/map are clearly visible in the center
+- authored Quaternius Bunker architecture is visible in the rear composition
 - 3D Bunker remains readable behind the UI
 - footer / Deploy reads as a premium action console
 - restrained gunmetal + cyan + amber palette
