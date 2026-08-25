@@ -8,12 +8,11 @@ Implemented:
 - one runtime presentation owner: `Production14CommandCenterUI`
 - stable legacy Bunker canvas is allowed to initialize, then its presentation is removed when 0.14 takes ownership
 - no 0.13 UI layers are used
-- runtime-generated industrial nine-slice skin with brushed gunmetal, clipped corners, bevel rails, rivets and restrained cyan/amber accents
 - premium header with separate SCRAP / EXTRACTS / BOSS KILLS counter modules
 - six segmented horizontal operations tabs
 - native 0.14 Overview / Arsenal / Operators / Campaign / Workshop / Supply screens
 - compact physical-style mission console on Overview
-- compact glass campaign console on Overview
+- compact campaign console on Overview
 - central command-table / holographic city hero composition
 - authored Quaternius `Door_Frame_A` / `Door_DarkMetal` rear Bunker architecture
 - premium footer / Deploy action strip
@@ -21,7 +20,15 @@ Implemented:
 - hologram decoration has no gameplay colliders
 - `DEADREACH > Build Production Slice 0.14` keeps the accepted 0.12 sector and layout passes in the build pipeline
 
-Latest hero polish implemented after the first screenshot:
+Current UI-art direction after the latest screenshot fail:
+- the temporary Devdog external HUD sprite experiment is **REJECTED**
+- thin white wireframe / hexagonal frames are not part of the accepted direction
+- `Production14IndustrialSkin` now owns a clean dark graphite baseline with restrained cyan / amber rails
+- no external HUD sprite dependency is used by the runtime skin
+- the editor cleanup removes the locally downloaded rejected Devdog `Resources/Production14/UI/External` folder after compile
+- command-center layout and navigation geometry remain unchanged
+
+Latest hero polish remains implemented:
 - denser holographic city with district plates, roads, more varied buildings and four objective markers
 - wider layered command table with front rail, side console wings and illuminated table edges
 - separate projector pod with animated projector core
@@ -46,18 +53,19 @@ Build setup was also hardened before the recovery commit:
 - 0.5 operator setup reuses validated production prefabs instead of destructively rebuilding them when already present
 - 0.6 weapon-family setup reuses validated production prefabs instead of re-downloading/re-importing standalone glTF files when already present
 
-## Gate A — Fresh Unity compile / asset import — RETEST REQUIRED AFTER HERO POLISH
+## Gate A — Fresh Unity compile / asset cleanup — PENDING
 
-Confirmed before the newest hero-presentation change:
+Previously confirmed:
 - post-recovery compile: **PASSED — 0 red Unity errors**
-- navigation/screen runtime change compiled and entered Play Mode successfully because all six screens were user-tested
+- six-screen navigation runtime compiled and entered Play Mode successfully
 
-The latest `Production14HoloDiorama` visual-polish commit changes runtime C# again, so require one fresh compile before visual judgment:
+The latest UI-art correction changes runtime/editor C# again, so require one fresh compile:
 - pull latest branch
 - allow Unity to compile
+- rejected external HUD folder should be removed automatically if it exists
 - require **0 red Unity errors**
 
-No scene rebuild is required solely for this runtime hero-polish change.
+No scene rebuild is required solely for this runtime/editor UI correction.
 
 ## Gate B — Build Production Slice 0.14 — PASSED ✅
 
@@ -68,25 +76,41 @@ User-confirmed real-Unity result after recovery/build-gate hardening:
 - Bunker scene reopened
 - Play Mode reached the new 0.14 Overview
 
-Later command-center changes are runtime UI/presentation only and do not invalidate the successful scene-generation gate.
+Later command-center UI/presentation-only changes do not invalidate the successful scene-generation gate.
 
-## Gate C — Overview visual acceptance — NOT ACCEPTED YET / NEW POLISH PENDING SCREENSHOT
+## Gate C — Overview visual acceptance — FAILED AGAIN / RETEST PENDING
 
 First 0.14 screenshot verdict: **“nah dran aber nicht ganz”**.
 
-Accepted direction from that screenshot:
-- physical segmented header/nav language is substantially closer to the approved reference
-- resource counters are separate modules
-- left mission and right campaign consoles read more like game UI than the old DEV dashboard
-- central hologram/command-table composition is visible
+Accepted from the first screenshot:
+- overall screen architecture and command-center composition
+- separate resource counters
+- left mission / right campaign console placement
+- central hologram / command-table concept
+- six-screen horizontal operations navigation
 
-Still missing in that screenshot:
-- center composition was too sparse / technical
-- overall 3D scene lacked the material/detail density of the approved reference
+Latest external-asset experiment verdict from the user screenshot: **VISUAL FAIL**.
+Observed failure:
+- thin white HUD outlines dominated the interface
+- counter cards became star/hex-like shapes
+- footer produced a large diagonal white line
+- mission / campaign frames read as wireframe placeholders
+- the result looked less premium than the prior 0.14 baseline
 
-A new center/room polish pass is now implemented as listed above. Visual acceptance remains pending until the user sees the new Overview in Play Mode.
+Cause:
+- unrelated Devdog HUD shapes were incorrectly repurposed as rectangular nine-slice panels
+- a radial hexagon frame was used for resource counters
+- a partial lower HUD bar was stretched across the footer
 
-Pass only when the screen clearly reads as a finished premium command center rather than a stylized prototype.
+Correction implemented:
+- external Devdog sprite lookup removed from the runtime skin
+- auto-download bootstrap removed and replaced by local cleanup
+- new clean dark graphite / cyan / amber panel baseline implemented without wireframe art, rivets or fake brushed-metal decoration
+- layout itself was not changed
+
+Visual acceptance remains pending until the user sees the corrected Overview in Play Mode.
+
+Pass only when the screen clearly reads as a finished game command center rather than a DEV / wireframe UI.
 
 ## Gate D — Command-center navigation — PASSED ✅ / DEEP ACTIONS STILL PENDING
 
