@@ -16,7 +16,7 @@ namespace Kamilunavo.Deadreach.UI
             var weapon = SaveService.GetEquippedPrimaryWeapon();
             var boss = data.selectedLevel % 10 == 0;
 
-            var mission = CreateIndustrialPanel("MissionConsole", _root, Production14IndustrialSkin.PlateKind.Mission, false);
+            var mission = CreateIndustrialPanel("MissionConsole", _contentRoot, Production14IndustrialSkin.PlateKind.Mission, false);
             Place(mission, 0.035f, 0.205f, 0.30f, 0.708f);
             AddSectionHeader(mission, "NEXT DEPLOYMENT", _amber);
 
@@ -45,7 +45,7 @@ namespace Kamilunavo.Deadreach.UI
             Place(loadout.rectTransform, 0.075f, 0.10f, 0.92f, 0.295f);
             AddBoltPair(mission);
 
-            var campaign = CreateIndustrialPanel("CampaignConsole", _root, Production14IndustrialSkin.PlateKind.Glass, false);
+            var campaign = CreateIndustrialPanel("CampaignConsole", _contentRoot, Production14IndustrialSkin.PlateKind.Glass, false);
             Place(campaign, 0.755f, 0.32f, 0.955f, 0.708f);
             AddSectionHeader(campaign, "CAMPAIGN STATUS", _cyan);
 
@@ -55,18 +55,18 @@ namespace Kamilunavo.Deadreach.UI
                 Mathf.Clamp01(data.highestCompletedLevel / (float)Mathf.Max(1, data.highestUnlockedLevel)));
             CreateStatusMetric(campaign, "BOSS KILLS", data.bossKills.ToString(), 0.11f, Mathf.Clamp01(data.bossKills / 5f));
 
-            var centerTag = CreateIndustrialPanel("HoloTag", _root, Production14IndustrialSkin.PlateKind.Tag, false);
+            var centerTag = CreateIndustrialPanel("HoloTag", _contentRoot, Production14IndustrialSkin.PlateKind.Tag, false);
             Place(centerTag, 0.42f, 0.18f, 0.58f, 0.224f);
             var centerTagText = CreateLabel("TagText", centerTag, "BUNKER 07 // TACTICAL FEED", 8, FontStyle.Bold, _cyan, TextAnchor.MiddleCenter);
             Fill(centerTagText.rectTransform, 4f, 2f, 4f, 2f);
 
-            var heroTop = CreateImage("HeroTopRail", _root, new Color(_cyan.r, _cyan.g, _cyan.b, 0.65f));
+            var heroTop = CreateImage("HeroTopRail", _contentRoot, new Color(_cyan.r, _cyan.g, _cyan.b, 0.65f));
             Place(heroTop.rectTransform, 0.33f, 0.705f, 0.70f, 0.709f);
 
-            var heroLeft = CreateImage("HeroLeftRail", _root, new Color(_cyan.r, _cyan.g, _cyan.b, 0.20f));
+            var heroLeft = CreateImage("HeroLeftRail", _contentRoot, new Color(_cyan.r, _cyan.g, _cyan.b, 0.20f));
             Place(heroLeft.rectTransform, 0.325f, 0.225f, 0.327f, 0.70f);
 
-            var heroRight = CreateImage("HeroRightRail", _root, new Color(_cyan.r, _cyan.g, _cyan.b, 0.20f));
+            var heroRight = CreateImage("HeroRightRail", _contentRoot, new Color(_cyan.r, _cyan.g, _cyan.b, 0.20f));
             Place(heroRight.rectTransform, 0.704f, 0.225f, 0.706f, 0.70f);
         }
 
