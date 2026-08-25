@@ -41,20 +41,19 @@ Build setup was also hardened before the recovery commit:
 - 0.5 operator setup reuses validated production prefabs instead of destructively rebuilding them when already present
 - 0.6 weapon-family setup reuses validated production prefabs instead of re-downloading/re-importing standalone glTF files when already present
 
-## Gate A — Fresh Unity compile / asset import — PENDING AGAIN
+## Gate A — Fresh Unity compile / asset import — PASSED ✅
 
-The earlier compile pass is stale because recovery assets and the 0.5 / 0.6 build-gate code changed afterward.
-
-After pulling the current branch:
-- allow Unity to finish importing
-- require **0 red Unity errors**
-- do not run the 0.14 build until this current gate passes
+Current user-confirmed real-Unity result after the recovery commit and 0.5 / 0.6 build-gate hardening:
+- recovered production assets loaded
+- fresh asset import completed
+- fresh script compile completed
+- **0 red Unity errors**
 
 ## Gate B — Build Production Slice 0.14 — PENDING RETRY
 
 The first attempt failed in the old 0.6 weapon-family import path before scene generation completed. That path has now been hardened to reuse the recovered validated prefabs.
 
-Run only after Gate A passes:
+Run:
 `DEADREACH > Build Production Slice 0.14`
 
 Require:
