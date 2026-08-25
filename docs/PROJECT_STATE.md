@@ -18,7 +18,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
 - active production branch: `production/0.14-premium-command-center`
-- Production 0.14 state: **Pass 1 premium Overview / Command Center reboot implemented; fresh Unity compile + asset import PASSED; build gate next**
+- Production 0.14 state: **Pass 1 implemented; complete Unity production asset recovery committed; current fresh compile required before build retry**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -53,16 +53,41 @@ Permanent firearm rule:
 - holographic decorative objects have colliders removed
 - non-Overview tabs are intentionally visually pending in Pass 1 and do not resurrect the legacy DEV dashboard
 
-### Build pipeline
+### Recovery / reproducibility checkpoint — COMPLETE ✅
+
+A local-clean operation exposed that critical Unity-generated production assets were previously only present in the local working tree. They were recovered from the pre-0.14 safety stash and permanently versioned in:
+- recovery commit `6ed8bf5e292f3430300fcb98ce13641885e7a309`
+
+Now versioned on the branch:
+- `Assets/Deadreach/Scenes/Bunker_Hub.unity`
+- `Assets/Deadreach/Scenes/DeadCity_VerticalSlice.unity`
+- DevPalette materials used by generated scenes
+- full `Assets/Deadreach/Art/Production` controllers / materials / prefabs / volume profile
+- Sam / Shaun / Matt production prefabs
+- Rifle / SMG / Pistol / Shotgun production prefabs
+- four infected production prefabs
+- `Assets/Deadreach/Resources/Deadreach/ProductionAssetCatalog.asset`
+- Unity GUID `.meta` files
+- URP project assets
+- `Packages/packages-lock.json`
+- `ProjectSettings`
+
+The recovered `ProductionAssetCatalog.asset` references the versioned production prefab GUIDs, including Rifle GUID `af8e76922930adf43856af69b33a808c`.
+
+### Build pipeline hardening
 - new menu item: `DEADREACH > Build Production Slice 0.14`
-- reuses accepted base generation path
 - accepted Production 0.12 SectorScenePass remains authoritative
 - accepted Production 0.12 LayoutPolishPass remains authoritative
 - 0.14 command center bootstraps at runtime in the Bunker
+- 0.5 operator art gate now reuses validated Sam / Shaun / Matt prefabs before entering any repair/import path
+- 0.6 weapon-family gate now reuses validated Rifle / SMG / Pistol / Shotgun prefabs before entering any standalone glTF repair/import path
 
 ### Current real-Unity validation
-- fresh Production 0.14 compile + asset import after Git LFS recovery: **PASSED — 0 red Unity errors**
-- Build Production Slice 0.14: **PENDING**
+- earlier fresh 0.14 compile before recovery/code hardening: **STALE**
+- first Build Production Slice 0.14 attempt: **FAILED in old 0.6 standalone weapon glTF import path before scene generation**
+- complete production asset recovery: **COMMITTED + VERIFIED ON GITHUB**
+- current fresh Unity compile after recovery/code changes: **PENDING**
+- Build Production Slice 0.14 retry: **PENDING**
 - Overview visual acceptance against premium command-center reference: **PENDING**
 - Deploy interaction: **PENDING**
 - mobile landscape / safe-area pass: **PENDING**
@@ -101,6 +126,6 @@ Permanent firearm rule:
 
 ## Next exact gate
 
-Run `DEADREACH > Build Production Slice 0.14`. Require accepted base generation + Production 0.12 sector/layout passes to complete and the Bunker scene to reopen with no blocking red generation error. Then enter Play Mode and capture the Overview for visual acceptance.
+Pull the latest Production 0.14 branch, allow a fresh Unity import/script compile and require **0 red Unity errors**. Only then retry `DEADREACH > Build Production Slice 0.14`.
 
 Test plan: `docs/PRODUCTION_14_TEST.md`
