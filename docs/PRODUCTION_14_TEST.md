@@ -24,20 +24,41 @@ Implemented:
 
 Pass 1 deliberately validates Overview before the remaining tabs are rebuilt. Arsenal / Operators / Campaign / Workshop / Supply are visually marked pending and must not fall back to the legacy DEV dashboard.
 
-## Gate A — Fresh Unity compile / asset import — PASSED ✅
+## Recovery checkpoint — COMPLETED ✅
 
-User-confirmed after resetting to the remote Production 0.14 branch and resolving Git LFS assets:
-- Git LFS-backed PNG / OBJ / glTF assets import without the previous pointer-file failures
-- fresh asset database import completed
-- fresh script compile completed
-- **0 red Unity errors**
+A local-clean operation exposed that the generated Unity scenes, production prefabs/materials, GUID `.meta` files and project settings had never been versioned. They were recovered from the pre-0.14 safety stash and committed to the branch in:
+- `6ed8bf5e292f3430300fcb98ce13641885e7a309` — `recovery: version complete validated Unity production assets`
 
-## Gate B — Build Production Slice 0.14 — PENDING
+GitHub verification confirms:
+- `Assets/Deadreach/Scenes/Bunker_Hub.unity` is versioned
+- `Assets/Deadreach/Scenes/DeadCity_VerticalSlice.unity` is versioned
+- validated Sam / Shaun / Matt production prefabs are versioned
+- validated Rifle / SMG / Pistol / Shotgun production prefabs are versioned
+- `ProductionAssetCatalog.asset` is versioned and references the recovered prefab GUIDs
+- Unity `.meta` GUIDs and ProjectSettings are now versioned
 
-Run:
+Build setup was also hardened before the recovery commit:
+- 0.5 operator setup reuses validated production prefabs instead of destructively rebuilding them when already present
+- 0.6 weapon-family setup reuses validated production prefabs instead of re-downloading/re-importing standalone glTF files when already present
+
+## Gate A — Fresh Unity compile / asset import — PENDING AGAIN
+
+The earlier compile pass is stale because recovery assets and the 0.5 / 0.6 build-gate code changed afterward.
+
+After pulling the current branch:
+- allow Unity to finish importing
+- require **0 red Unity errors**
+- do not run the 0.14 build until this current gate passes
+
+## Gate B — Build Production Slice 0.14 — PENDING RETRY
+
+The first attempt failed in the old 0.6 weapon-family import path before scene generation completed. That path has now been hardened to reuse the recovered validated prefabs.
+
+Run only after Gate A passes:
 `DEADREACH > Build Production Slice 0.14`
 
 Require:
+- validated operator / weapon prefabs are reused without standalone repair glTF import failures
 - accepted base scene generation completes
 - accepted Production 0.12 sector world pass completes
 - accepted Production 0.12 layout polish completes
