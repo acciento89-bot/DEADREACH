@@ -1,6 +1,6 @@
 # DEADREACH — Project State
 
-_Last updated: 2026-08-24_
+_Last updated: 2026-08-25_
 
 Canonical handoff for DEADREACH. Update after every major implementation, validation and merge.
 
@@ -17,13 +17,56 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable branch: `main`
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
-- active production branch: **none**
-- next production work must branch from current `main`
+- active production branch: `production/0.14-premium-command-center`
+- Production 0.14 state: **Pass 1 premium Overview / Command Center reboot implemented; fresh Unity compile pending**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
 - derive muzzle from that embedded firearm
 - never reintroduce the failed external hand-mounted Rifle transform path
+
+## Production 0.14 — Premium Command Center Reboot — ACTIVE
+
+### Why 0.14 is a clean reboot
+- branches directly from validated Production 0.12 `main`
+- rejected Production 0.13 presentation layers are not part of this branch
+- no stacked 0.13 shell / Kenney / real-asset overlay system
+- Overview is rebuilt first and must pass visual acceptance before the other Bunker tabs are redesigned
+
+### Pass 1 implementation
+- `Production14CommandCenterUI` is the sole new presentation owner
+- legacy `BunkerCommandCenterUI` may initialize its stable gameplay state, then its visual canvas is removed when 0.14 starts
+- new screen-space command-center shell is built as one system
+- new `Production14IndustrialSkin` generates sliced industrial UI plates at runtime
+- brushed gunmetal treatment, clipped corners, bevel edges, rivet details and controlled cyan/amber accents
+- premium header with separate SCRAP / EXTRACTS / BOSS KILLS counter modules
+- six segmented horizontal Operations tabs
+- compact physical-style deployment console on the left
+- compact campaign status console on the right
+- center remains open as the main hero composition
+- `Production14HoloDiorama` builds an animated tactical command table / projected city with objective markers, rings and cyan/amber lighting
+- Bunker camera is lowered and reframed around the central command-table presentation
+- old primitive sightline props around the legacy command table are hidden by the 0.14 hero pass
+- premium bottom Ready / Deploy console
+- decorative UI has raycast disabled
+- holographic decorative objects have colliders removed
+- non-Overview tabs are intentionally visually pending in Pass 1 and do not resurrect the legacy DEV dashboard
+
+### Build pipeline
+- new menu item: `DEADREACH > Build Production Slice 0.14`
+- reuses accepted base generation path
+- accepted Production 0.12 SectorScenePass remains authoritative
+- accepted Production 0.12 LayoutPolishPass remains authoritative
+- 0.14 command center bootstraps at runtime in the Bunker
+
+### Current real-Unity validation — PENDING
+- fresh Production 0.14 compile: **PENDING**
+- Build Production Slice 0.14: **PENDING**
+- Overview visual acceptance against premium command-center reference: **PENDING**
+- Deploy interaction: **PENDING**
+- mobile landscape / safe-area pass: **PENDING**
+- full stable 0.12 expedition regression: **PENDING**
+- final Unity Console 0 red runtime errors: **PENDING**
 
 ## Production 0.12 — Sector Expansion — STABLE ✅
 
@@ -41,57 +84,22 @@ Permanent firearm rule:
 - 0.10 combat-impact / boss / reward presentation regression: **PASSED**
 - final Unity Console: **0 red runtime errors**
 
-### Stable world / sector architecture
-- expanded east/west cross-street network
-- four authored layouts: QUARANTINE WARD / TRANSIT COLLAPSE / INDUSTRIAL SPILL / BLACKOUT PLAZA
-- sector-specific player, extraction, enemy, loot, objective and reinforcement anchors
-- sector-specific fog / key-light identity
-- automatic sector selection with editor-only deterministic test override
-- ordinary Runner enemies excluded from `_R##` reinforcement relocation
-
-### Stable gameplay hazards
-- Contamination / Electrical Arc / Fireline
-- trigger-only gameplay zones
-- periodic player damage while inside
-- HUD danger warning clears after exit
-- accepted CharacterController traversal / no control takeover
-
-### Stable sector risk/reward
-Primary completion extra unsecured Scrap:
-- Quarantine +4
-- Transit +6
-- Industrial +8
-- Blackout +10
-
-BLACK CACHE Item Power bonus:
-- Quarantine +2
-- Transit +3
-- Industrial +5
-- Blackout +6
-
-Successful-extraction banking behavior is accepted; unsecured run state remains risk-bearing.
-
-### Accepted 0.12b layout polish
-- Q-WARD unchanged
-- TRANSIT large wrecks / barrier moved outward and objective/hazard spacing improved
-- INDUSTRIAL props pushed out of core lanes and objective/hazard spacing improved
-- BLACKOUT strongly decluttered with an open central HOLDOUT arena
-- moved/rotated prop `CollisionBounds` refreshed after final pose to prevent stale invisible blocking
-
-### Earlier stable systems that remain authoritative
+### Stable systems that remain authoritative
+- four accepted sector layouts + 0.12b declutter geometry
+- Contamination / Electrical Arc / Fireline hazards
+- sector Scrap and BLACK CACHE Item Power bonuses
 - 0.11 RECOVERY / PURGE / HOLDOUT / BLACKSITE
-- objective-gated extraction
-- BLACK CACHE risk/reward path
+- objective-gated extraction and BLACK CACHE risk/reward
 - reinforcement waves
 - schema-v6 Workshop progression
 - fixed lower-left MOVE
 - fixed lower-right AIM/FIRE
 - independent upper-right Ability
 - 0.10 combat-impact VFX
-- accepted Arsenal / Bunker / boss / reward presentation
+- accepted Arsenal / operator / boss / reward behavior
 
-## Handoff
+## Next exact gate
 
-Production 0.12 is the current stable `main` baseline. No active production branch exists. Any next production pass must branch from current `main` and preserve the complete validated 0.12 world/mission/mobile/progression baseline.
+Pull the current Production 0.14 branch and let Unity complete a fresh script compile. Require **0 red compiler errors** before running `DEADREACH > Build Production Slice 0.14`.
 
-Test plan: `docs/PRODUCTION_12_TEST.md`
+Test plan: `docs/PRODUCTION_14_TEST.md`
