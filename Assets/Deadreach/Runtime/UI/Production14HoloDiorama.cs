@@ -14,9 +14,9 @@ namespace Kamilunavo.Deadreach.UI
             var camera = Camera.main;
             if (camera != null)
             {
-                camera.transform.position = new Vector3(0f, 4.45f, -8.6f);
-                camera.transform.LookAt(new Vector3(0f, 1.45f, 2.55f));
-                camera.fieldOfView = 51f;
+                camera.transform.position = new Vector3(0f, 4.35f, -8.9f);
+                camera.transform.LookAt(new Vector3(0f, 1.55f, 2.85f));
+                camera.fieldOfView = 50f;
             }
 
             HideLegacySightlineProps();
@@ -26,6 +26,10 @@ namespace Kamilunavo.Deadreach.UI
             var holoDim = CreateHoloMaterial(new Color(0.08f, 0.37f, 0.43f, 0.62f));
             var amber = CreateHoloMaterial(new Color(1f, 0.35f, 0.07f, 0.92f));
             var metal = CreateLitMaterial(new Color(0.075f, 0.085f, 0.086f), 0.62f, 0.08f);
+            var steel = CreateLitMaterial(new Color(0.17f, 0.19f, 0.19f), 0.48f, 0.34f);
+            var darkMetal = CreateLitMaterial(new Color(0.045f, 0.052f, 0.054f), 0.38f, 0.46f);
+
+            BuildAuthoredArchitecture(root.transform, steel, darkMetal);
 
             CreateBlock(root.transform, "ConsoleBase", new Vector3(0f, 0.85f, 2.65f), new Vector3(4.8f, 0.75f, 2.8f), metal);
             CreateBlock(root.transform, "ConsoleDeck", new Vector3(0f, 1.30f, 2.65f), new Vector3(5.2f, 0.14f, 3.15f), metal);
@@ -67,6 +71,51 @@ namespace Kamilunavo.Deadreach.UI
 
             AddSceneLight(root.transform, "Holo_Cyan", new Vector3(0f, 2.9f, 1.7f), new Color(0.18f, 0.72f, 0.86f), 5.5f, 8f);
             AddSceneLight(root.transform, "Holo_Amber", new Vector3(-3.3f, 2.1f, 2.2f), new Color(1f, 0.28f, 0.07f), 2.4f, 5f);
+            AddSceneLight(root.transform, "Rear_Cyan", new Vector3(0f, 4.4f, 6.6f), new Color(0.12f, 0.56f, 0.68f), 3.6f, 7f);
+        }
+
+        private static void BuildAuthoredArchitecture(Transform parent, Material steel, Material darkMetal)
+        {
+            var frameAsset = Resources.Load<GameObject>("Production14/Quaternius/Door_Frame_A");
+            var doorAsset = Resources.Load<GameObject>("Production14/Quaternius/Door_DarkMetal");
+
+            if (frameAsset != null)
+            {
+                var rearFrame = UnityEngine.Object.Instantiate(frameAsset, parent);
+                rearFrame.name = "P14_Quaternius_RearBulkhead";
+                rearFrame.transform.localPosition = new Vector3(0f, 0.05f, 7.72f);
+                rearFrame.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                rearFrame.transform.localScale = Vector3.one * 1.16f;
+                ApplyMaterial(rearFrame, steel);
+                RemoveAllColliders(rearFrame);
+
+                var leftFrame = UnityEngine.Object.Instantiate(frameAsset, parent);
+                leftFrame.name = "P14_Quaternius_LeftBulkhead";
+                leftFrame.transform.localPosition = new Vector3(-6.15f, 0.05f, 4.55f);
+                leftFrame.transform.localRotation = Quaternion.Euler(0f, 76f, 0f);
+                leftFrame.transform.localScale = Vector3.one * 0.82f;
+                ApplyMaterial(leftFrame, steel);
+                RemoveAllColliders(leftFrame);
+
+                var rightFrame = UnityEngine.Object.Instantiate(frameAsset, parent);
+                rightFrame.name = "P14_Quaternius_RightBulkhead";
+                rightFrame.transform.localPosition = new Vector3(6.15f, 0.05f, 4.55f);
+                rightFrame.transform.localRotation = Quaternion.Euler(0f, -76f, 0f);
+                rightFrame.transform.localScale = Vector3.one * 0.82f;
+                ApplyMaterial(rightFrame, steel);
+                RemoveAllColliders(rightFrame);
+            }
+
+            if (doorAsset != null)
+            {
+                var door = UnityEngine.Object.Instantiate(doorAsset, parent);
+                door.name = "P14_Quaternius_RearDoor";
+                door.transform.localPosition = new Vector3(0f, 0.07f, 7.66f);
+                door.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                door.transform.localScale = Vector3.one * 1.16f;
+                ApplyMaterial(door, darkMetal);
+                RemoveAllColliders(door);
+            }
         }
 
         private static void HideLegacySightlineProps()
@@ -77,7 +126,12 @@ namespace Kamilunavo.Deadreach.UI
                 "CommandTableTop",
                 "Workshop_Left",
                 "Storage_Right",
-                "Generator"
+                "Generator",
+                "BlastDoor_Frame_Left",
+                "BlastDoor_Frame_Right",
+                "BlastDoor_Frame_Top",
+                "BlastDoor",
+                "BlastDoor_Hazard"
             };
 
             foreach (var name in names)
@@ -188,6 +242,18 @@ namespace Kamilunavo.Deadreach.UI
 
             material.renderQueue = 3000;
             return material;
+        }
+
+        private static void ApplyMaterial(GameObject root, Material material)
+        {
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+                renderer.sharedMaterial = material;
+        }
+
+        private static void RemoveAllColliders(GameObject root)
+        {
+            foreach (var collider in root.GetComponentsInChildren<Collider>(true))
+                UnityEngine.Object.Destroy(collider);
         }
 
         private static void RemoveCollider(GameObject go)
