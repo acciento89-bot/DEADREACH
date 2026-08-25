@@ -2,7 +2,7 @@
 
 _Last updated: 2026-08-25_
 
-Canonical handoff for DEADREACH. Update after every major implementation, validation and merge.
+Canonical handoff for DEADREACH. Update after major implementation, validation and merge.
 
 ## Product / stable baseline
 
@@ -17,8 +17,8 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable branch: `main`
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
-- active production branch: `production/0.14-premium-command-center`
-- Production 0.14 state: **scene build PASSED; all six command-center tabs switch correctly; overall layout direction accepted; latest Devdog external-HUD asset experiment visually FAILED; external layer removed and clean dark baseline implemented; fresh compile + corrected Overview screenshot pending**
+- active branch: `production/0.14-premium-command-center`
+- active PR: #14 Draft
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -27,142 +27,137 @@ Permanent firearm rule:
 
 ## Production 0.14 — Premium Command Center Reboot — ACTIVE
 
-### Why 0.14 is a clean reboot
+### Stable accepted foundation
+
 - branches directly from validated Production 0.12 `main`
-- rejected Production 0.13 presentation layers are not part of this branch
-- no stacked 0.13 shell / Kenney / real-asset overlay system
-- command-center presentation is rebuilt as one runtime system
+- no rejected 0.13 presentation stack
+- `Production14CommandCenterUI` owns one command-center presentation
+- six native screens: Overview / Arsenal / Operators / Campaign / Workshop / Supply
+- user-confirmed six-tab switch test: **PASSED**
+- `DEADREACH > Build Production Slice 0.14`: **PASSED after recovery**
+- overall layout / composition direction accepted; final visual art is not yet accepted
 
-### Command-center implementation
-- `Production14CommandCenterUI` is the sole new presentation owner
-- legacy `BunkerCommandCenterUI` may initialize its stable gameplay state, then its visual canvas is removed when 0.14 starts
-- new screen-space command-center shell is built as one system
-- premium header with separate SCRAP / EXTRACTS / BOSS KILLS counter modules
-- six segmented horizontal Operations tabs
-- compact deployment console on Overview
-- compact campaign status console on Overview
-- bottom Ready / Deploy console
-- decorative UI has raycast disabled
+### Current screen architecture
 
-Current UI-art baseline:
-- temporary Devdog external HUD sprite experiment is **REJECTED** after the latest user screenshot
-- the external sprite lookup has been removed from runtime `Production14IndustrialSkin`
-- the editor auto-download bootstrap has been removed and replaced with cleanup of locally downloaded rejected sprites
-- runtime skin now generates restrained dark graphite panels with subtle depth and controlled cyan / amber status rails
-- no white wireframe frames, radial hexagon counter shapes, footer half-bars, rivets or fake brushed-metal treatment
-- command-center layout/navigation geometry was intentionally left unchanged
+- premium header with SCRAP / EXTRACTS / BOSS KILLS modules
+- six horizontal operations tabs
+- mission console left
+- campaign console right
+- central 3D command-table / holographic city hero
+- Ready / Deploy footer
+- Quaternius authored rear Bunker architecture
+- hologram only shown on Overview
 
-### Native 0.14 screens
-- Overview — mission / campaign / hero hologram
-- Arsenal — secured weapon inventory + equip actions + active-loadout inspector
-- Operators — roster + active operator details + selection
-- Campaign — sector navigation + unlocked level selection
-- Workshop — permanent Bunker upgrades + equipped weapon calibration
-- Supply — dedicated supply/cosmetic content screen
+### UI-art decisions
 
-Navigation behavior:
-- one `ScreenContent` layer is rebuilt per selected tab
-- header/nav/footer remain stable during screen swaps
-- active nav styling follows the selected tab
-- hologram is active only on Overview and returns when Overview is selected again
-- Operator/Campaign changes refresh the footer deployment state
-- no legacy DEV dashboard is restored
+Rejected:
+- first procedural industrial plates: too DEV/placeholder-like
+- Devdog HUD sprite experiment: **VISUAL FAIL** — wrong radial/partial HUD pieces produced white wireframes, star/hex counters and diagonal footer artifact
+- clean graphite fallback: **VISUAL FAIL** — technically clean but user verdict **“Ist ja wie vorher....”**
 
-### Overview hero / room presentation
-Base 0.14 implementation:
-- `Production14HoloDiorama` builds the tactical command-table / projected city
-- authored Quaternius `Door_Frame_A` / `Door_DarkMetal` geometry provides rear Bunker architecture
-- old primitive sightline props and primitive Blastdoor geometry are hidden by the 0.14 hero pass
+Current pass:
+- **Wenrexa “Assets: UI Minimalism SciFi” CC0** selected as a coherent UI family
+- original source: `https://opengameart.org/content/assets-ui-minimalism-scifi`
+- individual PNG mirror: `Bamjr/Delivery-Espacio-space-shooter-game/WenrexaAssetsUI_SciFI/PNG`
+- editor setup downloads only semantically matching authored components:
+  - `MainPanel` for main cards
+  - `SelectPanel` for compact cards
+  - `TitlePanel` for strips
+  - `Button` for tabs / Deploy / tags
+- no radial HUD or partial HUD art is mapped into rectangular panels
+- runtime `Production14IndustrialSkin` prefers the Wenrexa sprites and uses the graphite generator only as offline fallback
+- license/provenance notice is written into the prepared Resources folder
 
-Latest visual polish:
-- denser projected city with district plates, roads, 18 varied buildings and four objective markers
-- layered command table with wider console body, front rail, glowing edges and side console wings
-- separate right-side projector pod with animated projector core and rings
-- rear command-wall console banks with emissive cyan displays and amber warning rails
-- brighter Bunker ambient/fill lighting and tighter cinematic camera framing
-- slower, subtler hologram movement for a tactical-map feel
+### Hologram visibility bug — FIX IMPLEMENTED
+
+Latest clean-baseline screenshot showed an empty center.
+
+Root cause:
+- non-Overview tab disabled `P14_HoloDiorama`
+- return path used `GameObject.Find`, which cannot resolve inactive objects
+
+Fix:
+- new `Production14HoloVisibilityGuard`
+- resolves inactive scene hero roots
+- restores the hero when Overview becomes active
+- rebuilds the hero if it is unexpectedly missing
+- keeps it hidden on other tabs
+
+### Overview hero / room implementation
+
+`Production14HoloDiorama` currently provides:
+- projected city with district plates, roads, 18 varied buildings and four objective markers
+- layered command table, front rail and side console wings
+- projector pod with animated core/rings
+- rear command-wall consoles with cyan screens / amber alert rails
+- Bunker ambient/fill lighting and cinematic camera framing
+- subtle hologram animation
 
 ### Recovery / reproducibility checkpoint — COMPLETE ✅
 
-A local-clean operation exposed that critical Unity-generated production assets were previously only present in the local working tree. They were recovered from the pre-0.14 safety stash and permanently versioned in:
-- recovery commit `6ed8bf5e292f3430300fcb98ce13641885e7a309`
+Recovery commit:
+- `6ed8bf5e292f3430300fcb98ce13641885e7a309`
 
-Now versioned on the branch:
+Versioned after recovery:
 - `Assets/Deadreach/Scenes/Bunker_Hub.unity`
 - `Assets/Deadreach/Scenes/DeadCity_VerticalSlice.unity`
-- DevPalette materials used by generated scenes
-- full `Assets/Deadreach/Art/Production` controllers / materials / prefabs / volume profile
-- Sam / Shaun / Matt production prefabs
-- Rifle / SMG / Pistol / Shotgun production prefabs
-- four infected production prefabs
-- `Assets/Deadreach/Resources/Deadreach/ProductionAssetCatalog.asset`
-- Unity GUID `.meta` files
-- URP project assets
-- `Packages/packages-lock.json`
-- `ProjectSettings`
+- production Sam / Shaun / Matt prefabs
+- production Rifle / SMG / Pistol / Shotgun prefabs
+- infected prefabs
+- materials/controllers/volume profile
+- `ProductionAssetCatalog.asset`
+- Unity `.meta` GUIDs
+- URP / package lock / ProjectSettings
 
-The recovered `ProductionAssetCatalog.asset` references the versioned production prefab GUIDs, including Rifle GUID `af8e76922930adf43856af69b33a808c`.
-
-### Build pipeline hardening
-- menu item: `DEADREACH > Build Production Slice 0.14`
-- accepted Production 0.12 SectorScenePass remains authoritative
-- accepted Production 0.12 LayoutPolishPass remains authoritative
-- 0.14 command center bootstraps at runtime in the Bunker
-- 0.5 operator art gate reuses validated Sam / Shaun / Matt prefabs before any repair/import path
-- 0.6 weapon-family gate reuses validated Rifle / SMG / Pistol / Shotgun prefabs before any standalone glTF repair/import path
+Build hardening:
+- 0.5 operator gate reuses validated production prefabs
+- 0.6 weapon gate reuses validated production prefabs
+- old standalone glTF repair no longer blocks an already-valid production build
 
 ### Current real-Unity validation
-- complete production asset recovery: **COMMITTED + VERIFIED ON GITHUB**
-- post-recovery Unity compile: **PASSED — 0 red Unity errors**
-- `DEADREACH > Build Production Slice 0.14` after recovery: **PASSED**
-- Bunker reopened and Play Mode reached new Overview: **PASSED**
-- first Overview visual verdict: **NOT FINAL — user: “nah dran aber nicht ganz”**
-- initial non-Overview navigation: **FAILED — header changed only**
-- native six-screen navigation fix: **IMPLEMENTED**
-- six-tab switch retest: **PASSED — user confirmed all screens open**
+
+- recovery committed + verified: **PASSED**
+- post-recovery compile: **PASSED — 0 red Unity errors**
+- Build Production Slice 0.14: **PASSED**
+- Bunker / Play Mode Overview: **PASSED before latest UI changes**
+- six-screen navigation: **PASSED**
+- Devdog external-HUD art: **VISUAL FAIL**
+- clean graphite art: **VISUAL FAIL — “Ist ja wie vorher....”**
+- Wenrexa CC0 art integration: **IMPLEMENTED / FRESH COMPILE PENDING**
+- Holo visibility guard: **IMPLEMENTED / FRESH COMPILE PENDING**
+- new Overview visual screenshot: **PENDING**
 - deeper per-screen actions: **PENDING**
-- denser Overview hero/room visual polish: **IMPLEMENTED**
-- Devdog external-HUD sprite experiment: **VISUAL FAIL — user screenshot showed white wireframe frames, star/hex counter shapes and a diagonal footer artifact**
-- external-HUD experiment removal + clean runtime skin: **IMPLEMENTED**
-- fresh Unity compile after clean-skin correction: **PENDING**
-- corrected Overview screenshot / visual verdict: **PENDING**
 - Deploy interaction: **PENDING**
-- mobile landscape / safe-area pass: **PENDING**
+- mobile landscape / safe-area: **PENDING**
 - full stable 0.12 expedition regression: **PENDING**
 - final Unity Console 0 red runtime errors: **PENDING**
 
 ## Production 0.12 — Sector Expansion — STABLE ✅
 
-### Final real-Unity validation
-- fresh compile after 0.12b: **PASSED — 0 red compiler errors**
-- `DEADREACH > Build Production Slice 0.12`: **PASSED**
-- QUARANTINE WARD: **PASSED**
-- TRANSIT COLLAPSE after declutter: **PASSED**
-- INDUSTRIAL SPILL after declutter: **PASSED**
-- BLACKOUT PLAZA after declutter: **PASSED**
-- sector reward / BLACK CACHE Item Power behavior: **PASSED**
-- fixed-zone mobile controls: **PASSED**
-- full Bunker → Workshop/Arsenal → Deploy → mission/risk-reward → extraction → Bunker regression: **PASSED**
-- Workshop/progression persistence: **PASSED**
-- 0.10 combat-impact / boss / reward presentation regression: **PASSED**
-- final Unity Console: **0 red runtime errors**
+Final accepted real-Unity state:
+- fresh compile: PASSED
+- Production Slice 0.12 build: PASSED
+- QUARANTINE WARD: PASSED
+- TRANSIT COLLAPSE: PASSED
+- INDUSTRIAL SPILL: PASSED
+- BLACKOUT PLAZA: PASSED
+- sector reward / BLACK CACHE behavior: PASSED
+- fixed-zone mobile controls: PASSED
+- full Bunker -> expedition -> extraction -> Bunker regression: PASSED
+- Workshop/progression persistence: PASSED
+- combat-impact / boss / reward presentation regression: PASSED
+- final Unity Console: 0 red runtime errors
 
-### Stable systems that remain authoritative
-- four accepted sector layouts + 0.12b declutter geometry
-- Contamination / Electrical Arc / Fireline hazards
-- sector Scrap and BLACK CACHE Item Power bonuses
-- 0.11 RECOVERY / PURGE / HOLDOUT / BLACKSITE
-- objective-gated extraction and BLACK CACHE risk/reward
+Stable systems remain authoritative:
+- four 0.12 sectors + hazards
+- 0.11 mission families / objective-gated extraction / BLACK CACHE risk-reward
 - reinforcement waves
 - schema-v6 Workshop progression
-- fixed lower-left MOVE
-- fixed lower-right AIM/FIRE
-- independent upper-right Ability
-- 0.10 combat-impact VFX
-- accepted Arsenal / operator / boss / reward behavior
+- fixed MOVE / AIM-FIRE / Ability controls
+- accepted combat-impact VFX and boss/reward behavior
 
 ## Next exact gate
 
-Pull latest `production/0.14-premium-command-center`, allow Unity to compile and require **0 red errors**. The rejected external HUD folder should clean itself automatically. No `Build Production Slice 0.14` rerun is required. Enter Play Mode in the already generated Bunker and capture a corrected Overview screenshot for visual acceptance.
+Pull latest `production/0.14-premium-command-center` and let Unity compile. Confirm the Wenrexa setup log and **0 red errors**. No Production Slice rebuild is required for this runtime/editor UI pass. Then enter Play Mode on Overview and capture a screenshot verifying both the new panel/button art and the restored central hologram.
 
 Test plan: `docs/PRODUCTION_14_TEST.md`
