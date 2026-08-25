@@ -14,6 +14,10 @@ namespace Kamilunavo.Deadreach.Editor
         private const string AtlasMaterialPath = "Assets/Deadreach/Art/Production/Materials/Quaternius_ZombieAtlas.mat";
 
         private const string RiflePrefabPath = PrefabRoot + "/Weapon_Quaternius_Rifle.prefab";
+        private const string PistolPrefabPath = PrefabRoot + "/Weapon_Quaternius_Pistol.prefab";
+        private const string SmgPrefabPath = PrefabRoot + "/Weapon_Quaternius_SMG.prefab";
+        private const string ShotgunPrefabPath = PrefabRoot + "/Weapon_Quaternius_Shotgun.prefab";
+
         private const string PistolSource = SourceRoot + "/Weapon_Pistol_06.gltf";
         private const string SmgSource = SourceRoot + "/Weapon_SMG_06.gltf";
         private const string ShotgunSource = SourceRoot + "/Weapon_Shotgun_06.gltf";
@@ -34,6 +38,32 @@ namespace Kamilunavo.Deadreach.Editor
             {
                 Directory.CreateDirectory(ToAbsolute(SourceRoot));
                 Directory.CreateDirectory(ToAbsolute(PrefabRoot));
+
+                // First reuse the production prefabs that already passed real-Unity validation.
+                // Older builds unnecessarily re-imported three standalone glTF files on every build,
+                // making a fresh/local-clean checkout dependent on network/importer state.
+                var existingRifle = AssetDatabase.LoadAssetAtPath<GameObject>(RiflePrefabPath);
+                var existingPistol = AssetDatabase.LoadAssetAtPath<GameObject>(PistolPrefabPath);
+                var existingSmg = AssetDatabase.LoadAssetAtPath<GameObject>(SmgPrefabPath);
+                var existingShotgun = AssetDatabase.LoadAssetAtPath<GameObject>(ShotgunPrefabPath);
+
+                if (existingRifle != null && existingPistol != null && existingSmg != null && existingShotgun != null)
+                {
+                    var existingCatalog = ProductionArtBootstrap.EnsureCatalog();
+                    if (existingCatalog == null)
+                    {
+                        Debug.LogError("DEADREACH 0.6 weapon-family reuse failed: ProductionAssetCatalog unavailable.");
+                        return false;
+                    }
+
+                    existingCatalog.ConfigureWeaponFamilies(existingRifle, existingSmg, existingPistol, existingShotgun);
+                    EditorUtility.SetDirty(existingCatalog);
+                    AssetDatabase.SaveAssets();
+                    Debug.Log("DEADREACH 0.6 weapon family art READY: reusing validated Rifle / SMG / Pistol / Shotgun prefabs; glTF download/import skipped.");
+                    return true;
+                }
+
+                Debug.LogWarning("DEADREACH 0.6 validated weapon-family prefabs are incomplete; entering repair/import path.");
 
                 // Import every newly downloaded ScriptedImporter asset explicitly. A global
                 // AssetDatabase.Refresh here used to make glTFast discover three files that
