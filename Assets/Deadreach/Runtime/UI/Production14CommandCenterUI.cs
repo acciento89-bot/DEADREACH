@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Kamilunavo.Deadreach.Core;
 using Kamilunavo.Deadreach.Persistence;
+using Kamilunavo.Deadreach.Progression;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -11,7 +13,7 @@ using UnityEngine.UI;
 namespace Kamilunavo.Deadreach.UI
 {
     /// <summary>
-    /// Production 0.14 Pass 1. One presentation owner, no 0.13 overlay stack.
+    /// Production 0.14 command center. One presentation owner, no 0.13 overlay stack.
     /// </summary>
     public sealed partial class Production14CommandCenterUI : MonoBehaviour
     {
@@ -28,9 +30,12 @@ namespace Kamilunavo.Deadreach.UI
 
         private Font _font;
         private RectTransform _root;
+        private RectTransform _contentRoot;
         private Text _deployInfo;
         private Text _screenTitle;
         private Text _screenSubtitle;
+        private int _activeNavIndex;
+        private int _campaignSector;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InstallSceneHook()
@@ -63,6 +68,7 @@ namespace Kamilunavo.Deadreach.UI
             yield return null;
 
             DisableLegacyPresentation();
+            _campaignSector = Mathf.Clamp((SaveService.Data.selectedLevel - 1) / 10, 0, 4);
             Production14HoloDiorama.Build();
             BuildInterface();
         }
@@ -110,8 +116,16 @@ namespace Kamilunavo.Deadreach.UI
             BuildEdgeVignette();
             BuildHeader();
             BuildNavigation();
+
+            // Every tab owns only children of this layer. Header, navigation and footer never get
+            // destroyed during a screen switch, which keeps button input stable.
+            _contentRoot = CreateRect("ScreenContent", _root);
+            Fill(_contentRoot);
+
+            _activeNavIndex = 0;
             BuildOverview();
             BuildFooter();
+            RefreshFooter();
         }
 
         private void BuildEdgeVignette()
@@ -214,43 +228,117 @@ namespace Kamilunavo.Deadreach.UI
             Fill(text.rectTransform, 10f, 8f, 10f, 8f);
 
             if (active)
-            {
-                var rail = CreateImage("ActiveRail", go.transform, _cyan);
-                Place(rail.rectTransform, 0.12f, 0.02f, 0.88f, 0.055f);
-            }
+                EnsureActiveRail(button, true);
 
             return button;
         }
 
         private void HandleNav(int index)
         {
-            // Pass 1 is intentionally Overview-only. Do not resurrect the old DEV dashboard
-            // behind unfinished tabs while the visual language is still being accepted.
-            if (index == 0)
+            if (index < 0 || index > 5 || _contentRoot == null)
                 return;
 
-            _screenTitle.text = index switch
+            _activeNavIndex = index;
+            UpdateNavigationState(index);
+            ClearScreenContent();
+
+            var holo = GameObject.Find("P14_HoloDiorama");
+            if (holo != null)
+                holo.SetActive(index == 0);
+
+            switch (index)
             {
-                1 => "ARSENAL",
-                2 => "OPERATORS",
-                3 => "CAMPAIGN",
-                4 => "WORKSHOP",
-                _ => "SUPPLY NETWORK"
-            };
-            _screenSubtitle.text = "PRODUCTION 0.14 // PREMIUM SCREEN PASS PENDING";
-            StartCoroutine(FlashPending(index));
+                case 0:
+                    SetScreenHeader("OVERVIEW", "FIELD READINESS // BUNKER INTELLIGENCE");
+                    BuildOverview();
+                    break;
+                case 1:
+                    SetScreenHeader("ARSENAL", "SECURED WEAPONS // LOADOUT CONTROL");
+                    BuildArsenalScreen();
+                    break;
+                case 2:
+                    SetScreenHeader("OPERATORS", "SURVIVOR ROSTER // FIELD SPECIALIZATION");
+                    BuildOperatorsScreen();
+                    break;
+                case 3:
+                    SetScreenHeader("CAMPAIGN", "50-LEVEL PROGRESSION // SECTOR SELECT");
+                    BuildCampaignScreen();
+                    break;
+                case 4:
+                    SetScreenHeader("WORKSHOP", "BUNKER SYSTEMS // WEAPON CALIBRATION");
+                    BuildWorkshopScreen();
+                    break;
+                default:
+                    SetScreenHeader("SUPPLY NETWORK", "COSMETICS // BUNKER THEMES // SEASON CONTENT");
+                    BuildSupplyScreen();
+                    break;
+            }
+
+            RefreshFooter();
         }
 
-        private IEnumerator FlashPending(int index)
+        private void SetScreenHeader(string title, string subtitle)
         {
-            if (!_navButtons.TryGetValue(index, out var button))
-                yield break;
+            if (_screenTitle != null)
+                _screenTitle.text = title;
+            if (_screenSubtitle != null)
+                _screenSubtitle.text = subtitle;
+        }
 
-            var image = button.image;
-            var old = image.color;
-            image.color = new Color(0.82f, 0.44f, 0.16f, 1f);
-            yield return new WaitForSecondsRealtime(0.16f);
-            image.color = old;
+        private void UpdateNavigationState(int activeIndex)
+        {
+            foreach (var pair in _navButtons)
+            {
+                if (pair.Value == null)
+                    continue;
+
+                var active = pair.Key == activeIndex;
+                pair.Value.image.sprite = Production14IndustrialSkin.Get(active
+                    ? Production14IndustrialSkin.PlateKind.TabActive
+                    : Production14IndustrialSkin.PlateKind.Tab);
+
+                var text = pair.Value.transform.Find("Text")?.GetComponent<Text>();
+                if (text != null)
+                    text.color = active ? _white : new Color(0.78f, 0.82f, 0.82f, 1f);
+
+                EnsureActiveRail(pair.Value, active);
+            }
+        }
+
+        private void EnsureActiveRail(Button button, bool active)
+        {
+            var existing = button.transform.Find("ActiveRail");
+            if (existing == null && active)
+            {
+                var rail = CreateImage("ActiveRail", button.transform, _cyan);
+                Place(rail.rectTransform, 0.12f, 0.02f, 0.88f, 0.055f);
+                existing = rail.transform;
+            }
+
+            if (existing != null)
+                existing.gameObject.SetActive(active);
+        }
+
+        private void ClearScreenContent()
+        {
+            for (var i = _contentRoot.childCount - 1; i >= 0; i--)
+            {
+                var child = _contentRoot.GetChild(i).gameObject;
+                child.SetActive(false);
+                Destroy(child);
+            }
+        }
+
+        private void RefreshFooter()
+        {
+            if (_deployInfo == null)
+                return;
+
+            var data = SaveService.Data;
+            var op = OperatorCatalog.Get(data.selectedCharacterId);
+            _deployInfo.text =
+                $"READY // LEVEL {data.selectedLevel:00} // {RunDifficultyDirector.GetZoneName(data.selectedLevel).ToUpperInvariant()}   |   " +
+                $"OPERATOR {op.Name.ToUpperInvariant()}   |   {(data.selectedLevel % 10 == 0 ? "BOSS TARGET" : "STANDARD EXPEDITION")}";
         }
     }
 }
