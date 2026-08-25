@@ -18,7 +18,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
 - active production branch: `production/0.14-premium-command-center`
-- Production 0.14 state: **scene build PASSED; all six command-center tabs switch correctly; first Overview visual close but not accepted; denser hero/room polish implemented and awaiting fresh compile + screenshot**
+- Production 0.14 state: **scene build PASSED; all six command-center tabs switch correctly; overall layout direction accepted; latest Devdog external-HUD asset experiment visually FAILED; external layer removed and clean dark baseline implemented; fresh compile + corrected Overview screenshot pending**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -37,14 +37,20 @@ Permanent firearm rule:
 - `Production14CommandCenterUI` is the sole new presentation owner
 - legacy `BunkerCommandCenterUI` may initialize its stable gameplay state, then its visual canvas is removed when 0.14 starts
 - new screen-space command-center shell is built as one system
-- new `Production14IndustrialSkin` generates sliced industrial UI plates at runtime
-- brushed gunmetal treatment, clipped corners, bevel edges, rivet details and controlled cyan/amber accents
 - premium header with separate SCRAP / EXTRACTS / BOSS KILLS counter modules
 - six segmented horizontal Operations tabs
-- compact physical-style deployment console on Overview
+- compact deployment console on Overview
 - compact campaign status console on Overview
-- premium bottom Ready / Deploy console
+- bottom Ready / Deploy console
 - decorative UI has raycast disabled
+
+Current UI-art baseline:
+- temporary Devdog external HUD sprite experiment is **REJECTED** after the latest user screenshot
+- the external sprite lookup has been removed from runtime `Production14IndustrialSkin`
+- the editor auto-download bootstrap has been removed and replaced with cleanup of locally downloaded rejected sprites
+- runtime skin now generates restrained dark graphite panels with subtle depth and controlled cyan / amber status rails
+- no white wireframe frames, radial hexagon counter shapes, footer half-bars, rivets or fake brushed-metal treatment
+- command-center layout/navigation geometry was intentionally left unchanged
 
 ### Native 0.14 screens
 - Overview — mission / campaign / hero hologram
@@ -68,7 +74,7 @@ Base 0.14 implementation:
 - authored Quaternius `Door_Frame_A` / `Door_DarkMetal` geometry provides rear Bunker architecture
 - old primitive sightline props and primitive Blastdoor geometry are hidden by the 0.14 hero pass
 
-Latest visual polish after first screenshot:
+Latest visual polish:
 - denser projected city with district plates, roads, 18 varied buildings and four objective markers
 - layered command table with wider console body, front rail, glowing edges and side console wings
 - separate right-side projector pod with animated projector core and rings
@@ -115,9 +121,11 @@ The recovered `ProductionAssetCatalog.asset` references the versioned production
 - native six-screen navigation fix: **IMPLEMENTED**
 - six-tab switch retest: **PASSED — user confirmed all screens open**
 - deeper per-screen actions: **PENDING**
-- denser Overview hero/room visual polish: **IMPLEMENTED AFTER TAB PASS**
-- fresh Unity compile after latest hero-polish code: **PENDING**
-- new Overview screenshot / visual verdict: **PENDING**
+- denser Overview hero/room visual polish: **IMPLEMENTED**
+- Devdog external-HUD sprite experiment: **VISUAL FAIL — user screenshot showed white wireframe frames, star/hex counter shapes and a diagonal footer artifact**
+- external-HUD experiment removal + clean runtime skin: **IMPLEMENTED**
+- fresh Unity compile after clean-skin correction: **PENDING**
+- corrected Overview screenshot / visual verdict: **PENDING**
 - Deploy interaction: **PENDING**
 - mobile landscape / safe-area pass: **PENDING**
 - full stable 0.12 expedition regression: **PENDING**
@@ -155,6 +163,6 @@ The recovered `ProductionAssetCatalog.asset` references the versioned production
 
 ## Next exact gate
 
-Pull latest `production/0.14-premium-command-center`, allow Unity to compile and require **0 red errors**. No `Build Production Slice 0.14` rerun is required for the runtime-only hero polish. Enter Play Mode in the already generated Bunker and capture a new Overview screenshot for visual acceptance.
+Pull latest `production/0.14-premium-command-center`, allow Unity to compile and require **0 red errors**. The rejected external HUD folder should clean itself automatically. No `Build Production Slice 0.14` rerun is required. Enter Play Mode in the already generated Bunker and capture a corrected Overview screenshot for visual acceptance.
 
 Test plan: `docs/PRODUCTION_14_TEST.md`
