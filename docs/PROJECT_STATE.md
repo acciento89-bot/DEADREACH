@@ -18,7 +18,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
 - active production branch: `production/0.14-premium-command-center`
-- Production 0.14 state: **Pass 1 implemented; complete Unity production asset recovery committed; current fresh compile required before build retry**
+- Production 0.14 state: **Pass 1 implemented; complete Unity production asset recovery committed; current post-recovery fresh compile PASSED; build retry next**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -86,7 +86,7 @@ The recovered `ProductionAssetCatalog.asset` references the versioned production
 - earlier fresh 0.14 compile before recovery/code hardening: **STALE**
 - first Build Production Slice 0.14 attempt: **FAILED in old 0.6 standalone weapon glTF import path before scene generation**
 - complete production asset recovery: **COMMITTED + VERIFIED ON GITHUB**
-- current fresh Unity compile after recovery/code changes: **PENDING**
+- current fresh Unity compile after recovery/code changes: **PASSED — 0 red Unity errors**
 - Build Production Slice 0.14 retry: **PENDING**
 - Overview visual acceptance against premium command-center reference: **PENDING**
 - Deploy interaction: **PENDING**
@@ -126,6 +126,6 @@ The recovered `ProductionAssetCatalog.asset` references the versioned production
 
 ## Next exact gate
 
-Pull the latest Production 0.14 branch, allow a fresh Unity import/script compile and require **0 red Unity errors**. Only then retry `DEADREACH > Build Production Slice 0.14`.
+Run `DEADREACH > Build Production Slice 0.14`. Require validated operator/weapon prefab reuse, accepted base generation + Production 0.12 sector/layout passes, Bunker reopen and no blocking red generation error. Then enter Play Mode and capture the Overview for visual acceptance.
 
 Test plan: `docs/PRODUCTION_14_TEST.md`
