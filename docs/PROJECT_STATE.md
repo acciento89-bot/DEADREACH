@@ -18,7 +18,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
 - active production branch: `production/0.14-premium-command-center`
-- Production 0.14 state: **scene build PASSED; first visual screenshot close but not accepted; non-Overview tab failure fixed in code; fresh compile + interaction retest next**
+- Production 0.14 state: **scene build PASSED; all six command-center tabs switch correctly; first Overview visual close but not accepted; denser hero/room polish implemented and awaiting fresh compile + screenshot**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -43,19 +43,10 @@ Permanent firearm rule:
 - six segmented horizontal Operations tabs
 - compact physical-style deployment console on Overview
 - compact campaign status console on Overview
-- center remains the main hero composition
-- `Production14HoloDiorama` builds an animated tactical command table / projected city with objective markers, rings and cyan/amber lighting
-- authored Quaternius `Door_Frame_A` / `Door_DarkMetal` geometry is loaded from `Resources/Production14/Quaternius` for rear Bunker architecture
-- Bunker camera is lowered and reframed around the central command-table presentation
-- old primitive sightline props and primitive Blastdoor geometry are hidden by the 0.14 hero pass
 - premium bottom Ready / Deploy console
 - decorative UI has raycast disabled
-- holographic decorative objects have colliders removed
 
-### Functional screen navigation pass
-The first screenshot exposed that `HandleNav` intentionally changed only the header because Pass 1 had been hard-coded as Overview-only. That behavior is removed.
-
-Current branch now includes native 0.14 screens:
+### Native 0.14 screens
 - Overview — mission / campaign / hero hologram
 - Arsenal — secured weapon inventory + equip actions + active-loadout inspector
 - Operators — roster + active operator details + selection
@@ -69,7 +60,21 @@ Navigation behavior:
 - active nav styling follows the selected tab
 - hologram is active only on Overview and returns when Overview is selected again
 - Operator/Campaign changes refresh the footer deployment state
-- no legacy DEV dashboard is restored for unfinished screens
+- no legacy DEV dashboard is restored
+
+### Overview hero / room presentation
+Base 0.14 implementation:
+- `Production14HoloDiorama` builds the tactical command-table / projected city
+- authored Quaternius `Door_Frame_A` / `Door_DarkMetal` geometry provides rear Bunker architecture
+- old primitive sightline props and primitive Blastdoor geometry are hidden by the 0.14 hero pass
+
+Latest visual polish after first screenshot:
+- denser projected city with district plates, roads, 18 varied buildings and four objective markers
+- layered command table with wider console body, front rail, glowing edges and side console wings
+- separate right-side projector pod with animated projector core and rings
+- rear command-wall console banks with emissive cyan displays and amber warning rails
+- brighter Bunker ambient/fill lighting and tighter cinematic camera framing
+- slower, subtler hologram movement for a tactical-map feel
 
 ### Recovery / reproducibility checkpoint — COMPLETE ✅
 
@@ -102,16 +107,17 @@ The recovered `ProductionAssetCatalog.asset` references the versioned production
 
 ### Current real-Unity validation
 - complete production asset recovery: **COMMITTED + VERIFIED ON GITHUB**
-- post-recovery Unity compile before navigation pass: **PASSED — 0 red Unity errors**
+- post-recovery Unity compile: **PASSED — 0 red Unity errors**
 - `DEADREACH > Build Production Slice 0.14` after recovery: **PASSED**
 - Bunker reopened and Play Mode reached new Overview: **PASSED**
-- Overview visual verdict: **NOT FINAL — user: “nah dran aber nicht ganz”**
-- non-Overview tabs on that build: **FAILED — clicks changed header only**
-- root cause: Overview-only guard in `HandleNav`
-- functional six-screen navigation fix: **IMPLEMENTED**
-- fresh Unity compile after navigation fix: **PENDING**
-- six-tab interaction retest: **PENDING**
-- next visual polish pass: **PENDING**
+- first Overview visual verdict: **NOT FINAL — user: “nah dran aber nicht ganz”**
+- initial non-Overview navigation: **FAILED — header changed only**
+- native six-screen navigation fix: **IMPLEMENTED**
+- six-tab switch retest: **PASSED — user confirmed all screens open**
+- deeper per-screen actions: **PENDING**
+- denser Overview hero/room visual polish: **IMPLEMENTED AFTER TAB PASS**
+- fresh Unity compile after latest hero-polish code: **PENDING**
+- new Overview screenshot / visual verdict: **PENDING**
 - Deploy interaction: **PENDING**
 - mobile landscape / safe-area pass: **PENDING**
 - full stable 0.12 expedition regression: **PENDING**
@@ -149,6 +155,6 @@ The recovered `ProductionAssetCatalog.asset` references the versioned production
 
 ## Next exact gate
 
-Pull latest `production/0.14-premium-command-center`, let Unity compile and require **0 red errors**. No scene rebuild is required for the runtime-only navigation fix. Enter Play Mode in the already generated Bunker and test Overview / Arsenal / Operators / Campaign / Workshop / Supply. If all six switch correctly, continue directly with the next visual polish pass on the Overview center composition.
+Pull latest `production/0.14-premium-command-center`, allow Unity to compile and require **0 red errors**. No `Build Production Slice 0.14` rerun is required for the runtime-only hero polish. Enter Play Mode in the already generated Bunker and capture a new Overview screenshot for visual acceptance.
 
 Test plan: `docs/PRODUCTION_14_TEST.md`
