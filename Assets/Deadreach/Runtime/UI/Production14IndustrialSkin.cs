@@ -6,10 +6,8 @@ namespace Kamilunavo.Deadreach.UI
     /// <summary>
     /// Production 0.14 command-center skin.
     ///
-    /// This is intentionally a restrained game-UI baseline: dark graphite panels,
-    /// subtle depth, small cut corners and controlled cyan / amber status rails.
-    /// It does not depend on external HUD artwork and avoids decorative wireframe
-    /// shapes that distort when used as nine-slices.
+    /// A coherent CC0 Wenrexa panel/button family is preferred when the editor setup has
+    /// prepared it. The calm graphite generator remains only as an offline-safe fallback.
     /// </summary>
     public static class Production14IndustrialSkin
     {
@@ -33,9 +31,32 @@ namespace Kamilunavo.Deadreach.UI
             if (Cache.TryGetValue(kind, out var cached) && cached != null)
                 return cached;
 
+            var external = Resources.Load<Sprite>(ExternalResourcePath(kind));
+            if (external != null)
+            {
+                Cache[kind] = external;
+                return external;
+            }
+
             var sprite = Build(kind, GetSpec(kind));
             Cache[kind] = sprite;
             return sprite;
+        }
+
+        private static string ExternalResourcePath(PlateKind kind)
+        {
+            return kind switch
+            {
+                PlateKind.Header => "Production14/UI/Wenrexa/HeaderFrame",
+                PlateKind.Tab => "Production14/UI/Wenrexa/TabFrame",
+                PlateKind.TabActive => "Production14/UI/Wenrexa/TabActiveFrame",
+                PlateKind.Counter => "Production14/UI/Wenrexa/CounterFrame",
+                PlateKind.Mission => "Production14/UI/Wenrexa/MissionFrame",
+                PlateKind.Glass => "Production14/UI/Wenrexa/GlassFrame",
+                PlateKind.Footer => "Production14/UI/Wenrexa/FooterFrame",
+                PlateKind.Deploy => "Production14/UI/Wenrexa/DeployFrame",
+                _ => "Production14/UI/Wenrexa/TagFrame"
+            };
         }
 
         private static PanelSpec GetSpec(PlateKind kind)
@@ -126,9 +147,6 @@ namespace Kamilunavo.Deadreach.UI
 
                     var edge = EdgeDistance(x, y, spec.Width, spec.Height);
                     var color = fill;
-
-                    // Keep the surface calm. A tiny deterministic variation prevents a perfectly
-                    // flat placeholder look without turning the panel into fake brushed metal.
                     var variation = (((x * 11) + (y * 17)) & 15) / 255f;
                     color = Add(color, variation * 0.35f);
 
