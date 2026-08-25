@@ -18,7 +18,7 @@ Canonical handoff for DEADREACH. Update after every major implementation, valida
 - stable production level: **0.12**
 - Production 0.12 / PR #12 squash merge: `2d328868a6510cb744cff65c7c547cd8148c448e`
 - active production branch: `production/0.14-premium-command-center`
-- Production 0.14 state: **Pass 1 implemented; complete Unity production asset recovery committed; current post-recovery fresh compile PASSED; build retry next**
+- Production 0.14 state: **scene build PASSED; first visual screenshot close but not accepted; non-Overview tab failure fixed in code; fresh compile + interaction retest next**
 
 Permanent firearm rule:
 - use artist-authored firearm geometry already parented to the Quaternius survivor rig
@@ -31,9 +31,9 @@ Permanent firearm rule:
 - branches directly from validated Production 0.12 `main`
 - rejected Production 0.13 presentation layers are not part of this branch
 - no stacked 0.13 shell / Kenney / real-asset overlay system
-- Overview is rebuilt first and must pass visual acceptance before the other Bunker tabs are redesigned
+- command-center presentation is rebuilt as one runtime system
 
-### Pass 1 implementation
+### Command-center implementation
 - `Production14CommandCenterUI` is the sole new presentation owner
 - legacy `BunkerCommandCenterUI` may initialize its stable gameplay state, then its visual canvas is removed when 0.14 starts
 - new screen-space command-center shell is built as one system
@@ -41,9 +41,9 @@ Permanent firearm rule:
 - brushed gunmetal treatment, clipped corners, bevel edges, rivet details and controlled cyan/amber accents
 - premium header with separate SCRAP / EXTRACTS / BOSS KILLS counter modules
 - six segmented horizontal Operations tabs
-- compact physical-style deployment console on the left
-- compact campaign status console on the right
-- center remains open as the main hero composition
+- compact physical-style deployment console on Overview
+- compact campaign status console on Overview
+- center remains the main hero composition
 - `Production14HoloDiorama` builds an animated tactical command table / projected city with objective markers, rings and cyan/amber lighting
 - authored Quaternius `Door_Frame_A` / `Door_DarkMetal` geometry is loaded from `Resources/Production14/Quaternius` for rear Bunker architecture
 - Bunker camera is lowered and reframed around the central command-table presentation
@@ -51,7 +51,25 @@ Permanent firearm rule:
 - premium bottom Ready / Deploy console
 - decorative UI has raycast disabled
 - holographic decorative objects have colliders removed
-- non-Overview tabs are intentionally visually pending in Pass 1 and do not resurrect the legacy DEV dashboard
+
+### Functional screen navigation pass
+The first screenshot exposed that `HandleNav` intentionally changed only the header because Pass 1 had been hard-coded as Overview-only. That behavior is removed.
+
+Current branch now includes native 0.14 screens:
+- Overview — mission / campaign / hero hologram
+- Arsenal — secured weapon inventory + equip actions + active-loadout inspector
+- Operators — roster + active operator details + selection
+- Campaign — sector navigation + unlocked level selection
+- Workshop — permanent Bunker upgrades + equipped weapon calibration
+- Supply — dedicated supply/cosmetic content screen
+
+Navigation behavior:
+- one `ScreenContent` layer is rebuilt per selected tab
+- header/nav/footer remain stable during screen swaps
+- active nav styling follows the selected tab
+- hologram is active only on Overview and returns when Overview is selected again
+- Operator/Campaign changes refresh the footer deployment state
+- no legacy DEV dashboard is restored for unfinished screens
 
 ### Recovery / reproducibility checkpoint — COMPLETE ✅
 
@@ -75,20 +93,25 @@ Now versioned on the branch:
 The recovered `ProductionAssetCatalog.asset` references the versioned production prefab GUIDs, including Rifle GUID `af8e76922930adf43856af69b33a808c`.
 
 ### Build pipeline hardening
-- new menu item: `DEADREACH > Build Production Slice 0.14`
+- menu item: `DEADREACH > Build Production Slice 0.14`
 - accepted Production 0.12 SectorScenePass remains authoritative
 - accepted Production 0.12 LayoutPolishPass remains authoritative
 - 0.14 command center bootstraps at runtime in the Bunker
-- 0.5 operator art gate now reuses validated Sam / Shaun / Matt prefabs before entering any repair/import path
-- 0.6 weapon-family gate now reuses validated Rifle / SMG / Pistol / Shotgun prefabs before entering any standalone glTF repair/import path
+- 0.5 operator art gate reuses validated Sam / Shaun / Matt prefabs before any repair/import path
+- 0.6 weapon-family gate reuses validated Rifle / SMG / Pistol / Shotgun prefabs before any standalone glTF repair/import path
 
 ### Current real-Unity validation
-- earlier fresh 0.14 compile before recovery/code hardening: **STALE**
-- first Build Production Slice 0.14 attempt: **FAILED in old 0.6 standalone weapon glTF import path before scene generation**
 - complete production asset recovery: **COMMITTED + VERIFIED ON GITHUB**
-- current fresh Unity compile after recovery/code changes: **PASSED — 0 red Unity errors**
-- Build Production Slice 0.14 retry: **PENDING**
-- Overview visual acceptance against premium command-center reference: **PENDING**
+- post-recovery Unity compile before navigation pass: **PASSED — 0 red Unity errors**
+- `DEADREACH > Build Production Slice 0.14` after recovery: **PASSED**
+- Bunker reopened and Play Mode reached new Overview: **PASSED**
+- Overview visual verdict: **NOT FINAL — user: “nah dran aber nicht ganz”**
+- non-Overview tabs on that build: **FAILED — clicks changed header only**
+- root cause: Overview-only guard in `HandleNav`
+- functional six-screen navigation fix: **IMPLEMENTED**
+- fresh Unity compile after navigation fix: **PENDING**
+- six-tab interaction retest: **PENDING**
+- next visual polish pass: **PENDING**
 - Deploy interaction: **PENDING**
 - mobile landscape / safe-area pass: **PENDING**
 - full stable 0.12 expedition regression: **PENDING**
@@ -126,6 +149,6 @@ The recovered `ProductionAssetCatalog.asset` references the versioned production
 
 ## Next exact gate
 
-Run `DEADREACH > Build Production Slice 0.14`. Require validated operator/weapon prefab reuse, accepted base generation + Production 0.12 sector/layout passes, Bunker reopen and no blocking red generation error. Then enter Play Mode and capture the Overview for visual acceptance.
+Pull latest `production/0.14-premium-command-center`, let Unity compile and require **0 red errors**. No scene rebuild is required for the runtime-only navigation fix. Enter Play Mode in the already generated Bunker and test Overview / Arsenal / Operators / Campaign / Workshop / Supply. If all six switch correctly, continue directly with the next visual polish pass on the Overview center composition.
 
 Test plan: `docs/PRODUCTION_14_TEST.md`
