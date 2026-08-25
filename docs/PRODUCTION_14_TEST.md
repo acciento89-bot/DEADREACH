@@ -103,6 +103,8 @@ Next screenshot must show:
 - accepted layout preserved
 - overall result materially more like finished game UI than the prior DEV-style baseline
 
+The next visual gate is therefore a **Wenrexa-art + restored-hologram** screenshot, not another baseline-skin screenshot.
+
 ## Gate D — Navigation — PASSED ✅ / DEEP ACTIONS PENDING
 
 User-confirmed:
