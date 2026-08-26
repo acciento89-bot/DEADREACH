@@ -7,11 +7,9 @@ using UnityEngine;
 namespace Kamilunavo.Deadreach.Editor
 {
     /// <summary>
-    /// Prepares the CC0 Wenrexa "Free UI Minimalism SciFi" art used by Production 0.14.
-    ///
-    /// Unlike the rejected Devdog experiment, every source here is selected by its authored
-    /// role: MainPanel -> main content card, SelectPanel -> compact card, TitlePanel -> strip,
-    /// Button -> button. No radial HUD pieces or partial HUD bars are stretched into panels.
+    /// Optional CC0 Wenrexa "Free UI Minimalism SciFi" setup retained for reference.
+    /// Production 0.14 now renders its shipping command-center skin natively, so this pack is
+    /// never downloaded automatically and cannot block normal editor startup or release builds.
     /// </summary>
     public static class Production14ExternalUISetup
     {
@@ -37,7 +35,6 @@ namespace Kamilunavo.Deadreach.Editor
 
         private static readonly AssetSpec[] Assets =
         {
-            // Authored title/panel/button families only. These are not arbitrary HUD fragments.
             new("HeaderFrame.png", "TitlePanel01.png", 0.10f, 0.22f),
             new("TabFrame.png", "Button11.png", 0.16f, 0.30f),
             new("TabActiveFrame.png", "Button12.png", 0.16f, 0.30f),
@@ -55,14 +52,12 @@ namespace Kamilunavo.Deadreach.Editor
             EditorApplication.delayCall += () =>
             {
                 CleanupRejectedPack();
-                if (!AllAssetsReady())
-                    EnsureReady(false);
-                else
+                if (AllAssetsReady())
                     ConfigureAllExisting();
             };
         }
 
-        [MenuItem("DEADREACH/Setup Production 0.14 Wenrexa UI Pack", priority = 8)]
+        [MenuItem("DEADREACH/Setup Optional Wenrexa UI Reference Pack", priority = 8)]
         public static void SetupFromMenu()
         {
             EnsureReady(true);
@@ -103,12 +98,12 @@ namespace Kamilunavo.Deadreach.Editor
                 AssetDatabase.Refresh();
 
                 if (verbose || changed)
-                    Debug.Log($"DEADREACH 0.14 Wenrexa UI pack READY: {Assets.Length} CC0 panel/button sprites available.");
+                    Debug.Log($"DEADREACH optional Wenrexa UI reference pack READY: {Assets.Length} CC0 sprites available.");
                 return true;
             }
             catch (Exception exception)
             {
-                Debug.LogWarning($"DEADREACH 0.14 Wenrexa UI pack could not be prepared; safe fallback skin remains active. {exception.Message}");
+                Debug.LogWarning($"DEADREACH optional Wenrexa UI reference pack could not be prepared. {exception.Message}");
                 return false;
             }
         }
