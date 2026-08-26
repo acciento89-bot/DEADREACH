@@ -2,22 +2,28 @@
 
 Goal: finish Production 0.14 in one consolidated validation run instead of returning to small isolated checks.
 
-## A — Fresh compile — PASSED ✅
-- Latest orientation/release-hardening code compiled successfully enough to run the release validator.
-- No compile-blocking errors remain on the current user-tested head.
+## A — Fresh compile — RECHECK REQUIRED
+- The previous compile passed before the operator-asset integrity fix.
+- Current 0.14 now includes runtime fallback, mesh-aware operator repair, and a stronger release validator.
+- Run one fresh compile after pulling the current head.
 
-## B — Static release validator — PASSED ✅
-User-confirmed result:
+## B — Static release validator — RECHECK REQUIRED
+The previous user-confirmed result was:
 `DEADREACH 0.14 RELEASE STATIC CHECK: PASS`
 
-Validated:
+That PASS is superseded because the validator did not previously verify that SAM / RAVEN / BRIGGS prefabs contained resolvable body meshes.
+
+Current validator additionally checks:
 - Bunker and expedition scene assets
 - both scenes enabled in Build Settings
 - required Quaternius command-center Resources
+- SAM / RAVEN / BRIGGS operator prefabs contain real non-weapon meshes
 - Wenrexa preparation/fallback availability
 - landscape-only orientation compatibility
 
-## C — Command Center deep interaction sweep — NEXT
+If RAVEN/Shaun or BRIGGS/Matt wrappers exist but their glTF-backed meshes are unresolved, the validator now fails and directs the operator-art repair/build path to regenerate them.
+
+## C — Command Center deep interaction sweep — PENDING
 Do this in one Bunker session:
 1. Overview visible; central hologram present.
 2. Arsenal: equip another secured weapon if available.
@@ -46,17 +52,18 @@ Test one phone-like landscape aspect in Game view, preferably an ultrawide/notch
 ## E — Full stable expedition regression
 From the hardened 0.14 Bunker:
 1. Deploy.
-2. Validate fixed MOVE / AIM-FIRE / Ability controls.
-3. Validate active 0.12 sector layout and its hazard behavior.
-4. Complete Primary objective.
-5. Complete optional BLACK CACHE when available.
-6. Confirm objective-gated extraction.
-7. Extract.
-8. Return to Bunker.
-9. Confirm Scrap/reward/progression persistence.
-10. Confirm selected operator/level/equipped weapon still persist.
-11. Confirm Overview hologram still restores after tab switching.
-12. Final Unity Console: **0 red runtime errors**.
+2. Confirm the selected production operator is visibly rendered. Runtime may fall back to the validated SAM visual only as a safety net if a selected operator asset is still broken; the release gate itself must not PASS until all three operator meshes are healthy.
+3. Validate fixed MOVE / AIM-FIRE / Ability controls.
+4. Validate active 0.12 sector layout and its hazard behavior.
+5. Complete Primary objective.
+6. Complete optional BLACK CACHE when available.
+7. Confirm objective-gated extraction.
+8. Extract.
+9. Return to Bunker.
+10. Confirm Scrap/reward/progression persistence.
+11. Confirm selected operator/level/equipped weapon still persist.
+12. Confirm Overview hologram still restores after tab switching.
+13. Final Unity Console: **0 red runtime errors**. Device Simulator editor-state exceptions are a separate local editor/layout defect and must be cleared before counting the final console gate.
 
 ## Release decision
-If C–E pass, Production 0.14 is ready to leave Draft and proceed to final merge/release packaging. Do not reopen visual redesign unless a real blocking visual defect appears.
+Only after current A + B are green again and C–E pass is Production 0.14 ready to leave Draft and proceed to final merge/release packaging. Do not reopen visual redesign unless a real blocking visual defect appears.
