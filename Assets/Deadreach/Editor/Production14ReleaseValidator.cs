@@ -17,6 +17,10 @@ namespace Kamilunavo.Deadreach.Editor
             var errors = new List<string>();
             var warnings = new List<string>();
 
+            // Release invariant is deterministic and self-healing on recovered/fresh checkouts.
+            // The validator still checks the resulting PlayerSettings below.
+            Production14LandscapeSettings.EnsureLandscapeOnly(false);
+
             ValidateSceneAsset(BunkerScenePath, SceneFlowService.BunkerSceneName, errors);
             ValidateSceneAsset(ExpeditionScenePath, SceneFlowService.ExpeditionSceneName, errors);
             ValidateBuildSettings(SceneFlowService.BunkerSceneName, errors);
