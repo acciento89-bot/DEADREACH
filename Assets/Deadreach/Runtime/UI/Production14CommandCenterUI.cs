@@ -120,6 +120,7 @@ namespace Kamilunavo.Deadreach.UI
             _scaler.referenceResolution = new Vector2(1440f, 810f);
             _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             _scaler.matchWidthOrHeight = 0.52f;
+            _scaler.dynamicPixelsPerUnit = 2f;
 
             _root = CreateRect("Root", canvasObject.transform);
             Fill(_root);
@@ -156,6 +157,7 @@ namespace Kamilunavo.Deadreach.UI
 
             _scaler.referenceResolution = new Vector2(1440f, 810f);
             _scaler.matchWidthOrHeight = safe.height > 0f && safe.width / safe.height >= 2.15f ? 0.62f : 0.52f;
+            _scaler.dynamicPixelsPerUnit = 2f;
 
             _root.anchorMin = new Vector2(safe.xMin / Screen.width, safe.yMin / Screen.height);
             _root.anchorMax = new Vector2(safe.xMax / Screen.width, safe.yMax / Screen.height);
