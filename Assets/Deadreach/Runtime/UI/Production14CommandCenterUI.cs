@@ -19,16 +19,17 @@ namespace Kamilunavo.Deadreach.UI
     {
         private static bool _hooked;
 
-        private readonly Color _white = new(0.93f, 0.95f, 0.95f, 1f);
-        private readonly Color _muted = new(0.51f, 0.58f, 0.60f, 1f);
+        private readonly Color _white = new(0.98f, 0.99f, 1f, 1f);
+        private readonly Color _muted = new(0.70f, 0.75f, 0.76f, 1f);
         private readonly Color _cyan = new(0.22f, 0.88f, 0.95f, 1f);
         private readonly Color _amber = new(1.0f, 0.42f, 0.08f, 1f);
         private readonly Color _green = new(0.21f, 0.90f, 0.53f, 1f);
-        private readonly Color _danger = new(0.86f, 0.16f, 0.08f, 1f);
+        private readonly Color _danger = new(0.92f, 0.24f, 0.12f, 1f);
 
         private readonly Dictionary<int, Button> _navButtons = new();
 
         private Font _font;
+        private CanvasScaler _scaler;
         private RectTransform _root;
         private RectTransform _contentRoot;
         private Text _deployInfo;
@@ -36,6 +37,9 @@ namespace Kamilunavo.Deadreach.UI
         private Text _screenSubtitle;
         private int _activeNavIndex;
         private int _campaignSector;
+        private Rect _lastSafeArea;
+        private Vector2Int _lastScreenSize;
+        private bool _hasResponsiveFrame;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InstallSceneHook()
@@ -73,6 +77,11 @@ namespace Kamilunavo.Deadreach.UI
             BuildInterface();
         }
 
+        private void LateUpdate()
+        {
+            ApplyResponsiveFrame();
+        }
+
         private void DisableLegacyPresentation()
         {
             var legacy = FindFirstObjectByType<BunkerCommandCenterUI>();
@@ -103,15 +112,18 @@ namespace Kamilunavo.Deadreach.UI
             var canvas = canvasObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 140;
+            canvas.pixelPerfect = true;
             canvasObject.AddComponent<GraphicRaycaster>();
 
-            var scaler = canvasObject.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1600f, 900f);
-            scaler.matchWidthOrHeight = 0.5f;
+            _scaler = canvasObject.AddComponent<CanvasScaler>();
+            _scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            _scaler.referenceResolution = new Vector2(1440f, 810f);
+            _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            _scaler.matchWidthOrHeight = 0.52f;
 
             _root = CreateRect("Root", canvasObject.transform);
             Fill(_root);
+            ApplyResponsiveFrame(true);
 
             BuildEdgeVignette();
             BuildHeader();
@@ -128,15 +140,38 @@ namespace Kamilunavo.Deadreach.UI
             RefreshFooter();
         }
 
+        private void ApplyResponsiveFrame(bool force = false)
+        {
+            if (_root == null || _scaler == null || Screen.width <= 0 || Screen.height <= 0)
+                return;
+
+            var safe = Screen.safeArea;
+            var screenSize = new Vector2Int(Screen.width, Screen.height);
+            if (!force && _hasResponsiveFrame && _lastScreenSize == screenSize && _lastSafeArea == safe)
+                return;
+
+            _hasResponsiveFrame = true;
+            _lastSafeArea = safe;
+            _lastScreenSize = screenSize;
+
+            _scaler.referenceResolution = new Vector2(1440f, 810f);
+            _scaler.matchWidthOrHeight = safe.height > 0f && safe.width / safe.height >= 2.15f ? 0.62f : 0.52f;
+
+            _root.anchorMin = new Vector2(safe.xMin / Screen.width, safe.yMin / Screen.height);
+            _root.anchorMax = new Vector2(safe.xMax / Screen.width, safe.yMax / Screen.height);
+            _root.offsetMin = Vector2.zero;
+            _root.offsetMax = Vector2.zero;
+        }
+
         private void BuildEdgeVignette()
         {
-            var topShade = CreateImage("TopShade", _root, new Color(0.01f, 0.015f, 0.017f, 0.72f));
+            var topShade = CreateImage("TopShade", _root, new Color(0.01f, 0.015f, 0.017f, 0.54f));
             Place(topShade.rectTransform, 0f, 0.84f, 1f, 1f);
 
-            var leftShade = CreateImage("LeftShade", _root, new Color(0.005f, 0.012f, 0.014f, 0.34f));
+            var leftShade = CreateImage("LeftShade", _root, new Color(0.005f, 0.012f, 0.014f, 0.18f));
             Place(leftShade.rectTransform, 0f, 0.10f, 0.23f, 0.84f);
 
-            var rightShade = CreateImage("RightShade", _root, new Color(0.005f, 0.012f, 0.014f, 0.26f));
+            var rightShade = CreateImage("RightShade", _root, new Color(0.005f, 0.012f, 0.014f, 0.16f));
             Place(rightShade.rectTransform, 0.77f, 0.10f, 1f, 0.84f);
         }
 
@@ -224,7 +259,7 @@ namespace Kamilunavo.Deadreach.UI
             colors.fadeDuration = 0.08f;
             button.colors = colors;
 
-            var text = CreateLabel("Text", go.transform, label, 10, FontStyle.Bold, active ? _white : new Color(0.78f, 0.82f, 0.82f, 1f), TextAnchor.MiddleCenter);
+            var text = CreateLabel("Text", go.transform, label, 10, FontStyle.Bold, active ? _white : new Color(0.86f, 0.89f, 0.90f, 1f), TextAnchor.MiddleCenter);
             Fill(text.rectTransform, 10f, 8f, 10f, 8f);
 
             if (active)
@@ -299,7 +334,7 @@ namespace Kamilunavo.Deadreach.UI
 
                 var text = pair.Value.transform.Find("Text")?.GetComponent<Text>();
                 if (text != null)
-                    text.color = active ? _white : new Color(0.78f, 0.82f, 0.82f, 1f);
+                    text.color = active ? _white : new Color(0.86f, 0.89f, 0.90f, 1f);
 
                 EnsureActiveRail(pair.Value, active);
             }
