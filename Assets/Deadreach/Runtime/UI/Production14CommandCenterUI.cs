@@ -13,18 +13,18 @@ using UnityEngine.UI;
 namespace Kamilunavo.Deadreach.UI
 {
     /// <summary>
-    /// Production 0.14 command center. One presentation owner, no 0.13 overlay stack.
+    /// Production 0.14 command center. Clean game-menu presentation based on the approved visual target.
     /// </summary>
     public sealed partial class Production14CommandCenterUI : MonoBehaviour
     {
         private static bool _hooked;
 
         private readonly Color _white = new(0.98f, 0.99f, 1f, 1f);
-        private readonly Color _muted = new(0.70f, 0.75f, 0.76f, 1f);
-        private readonly Color _cyan = new(0.22f, 0.88f, 0.95f, 1f);
-        private readonly Color _amber = new(1.0f, 0.42f, 0.08f, 1f);
-        private readonly Color _green = new(0.21f, 0.90f, 0.53f, 1f);
-        private readonly Color _danger = new(0.92f, 0.24f, 0.12f, 1f);
+        private readonly Color _muted = new(0.72f, 0.77f, 0.78f, 1f);
+        private readonly Color _cyan = new(0.16f, 0.86f, 0.92f, 1f);
+        private readonly Color _amber = new(1.0f, 0.36f, 0.05f, 1f);
+        private readonly Color _green = new(0.18f, 0.90f, 0.55f, 1f);
+        private readonly Color _danger = new(0.92f, 0.22f, 0.10f, 1f);
 
         private readonly Dictionary<int, Button> _navButtons = new();
 
@@ -66,14 +66,11 @@ namespace Kamilunavo.Deadreach.UI
         {
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             EnsureEventSystem();
-
-            // Stable 0.12 UI gets one frame to initialize its gameplay bindings, then 0.14
-            // takes full visual ownership and removes only the legacy presentation canvas.
             yield return null;
 
             DisableLegacyPresentation();
+            DisablePrototypeHologram();
             _campaignSector = Mathf.Clamp((SaveService.Data.selectedLevel - 1) / 10, 0, 4);
-            Production14HoloDiorama.Build();
             BuildInterface();
         }
 
@@ -91,6 +88,13 @@ namespace Kamilunavo.Deadreach.UI
             var legacyCanvas = GameObject.Find("Bunker_CommandCenter_Canvas");
             if (legacyCanvas != null)
                 Destroy(legacyCanvas);
+        }
+
+        private static void DisablePrototypeHologram()
+        {
+            var holo = GameObject.Find("P14_HoloDiorama");
+            if (holo != null)
+                holo.SetActive(false);
         }
 
         private void EnsureEventSystem()
@@ -130,8 +134,6 @@ namespace Kamilunavo.Deadreach.UI
             BuildHeader();
             BuildNavigation();
 
-            // Every tab owns only children of this layer. Header, navigation and footer never get
-            // destroyed during a screen switch, which keeps button input stable.
             _contentRoot = CreateRect("ScreenContent", _root);
             Fill(_contentRoot);
 
@@ -167,14 +169,11 @@ namespace Kamilunavo.Deadreach.UI
 
         private void BuildEdgeVignette()
         {
-            var topShade = CreateImage("TopShade", _root, new Color(0.01f, 0.015f, 0.017f, 0.54f));
+            var topShade = CreateImage("TopShade", _root, new Color(0.005f, 0.008f, 0.010f, 0.78f));
             Place(topShade.rectTransform, 0f, 0.84f, 1f, 1f);
 
-            var leftShade = CreateImage("LeftShade", _root, new Color(0.005f, 0.012f, 0.014f, 0.18f));
-            Place(leftShade.rectTransform, 0f, 0.10f, 0.23f, 0.84f);
-
-            var rightShade = CreateImage("RightShade", _root, new Color(0.005f, 0.012f, 0.014f, 0.16f));
-            Place(rightShade.rectTransform, 0.77f, 0.10f, 1f, 0.84f);
+            var bottomShade = CreateImage("BottomShade", _root, new Color(0.005f, 0.008f, 0.010f, 0.70f));
+            Place(bottomShade.rectTransform, 0f, 0f, 1f, 0.14f);
         }
 
         private void BuildHeader()
@@ -182,59 +181,48 @@ namespace Kamilunavo.Deadreach.UI
             var header = CreateIndustrialPanel("Header", _root, Production14IndustrialSkin.PlateKind.Header, false);
             Place(header, 0.012f, 0.865f, 0.988f, 0.988f);
 
-            var brand = CreateLabel("Brand", header, "DEADREACH", 31, FontStyle.Bold, _white, TextAnchor.MiddleLeft);
-            Place(brand.rectTransform, 0.024f, 0.39f, 0.245f, 0.86f);
+            var brand = CreateLabel("Brand", header, "DEADREACH", 38, FontStyle.Bold, _white, TextAnchor.MiddleLeft);
+            Place(brand.rectTransform, 0.024f, 0.37f, 0.37f, 0.90f);
 
-            var brandSub = CreateLabel("BrandSub", header, "BUNKER // COMMAND CENTER", 11, FontStyle.Bold, _cyan, TextAnchor.UpperLeft);
-            Place(brandSub.rectTransform, 0.026f, 0.17f, 0.25f, 0.40f);
+            var brandSub = CreateLabel("BrandSub", header, "BUNKER COMMAND CENTER", 15, FontStyle.Bold, _cyan, TextAnchor.UpperLeft);
+            Place(brandSub.rectTransform, 0.026f, 0.10f, 0.38f, 0.40f);
 
-            var divider = CreateImage("HeaderDivider", header, new Color(_cyan.r, _cyan.g, _cyan.b, 0.62f));
-            Place(divider.rectTransform, 0.278f, 0.20f, 0.2805f, 0.80f);
-
-            _screenTitle = CreateLabel("ScreenTitle", header, "OVERVIEW", 25, FontStyle.Bold, _white, TextAnchor.MiddleLeft);
-            Place(_screenTitle.rectTransform, 0.305f, 0.44f, 0.55f, 0.80f);
-
-            _screenSubtitle = CreateLabel("ScreenSubtitle", header, "FIELD READINESS // BUNKER INTELLIGENCE", 10, FontStyle.Bold, _muted, TextAnchor.UpperLeft);
-            Place(_screenSubtitle.rectTransform, 0.307f, 0.20f, 0.58f, 0.44f);
+            _screenTitle = null;
+            _screenSubtitle = null;
 
             var data = SaveService.Data;
-            CreateCounterCard(header, "SCRAP", data.securedScrap.ToString("N0"), 0.665f);
-            CreateCounterCard(header, "EXTRACTS", data.successfulExtractions.ToString("N0"), 0.775f);
-            CreateCounterCard(header, "BOSS KILLS", data.bossKills.ToString("N0"), 0.885f);
-
-            var liveRail = CreateImage("HeaderLiveRail", header, _amber);
-            Place(liveRail.rectTransform, 0.018f, 0.94f, 0.16f, 0.965f);
-            var liveRail2 = CreateImage("HeaderLiveRailCyan", header, _cyan);
-            Place(liveRail2.rectTransform, 0.165f, 0.94f, 0.255f, 0.965f);
+            CreateCounterCard(header, "SCRAP", data.securedScrap.ToString("N0"), 0.56f);
+            CreateCounterCard(header, "EXTRACTS", data.successfulExtractions.ToString("N0"), 0.70f);
+            CreateCounterCard(header, "BOSS KILLS", data.bossKills.ToString("N0"), 0.84f);
         }
 
         private void CreateCounterCard(Transform parent, string label, string value, float x)
         {
             var card = CreateIndustrialPanel($"Counter_{label}", parent, Production14IndustrialSkin.PlateKind.Counter, false);
-            Place(card, x, 0.18f, x + 0.095f, 0.84f);
+            Place(card, x, 0.14f, x + 0.125f, 0.86f);
 
-            var title = CreateLabel("Label", card, label, 8, FontStyle.Bold, _muted, TextAnchor.UpperLeft);
-            Place(title.rectTransform, 0.12f, 0.59f, 0.90f, 0.85f);
+            var title = CreateLabel("Label", card, label, 11, FontStyle.Bold, _muted, TextAnchor.UpperLeft);
+            Place(title.rectTransform, 0.12f, 0.58f, 0.92f, 0.88f);
 
-            var number = CreateLabel("Value", card, value, 23, FontStyle.Bold, _white, TextAnchor.LowerLeft);
-            Place(number.rectTransform, 0.12f, 0.12f, 0.90f, 0.63f);
+            var number = CreateLabel("Value", card, value, 27, FontStyle.Bold, _white, TextAnchor.LowerLeft);
+            Place(number.rectTransform, 0.12f, 0.10f, 0.92f, 0.61f);
 
             var status = CreateImage("Status", card, _cyan);
-            Place(status.rectTransform, 0.04f, 0.18f, 0.065f, 0.80f);
+            Place(status.rectTransform, 0.035f, 0.14f, 0.055f, 0.86f);
         }
 
         private void BuildNavigation()
         {
             var navRoot = CreateRect("Navigation", _root);
-            Place(navRoot, 0.012f, 0.752f, 0.988f, 0.852f);
+            Place(navRoot, 0.012f, 0.735f, 0.988f, 0.852f);
 
             var labels = new[] { "OVERVIEW", "ARSENAL", "OPERATORS", "CAMPAIGN", "WORKSHOP", "SUPPLY" };
             for (var i = 0; i < labels.Length; i++)
             {
                 var left = i / 6f;
                 var right = (i + 1) / 6f;
-                var button = CreateNavButton(navRoot, $"{i + 1:00}  //  {labels[i]}", i == 0);
-                Place(button.GetComponent<RectTransform>(), left + 0.004f, 0.06f, right - 0.004f, 0.94f);
+                var button = CreateNavButton(navRoot, labels[i], i == 0);
+                Place(button.GetComponent<RectTransform>(), left + 0.004f, 0.04f, right - 0.004f, 0.96f);
                 _navButtons[i] = button;
 
                 var captured = i;
@@ -244,7 +232,7 @@ namespace Kamilunavo.Deadreach.UI
 
         private Button CreateNavButton(Transform parent, string label, bool active)
         {
-            var go = new GameObject($"Nav_{label.Replace(" ", "_").Replace("/", string.Empty)}", typeof(RectTransform), typeof(Image), typeof(Button));
+            var go = new GameObject($"Nav_{label.Replace(" ", "_")}", typeof(RectTransform), typeof(Image), typeof(Button));
             go.transform.SetParent(parent, false);
 
             var image = go.GetComponent<Image>();
@@ -261,8 +249,8 @@ namespace Kamilunavo.Deadreach.UI
             colors.fadeDuration = 0.08f;
             button.colors = colors;
 
-            var text = CreateLabel("Text", go.transform, label, 10, FontStyle.Bold, active ? _white : new Color(0.86f, 0.89f, 0.90f, 1f), TextAnchor.MiddleCenter);
-            Fill(text.rectTransform, 10f, 8f, 10f, 8f);
+            var text = CreateLabel("Text", go.transform, label, 17, FontStyle.Bold, active ? _cyan : new Color(0.88f, 0.90f, 0.91f, 1f), TextAnchor.MiddleCenter);
+            Fill(text.rectTransform, 12f, 8f, 12f, 8f);
 
             if (active)
                 EnsureActiveRail(button, true);
@@ -278,35 +266,26 @@ namespace Kamilunavo.Deadreach.UI
             _activeNavIndex = index;
             UpdateNavigationState(index);
             ClearScreenContent();
-
-            var holo = GameObject.Find("P14_HoloDiorama");
-            if (holo != null)
-                holo.SetActive(index == 0);
+            DisablePrototypeHologram();
 
             switch (index)
             {
                 case 0:
-                    SetScreenHeader("OVERVIEW", "FIELD READINESS // BUNKER INTELLIGENCE");
                     BuildOverview();
                     break;
                 case 1:
-                    SetScreenHeader("ARSENAL", "SECURED WEAPONS // LOADOUT CONTROL");
                     BuildArsenalScreen();
                     break;
                 case 2:
-                    SetScreenHeader("OPERATORS", "SURVIVOR ROSTER // FIELD SPECIALIZATION");
                     BuildOperatorsScreen();
                     break;
                 case 3:
-                    SetScreenHeader("CAMPAIGN", "50-LEVEL PROGRESSION // SECTOR SELECT");
                     BuildCampaignScreen();
                     break;
                 case 4:
-                    SetScreenHeader("WORKSHOP", "BUNKER SYSTEMS // WEAPON CALIBRATION");
                     BuildWorkshopScreen();
                     break;
                 default:
-                    SetScreenHeader("SUPPLY NETWORK", "COSMETICS // BUNKER THEMES // SEASON CONTENT");
                     BuildSupplyScreen();
                     break;
             }
@@ -336,7 +315,7 @@ namespace Kamilunavo.Deadreach.UI
 
                 var text = pair.Value.transform.Find("Text")?.GetComponent<Text>();
                 if (text != null)
-                    text.color = active ? _white : new Color(0.86f, 0.89f, 0.90f, 1f);
+                    text.color = active ? _cyan : new Color(0.88f, 0.90f, 0.91f, 1f);
 
                 EnsureActiveRail(pair.Value, active);
             }
@@ -348,7 +327,7 @@ namespace Kamilunavo.Deadreach.UI
             if (existing == null && active)
             {
                 var rail = CreateImage("ActiveRail", button.transform, _cyan);
-                Place(rail.rectTransform, 0.12f, 0.02f, 0.88f, 0.055f);
+                Place(rail.rectTransform, 0.08f, 0.015f, 0.92f, 0.05f);
                 existing = rail.transform;
             }
 
@@ -373,9 +352,7 @@ namespace Kamilunavo.Deadreach.UI
 
             var data = SaveService.Data;
             var op = OperatorCatalog.Get(data.selectedCharacterId);
-            _deployInfo.text =
-                $"READY // LEVEL {data.selectedLevel:00} // {RunDifficultyDirector.GetZoneName(data.selectedLevel).ToUpperInvariant()}   |   " +
-                $"OPERATOR {op.Name.ToUpperInvariant()}   |   {(data.selectedLevel % 10 == 0 ? "BOSS TARGET" : "STANDARD EXPEDITION")}";
+            _deployInfo.text = $"SYSTEMS ONLINE   •   LEVEL {data.selectedLevel:00} {RunDifficultyDirector.GetZoneName(data.selectedLevel).ToUpperInvariant()}   •   OPERATOR {op.Name.ToUpperInvariant()}";
         }
     }
 }
