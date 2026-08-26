@@ -1,6 +1,6 @@
 # DEADREACH — Project State
 
-_Last updated: 2026-08-25_
+_Last updated: 2026-08-26_
 
 Canonical handoff for DEADREACH. Update after major implementation, validation and merge.
 
@@ -24,7 +24,7 @@ Permanent firearm rule:
 - derive muzzle from that embedded firearm
 - never reintroduce the failed external hand-mounted Rifle transform path
 
-## Production 0.14 — Premium Command Center Reboot — RELEASE-HARDENING ACTIVE
+## Production 0.14 — Premium Command Center Reboot — FINAL QA ACTIVE
 
 ### Accepted foundation
 - branches directly from validated Production 0.12 `main`
@@ -34,7 +34,7 @@ Permanent firearm rule:
 - six-tab switching: **PASSED**
 - Production Slice 0.14 build after recovery: **PASSED**
 - current Wenrexa + restored-hologram Overview: **VISUALLY ACCEPTED**
-- user explicitly requested stopping visual iteration and moving rapidly toward completion
+- visual iteration is frozen unless a blocking defect appears
 
 ### Current UI/presentation
 - Wenrexa `UI Minimalism SciFi` CC0 authored panel/button family
@@ -73,26 +73,31 @@ Implemented:
 - Arsenal salvage buttons for unequipped secured weapons
 - Scrap update after salvage
 
-New editor validator:
+Orientation hardening:
+- Portrait and Portrait Upside Down are disabled
+- Landscape Left/Right remain enabled
+- editor bootstrap repairs these PlayerSettings automatically on fresh checkout
+- release validator rechecks the result
+
+Release validator:
 - `DEADREACH > Validate Production 0.14 Release Readiness`
 - validates required scenes, Build Settings, Quaternius resources, Wenrexa preparation/fallback and landscape orientation compatibility
-- expected success: `DEADREACH 0.14 RELEASE STATIC CHECK: PASS`
 
 One-pass final QA document:
 - `docs/PRODUCTION_14_RELEASE_GATE.md`
 
 ### Current real-Unity validation
-Already passed:
+PASSED:
 - recovered assets committed/verified
-- post-recovery compile before latest hardening
+- post-recovery compile
 - Production Slice 0.14 build
 - Bunker / Play Mode
 - six-screen navigation
 - current Overview visual acceptance
+- latest release-hardening/orientation compile gate
+- `DEADREACH 0.14 RELEASE STATIC CHECK: PASS`
 
-Pending because latest runtime/editor release block changed code:
-- fresh Unity compile with **0 red errors**
-- release static validator PASS
+Remaining final QA only:
 - deep Arsenal/operator/campaign/workshop interactions
 - mobile safe-area/touch sweep
 - guarded Deploy interaction
@@ -124,4 +129,4 @@ Stable systems remain authoritative:
 - accepted combat-impact VFX and boss/reward behavior
 
 ## Next exact gate
-Pull latest `production/0.14-premium-command-center`, allow Unity to compile and require **0 red errors**. Then run `DEADREACH > Validate Production 0.14 Release Readiness`. If PASS, execute `docs/PRODUCTION_14_RELEASE_GATE.md` as one consolidated run instead of reopening small UI iterations.
+Execute sections C–E of `docs/PRODUCTION_14_RELEASE_GATE.md` as one consolidated final run. If all pass, mark PR #14 ready and proceed to merge/release packaging.
