@@ -50,22 +50,26 @@ namespace Kamilunavo.Deadreach.Editor
             var rig = new GameObject(RigName);
 
             // Neutral/cool command-center readability without flattening the bunker mood.
-            CreatePointLight(rig.transform, "Command_Key", new Vector3(0f, 4.35f, 2.35f),
-                new Color(0.62f, 0.82f, 0.88f), 5.8f, 10.5f, LightShadows.Soft);
+            CreatePointLight(rig.transform, "Command_Key", new Vector3(0f, 4.15f, 2.1f),
+                new Color(0.64f, 0.84f, 0.9f), 6.8f, 11.2f, LightShadows.Soft);
+
+            // Lower central fill lifts the floor and table base without washing the back wall.
+            CreatePointLight(rig.transform, "Command_Floor_Fill", new Vector3(0f, 1.65f, 1.4f),
+                new Color(0.42f, 0.60f, 0.64f), 2.6f, 6.8f, LightShadows.None);
 
             // Separate the rear console / blast-door zone from the dark back wall.
-            CreatePointLight(rig.transform, "Rear_Fill", new Vector3(0f, 3.15f, 6.15f),
-                new Color(0.48f, 0.68f, 0.74f), 3.1f, 7.5f, LightShadows.None);
+            CreatePointLight(rig.transform, "Rear_Fill", new Vector3(0f, 3.05f, 6.05f),
+                new Color(0.50f, 0.70f, 0.76f), 3.55f, 8.0f, LightShadows.None);
 
             // Side-station accents: warm workshop, cool operator/supply side.
-            CreatePointLight(rig.transform, "Left_Station_Fill", new Vector3(-4.4f, 2.65f, 3.7f),
-                new Color(1f, 0.48f, 0.24f), 2.7f, 6.2f, LightShadows.None);
-            CreatePointLight(rig.transform, "Right_Station_Fill", new Vector3(4.4f, 2.65f, 3.7f),
-                new Color(0.34f, 0.78f, 0.86f), 2.9f, 6.2f, LightShadows.None);
+            CreatePointLight(rig.transform, "Left_Station_Fill", new Vector3(-4.2f, 2.45f, 3.45f),
+                new Color(1f, 0.50f, 0.26f), 3.15f, 6.8f, LightShadows.None);
+            CreatePointLight(rig.transform, "Right_Station_Fill", new Vector3(4.2f, 2.45f, 3.45f),
+                new Color(0.36f, 0.80f, 0.88f), 3.3f, 6.8f, LightShadows.None);
 
             // Gentle front lift so foreground props are visible behind the Overview UI panel.
-            CreatePointLight(rig.transform, "Front_Lift", new Vector3(0f, 2.4f, -1.2f),
-                new Color(0.52f, 0.68f, 0.7f), 2.35f, 7.5f, LightShadows.None);
+            CreatePointLight(rig.transform, "Front_Lift", new Vector3(0f, 2.25f, -1.0f),
+                new Color(0.54f, 0.70f, 0.72f), 2.75f, 8.0f, LightShadows.None);
 
             Physics.SyncTransforms();
             EditorSceneManager.MarkSceneDirty(scene);
@@ -79,13 +83,13 @@ namespace Kamilunavo.Deadreach.Editor
         {
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Exponential;
-            RenderSettings.fogDensity = 0.0105f;
-            RenderSettings.fogColor = new Color(0.018f, 0.026f, 0.027f);
+            RenderSettings.fogDensity = 0.009f;
+            RenderSettings.fogColor = new Color(0.020f, 0.029f, 0.030f);
 
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.085f, 0.105f, 0.108f);
-            RenderSettings.ambientEquatorColor = new Color(0.043f, 0.052f, 0.052f);
-            RenderSettings.ambientGroundColor = new Color(0.017f, 0.021f, 0.021f);
+            RenderSettings.ambientSkyColor = new Color(0.10f, 0.122f, 0.125f);
+            RenderSettings.ambientEquatorColor = new Color(0.052f, 0.062f, 0.062f);
+            RenderSettings.ambientGroundColor = new Color(0.022f, 0.027f, 0.027f);
         }
 
         private static void BoostFixtureLights(Transform meshyRoot)
@@ -96,10 +100,10 @@ namespace Kamilunavo.Deadreach.Editor
                 if (light == null || !light.name.StartsWith("Light_"))
                     continue;
 
-                light.intensity = Mathf.Max(light.intensity, 3.6f);
-                light.range = Mathf.Max(light.range, 7.1f);
+                light.intensity = Mathf.Max(light.intensity, 4.1f);
+                light.range = Mathf.Max(light.range, 7.6f);
                 if (light.color.maxColorComponent < 0.75f)
-                    light.color = new Color(0.72f, 0.90f, 0.94f);
+                    light.color = new Color(0.74f, 0.92f, 0.96f);
                 EditorUtility.SetDirty(light);
             }
         }
