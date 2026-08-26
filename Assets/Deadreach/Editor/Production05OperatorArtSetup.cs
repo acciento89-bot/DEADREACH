@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Kamilunavo.Deadreach.Presentation;
 using UnityEditor;
 using UnityEngine;
@@ -14,9 +16,12 @@ namespace Kamilunavo.Deadreach.Editor
     public static class Production05OperatorArtSetup
     {
         private const string PrefabRoot = "Assets/Deadreach/Art/Production/Prefabs";
+        private const string SourceRoot = "Assets/Deadreach/ThirdParty/Quaternius/ZombieApocalypseKit/glTF";
         private const string SamPrefabPath = PrefabRoot + "/Survivor_Quaternius_Sam.prefab";
         private const string ScoutPrefabPath = PrefabRoot + "/Survivor_Quaternius_Shaun.prefab";
         private const string WardenPrefabPath = PrefabRoot + "/Survivor_Quaternius_Matt.prefab";
+        private const string SharedAtlasPath = SourceRoot + "/Zombie_Atlas.png";
+        private const string GitLfsPointerHeader = "version https://git-lfs.github.com/spec/v1";
 
         private static readonly string[] WeaponTokens =
         {
@@ -63,7 +68,43 @@ namespace Kamilunavo.Deadreach.Editor
                 $"BRIGGS/Matt={(wardenReady ? "OK" : "BROKEN")}. " +
                 "A wrapper file without a resolvable body mesh is not considered valid.");
 
+            // GitHub recovery can leave the shared atlas as a tiny Git-LFS pointer text file rather
+            // than the real PNG. V2 already knows the authoritative remote dependency URL from each
+            // downloaded glTF, but its dependency repair only downloads when the local file is absent.
+            // Remove only the pointer payload here and deliberately keep the .meta file so Unity's
+            // existing texture GUID remains stable. V2 will then restore the real atlas before the
+            // single synchronous glTFast import pass.
+            RemoveGitLfsPointerPayload(SharedAtlasPath);
+
             return Production05OperatorArtSetupV2.EnsureOperatorAssetsReady();
+        }
+
+        private static void RemoveGitLfsPointerPayload(string assetPath)
+        {
+            var absolutePath = AssetPathToAbsolute(assetPath);
+            if (!File.Exists(absolutePath))
+                return;
+
+            var info = new FileInfo(absolutePath);
+            if (info.Length <= 0 || info.Length > 1024)
+                return;
+
+            try
+            {
+                using var reader = new StreamReader(absolutePath);
+                var firstLine = reader.ReadLine()?.Trim();
+                if (!string.Equals(firstLine, GitLfsPointerHeader, StringComparison.Ordinal))
+                    return;
+
+                File.Delete(absolutePath);
+                Debug.LogWarning(
+                    $"DEADREACH removed Git-LFS pointer payload for '{assetPath}' while preserving its .meta/GUID. " +
+                    "Atomic V2 will download the real glTF dependency before import.");
+            }
+            catch (Exception exception)
+            {
+                throw new IOException($"Could not inspect/remove Git-LFS pointer dependency '{assetPath}'.", exception);
+            }
         }
 
         private static bool HasUsableBodyMesh(GameObject prefab)
@@ -131,6 +172,12 @@ namespace Kamilunavo.Deadreach.Editor
             }
 
             return new string(buffer, 0, length);
+        }
+
+        private static string AssetPathToAbsolute(string assetPath)
+        {
+            var relative = assetPath.Replace("Assets/", string.Empty).Replace('/', Path.DirectorySeparatorChar);
+            return Path.Combine(Application.dataPath, relative);
         }
     }
 }
