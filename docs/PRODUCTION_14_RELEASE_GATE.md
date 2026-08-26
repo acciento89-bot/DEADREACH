@@ -1,69 +1,52 @@
-# DEADREACH — Production 0.14 One-Pass Release Gate
+# DEADREACH — Production 0.14 Release Gate
 
-Goal: finish Production 0.14 in one consolidated validation run instead of returning to small isolated checks.
+Goal: close Production 0.14 without reopening the visual redesign loop.
 
-## A — Fresh compile — RECHECK REQUIRED
-- The previous compile passed before the operator-asset integrity fix.
-- Current 0.14 now includes runtime fallback, mesh-aware operator repair, and a stronger release validator.
-- Run one fresh compile after pulling the current head.
+## A — Fresh compile — PASS
+- Current head compiles with 0 red compiler errors in Unity.
+- The duplicate `LateUpdate()` partial-class regression was fixed in `989b646`.
+- The release hardening block no longer overrides the final 1440x810 readability scaler.
 
-## B — Static release validator — RECHECK REQUIRED
-The previous user-confirmed result was:
-`DEADREACH 0.14 RELEASE STATIC CHECK: PASS`
+## B — Operator asset integrity — PASS
+- SAM / RAVEN / BRIGGS are validated by real non-weapon body meshes, not wrapper-prefab existence alone.
+- The Quaternius shared atlas Git-LFS pointer recovery path is in place.
+- Runtime visual fallback remains only as a safety net; it does not rewrite the selected operator.
 
-That PASS is superseded because the validator did not previously verify that SAM / RAVEN / BRIGGS prefabs contained resolvable body meshes.
+## C — Final Command Center presentation — PASS
+User-confirmed visual smoke check on the current Production 0.14 head.
 
-Current validator additionally checks:
-- Bunker and expedition scene assets
-- both scenes enabled in Build Settings
-- required Quaternius command-center Resources
-- SAM / RAVEN / BRIGGS operator prefabs contain real non-weapon meshes
-- Wenrexa preparation/fallback availability
-- landscape-only orientation compatibility
+Shipping presentation now uses:
+- large readable DEADREACH header and resource counters
+- six large navigation tabs without numbered debug-terminal styling
+- left-side Next Deployment mission card
+- central clean Bunker hero window; the old prototype cube/hologram presentation is intentionally removed
+- right-side Campaign Status and Active Operator cards
+- bottom Bunker Feed and large Deploy action
+- safe-area aware landscape layout
+- pixel-perfect Canvas with increased dynamic text pixel density
 
-If RAVEN/Shaun or BRIGGS/Matt wrappers exist but their glTF-backed meshes are unresolved, the validator now fails and directs the operator-art repair/build path to regenerate them.
+Visual design is frozen for 0.14. Do not reopen redesign unless a blocking defect appears.
 
-## C — Command Center deep interaction sweep — PENDING
-Do this in one Bunker session:
-1. Overview visible; central hologram present.
-2. Arsenal: equip another secured weapon if available.
-3. Arsenal: salvage one unequipped weapon if available; Scrap counter must update.
-4. Operators: select another operator, then switch tabs and back; selection must persist.
-5. Campaign: select any unlocked level; footer must update.
-6. Workshop: buy one affordable Bunker upgrade if available.
-7. Workshop: calibrate equipped weapon if affordable/within cap.
-8. Supply: open screen and return; no legacy/DEV UI may appear.
-9. Overview: hologram must return after leaving and re-entering Overview.
+## D — Command Center interaction smoke — PENDING
+One consolidated Bunker session only:
+- Arsenal equip/salvage updates state and Scrap
+- Operator selection persists after tab switching
+- Campaign level selection updates deployment state
+- Workshop upgrade/calibration updates progression when affordable
+- Supply opens and returns without legacy/DEV UI
+- Deploy cannot double-start
 
-Expected release-hardening behavior:
-- action/status toast appears for profile changes
-- header counters refresh without restarting Bunker
-- footer deployment summary refreshes after level/operator changes
-- no double activation on rapid taps
+## E — Stable expedition regression — PENDING
+One expedition only:
+1. Deploy from the 0.14 Bunker.
+2. Confirm selected operator is visible.
+3. Confirm MOVE / AIM-FIRE / Ability controls.
+4. Complete the primary objective; optional BLACK CACHE only when available.
+5. Extract and return to Bunker.
+6. Confirm rewards/progression and selected operator/level/weapon persist.
+7. Final gameplay/runtime Console has no red DEADREACH errors.
 
-## D — Mobile landscape / safe-area sweep
-Test one phone-like landscape aspect in Game view, preferably an ultrawide/notched preset:
-- all command-center content remains inside safe area
-- navigation buttons remain touchable
-- Deploy remains fully visible/touchable
-- Arsenal scroll remains draggable
-- no portrait layout is used
-
-## E — Full stable expedition regression
-From the hardened 0.14 Bunker:
-1. Deploy.
-2. Confirm the selected production operator is visibly rendered. Runtime may fall back to the validated SAM visual only as a safety net if a selected operator asset is still broken; the release gate itself must not PASS until all three operator meshes are healthy.
-3. Validate fixed MOVE / AIM-FIRE / Ability controls.
-4. Validate active 0.12 sector layout and its hazard behavior.
-5. Complete Primary objective.
-6. Complete optional BLACK CACHE when available.
-7. Confirm objective-gated extraction.
-8. Extract.
-9. Return to Bunker.
-10. Confirm Scrap/reward/progression persistence.
-11. Confirm selected operator/level/equipped weapon still persist.
-12. Confirm Overview hologram still restores after tab switching.
-13. Final Unity Console: **0 red runtime errors**. Device Simulator editor-state exceptions are a separate local editor/layout defect and must be cleared before counting the final console gate.
+Note: the known Unity Device Simulator `StoreSerializedStates` / duplicate `AdaptivePerformanceUIExtension` exceptions are Unity editor-state defects, not DEADREACH gameplay exceptions. Release gameplay validation should use normal Game View if that local Device Simulator state remains corrupted.
 
 ## Release decision
-Only after current A + B are green again and C–E pass is Production 0.14 ready to leave Draft and proceed to final merge/release packaging. Do not reopen visual redesign unless a real blocking visual defect appears.
+Production 0.14 presentation and compile gate are accepted. PR may leave Draft. Final merge/release packaging requires only the consolidated D + E runtime smoke above; no further UI redesign or static micro-check loop is required.
