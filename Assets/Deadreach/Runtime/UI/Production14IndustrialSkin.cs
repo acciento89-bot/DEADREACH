@@ -5,9 +5,8 @@ namespace Kamilunavo.Deadreach.UI
 {
     /// <summary>
     /// Production 0.14 command-center skin.
-    ///
-    /// A coherent CC0 Wenrexa panel/button family is preferred when the editor setup has
-    /// prepared it. The calm graphite generator remains only as an offline-safe fallback.
+    /// Uses one native, deterministic graphite/cyan/orange panel language so the bunker stays
+    /// sharp at every aspect ratio and no longer depends on stretched third-party UI artwork.
     /// </summary>
     public static class Production14IndustrialSkin
     {
@@ -31,32 +30,9 @@ namespace Kamilunavo.Deadreach.UI
             if (Cache.TryGetValue(kind, out var cached) && cached != null)
                 return cached;
 
-            var external = Resources.Load<Sprite>(ExternalResourcePath(kind));
-            if (external != null)
-            {
-                Cache[kind] = external;
-                return external;
-            }
-
             var sprite = Build(kind, GetSpec(kind));
             Cache[kind] = sprite;
             return sprite;
-        }
-
-        private static string ExternalResourcePath(PlateKind kind)
-        {
-            return kind switch
-            {
-                PlateKind.Header => "Production14/UI/Wenrexa/HeaderFrame",
-                PlateKind.Tab => "Production14/UI/Wenrexa/TabFrame",
-                PlateKind.TabActive => "Production14/UI/Wenrexa/TabActiveFrame",
-                PlateKind.Counter => "Production14/UI/Wenrexa/CounterFrame",
-                PlateKind.Mission => "Production14/UI/Wenrexa/MissionFrame",
-                PlateKind.Glass => "Production14/UI/Wenrexa/GlassFrame",
-                PlateKind.Footer => "Production14/UI/Wenrexa/FooterFrame",
-                PlateKind.Deploy => "Production14/UI/Wenrexa/DeployFrame",
-                _ => "Production14/UI/Wenrexa/TagFrame"
-            };
         }
 
         private static PanelSpec GetSpec(PlateKind kind)
@@ -95,7 +71,7 @@ namespace Kamilunavo.Deadreach.UI
 
                 PlateKind.Glass => new PanelSpec(
                     256, 256,
-                    new Color32(13, 31, 34, 236), new Color32(8, 20, 22, 236),
+                    new Color32(13, 31, 34, 244), new Color32(8, 20, 22, 244),
                     new Color32(52, 83, 88, 255), new Color32(50, 215, 229, 255),
                     8, 16, AccentMode.Top),
 
@@ -113,7 +89,7 @@ namespace Kamilunavo.Deadreach.UI
 
                 _ => new PanelSpec(
                     160, 56,
-                    new Color32(15, 27, 29, 244), new Color32(10, 19, 21, 244),
+                    new Color32(15, 27, 29, 248), new Color32(10, 19, 21, 248),
                     new Color32(53, 79, 84, 255), new Color32(50, 207, 222, 255),
                     5, 11, AccentMode.Left)
             };
@@ -147,22 +123,19 @@ namespace Kamilunavo.Deadreach.UI
 
                     var edge = EdgeDistance(x, y, spec.Width, spec.Height);
                     var color = fill;
-                    var variation = (((x * 11) + (y * 17)) & 15) / 255f;
-                    color = Add(color, variation * 0.35f);
 
                     if (edge == 0)
                         color = innerEdge;
                     else if (edge <= 2)
                         color = spec.Edge;
                     else if (edge <= 5)
-                        color = Lerp(color, spec.Edge, 0.20f);
+                        color = Lerp(color, spec.Edge, 0.14f);
 
                     pixels[index] = color;
                 }
             }
 
             PaintAccent(pixels, spec);
-            PaintCornerTicks(pixels, spec);
 
             texture.SetPixels32(pixels);
             texture.Apply(false, true);
@@ -194,16 +167,6 @@ namespace Kamilunavo.Deadreach.UI
 
             if (spec.AccentMode is AccentMode.Left or AccentMode.LeftTop)
                 PaintVertical(pixels, spec.Width, spec.Height, 3, inset, spec.Height - inset, 2, spec.Accent);
-        }
-
-        private static void PaintCornerTicks(Color32[] pixels, PanelSpec spec)
-        {
-            var muted = Lerp(spec.Edge, spec.Accent, 0.24f);
-            var inset = spec.CornerCut + 4;
-            const int length = 10;
-
-            PaintHorizontal(pixels, spec.Width, spec.Height, inset, Mathf.Min(spec.Width - inset, inset + length), 4, 1, muted);
-            PaintHorizontal(pixels, spec.Width, spec.Height, Mathf.Max(inset, spec.Width - inset - length), spec.Width - inset, spec.Height - 5, 1, muted);
         }
 
         private static void PaintHorizontal(Color32[] pixels, int width, int height, int x0, int x1, int y, int thickness, Color32 color)
@@ -260,16 +223,6 @@ namespace Kamilunavo.Deadreach.UI
                 (byte)Mathf.RoundToInt(color.r * amount),
                 (byte)Mathf.RoundToInt(color.g * amount),
                 (byte)Mathf.RoundToInt(color.b * amount),
-                color.a);
-        }
-
-        private static Color32 Add(Color32 color, float amount)
-        {
-            var value = Mathf.RoundToInt(amount * 255f);
-            return new Color32(
-                (byte)Mathf.Clamp(color.r + value, 0, 255),
-                (byte)Mathf.Clamp(color.g + value, 0, 255),
-                (byte)Mathf.Clamp(color.b + value, 0, 255),
                 color.a);
         }
 
