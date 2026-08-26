@@ -62,6 +62,27 @@ namespace Kamilunavo.Deadreach.Editor
             Debug.Log("DEADREACH Production Slice 0.12 generated: four playable sector layouts + expanded side routes + sector hazards + dynamic geography + decluttered Transit / Industrial / Blackout objective arenas.");
         }
 
+        [MenuItem("DEADREACH/Build Production Slice 0.14", priority = 7)]
+        public static void Build14()
+        {
+            if (!BuildInternal("0.14", "0.12 validated sector baseline + single-system premium command-center reboot + industrial UI skin + central tactical hologram"))
+                return;
+
+            if (!Production12SectorScenePass.Apply())
+            {
+                Debug.LogError("DEADREACH Production Slice 0.14 aborted: sector world pass failed after base scene generation.");
+                return;
+            }
+
+            if (!Production12LayoutPolishPass.Apply())
+            {
+                Debug.LogError("DEADREACH Production Slice 0.14 aborted: sector layout polish failed after world generation.");
+                return;
+            }
+
+            Debug.Log("DEADREACH Production Slice 0.14 generated: stable 0.12 expedition baseline + premium command-center reboot Pass 1.");
+        }
+
         private static bool BuildInternal(string version, string featureSummary)
         {
             if (!Production06WeaponArtSetup.EnsureReady())

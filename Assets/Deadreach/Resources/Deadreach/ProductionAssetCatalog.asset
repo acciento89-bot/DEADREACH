@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4693a854bc745a47ab24a9379fc2751, type: 3}
+  m_Name: ProductionAssetCatalog
+  m_EditorClassIdentifier: Deadreach.Runtime::Kamilunavo.Deadreach.Presentation.ProductionAssetCatalog
+  survivorPrefab: {fileID: 4118479080781216747, guid: 2a65c9bd42f51fd4dbc4144701a60744, type: 3}
+  survivorScoutPrefab: {fileID: 7213972685225011581, guid: 7139afb67c1712e4f8243bf499340e73, type: 3}
+  survivorWardenPrefab: {fileID: 792066353347465472, guid: e989cc88c974f18438f5c61e04d86c3d, type: 3}
+  infectedPrefabs:
+  - {fileID: 1082465403526559343, guid: 671579cb96381924085ab1c58f78d19e, type: 3}
+  - {fileID: 7565361472102658069, guid: 000c50fea442d75468f8c5ed1376273e, type: 3}
+  - {fileID: 8530439367946541159, guid: a08250608e2708d4db7f8cea1974d227, type: 3}
+  - {fileID: 1564449050716082437, guid: f97645407beacc444b6341ce2ca3f342, type: 3}
+  primaryWeaponPrefab: {fileID: 1527840560587821405, guid: af8e76922930adf43856af69b33a808c, type: 3}
+  pistolWeaponPrefab: {fileID: 9055159258697078787, guid: e7afa7b679493c141ac6936c5c8c33c8, type: 3}
+  smgWeaponPrefab: {fileID: 5397996217044996407, guid: 477a05e848a4c0b4eaec509e6ca3b2f1, type: 3}
+  shotgunWeaponPrefab: {fileID: 2090120077074113584, guid: 9b00b7627a57f184cbddc15554f64e5c, type: 3}
+  survivorLocalPosition: {x: 0, y: 0, z: 0}
+  survivorLocalEuler: {x: 0, y: 0, z: 0}
+  survivorScale: 1
+  infectedLocalPosition: {x: 0, y: 0, z: 0}
+  infectedLocalEuler: {x: 0, y: 0, z: 0}
+  infectedScale: 1
