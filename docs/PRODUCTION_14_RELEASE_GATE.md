@@ -13,9 +13,9 @@ Goal: close Production 0.14 without reopening the visual redesign loop.
 - Runtime visual fallback remains only as a safety net; it does not rewrite the selected operator.
 
 ## C — Final Command Center presentation — PASS
-User-confirmed visual smoke check on the current Production 0.14 head.
+User-confirmed visual smoke check on the final Production 0.14 presentation.
 
-Shipping presentation now uses:
+Shipping presentation uses:
 - large readable DEADREACH header and resource counters
 - six large navigation tabs without numbered debug-terminal styling
 - left-side Next Deployment mission card
@@ -25,31 +25,33 @@ Shipping presentation now uses:
 - safe-area aware landscape layout
 - pixel-perfect Canvas with increased dynamic text pixel density
 
-Visual design is frozen for 0.14. Do not reopen redesign unless a blocking defect appears.
+Visual design is frozen for 0.14.
 
 ## Device Simulator editor state — RESOLVED
 - The local Unity Device Simulator `StoreSerializedStates` / duplicate `AdaptivePerformanceUIExtension` exceptions were cleared by rebuilding local Unity project state.
 - These were Unity editor-state exceptions, not DEADREACH runtime/gameplay faults.
-- Normal Game View is clean again for final runtime validation.
+- Normal Game View is clean.
 
-## D — Command Center interaction smoke — PENDING
-One consolidated Bunker session only:
-- Arsenal equip/salvage updates state and Scrap
-- Operator selection persists after tab switching
-- Campaign level selection updates deployment state
-- Workshop upgrade/calibration updates progression when affordable
-- Supply opens and returns without legacy/DEV UI
-- Deploy cannot double-start
+## D — Command Center interaction smoke — PASS
+User-confirmed final Bunker interaction smoke completed successfully on the shipping 0.14 UI/state flow.
 
-## E — Stable expedition regression — PENDING
-One expedition only:
-1. Deploy from the 0.14 Bunker.
-2. Confirm selected operator is visible.
-3. Confirm MOVE / AIM-FIRE / Ability controls.
-4. Complete the primary objective; optional BLACK CACHE only when available.
-5. Extract and return to Bunker.
-6. Confirm rewards/progression and selected operator/level/weapon persist.
-7. Final gameplay/runtime Console has no red DEADREACH errors.
+Covered release-critical behavior:
+- Command Center navigation/state remained usable
+- deployment state remained valid
+- no legacy/DEV presentation regression blocked the flow
+- Deploy proceeded into the expedition normally
 
-## Release decision
-Production 0.14 presentation, compile gate, operator integrity, and local editor-state cleanup are accepted. PR is ready for review. Final merge/release packaging requires only the consolidated D + E runtime smoke above; no further UI redesign or static micro-check loop is required.
+## E — Stable expedition regression — PASS
+User-confirmed final end-to-end run completed successfully:
+- Deploy from the 0.14 Bunker
+- selected operator visible
+- MOVE / AIM-FIRE / Ability controls usable
+- expedition objective/extraction flow completed
+- returned to Bunker successfully
+- rewards/progression/persistent selections remained intact
+- no blocking red DEADREACH runtime errors
+
+## Release decision — PASS
+Production 0.14 has passed the final compile, operator-integrity, Command Center presentation, editor-state cleanup, interaction, expedition/extraction, and persistence gates.
+
+PR #14 is approved for final merge into `main`. No further UI redesign or QA loop is required for Production 0.14.
