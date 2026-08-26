@@ -173,6 +173,21 @@ namespace Kamilunavo.Deadreach.Editor
                 importer.mipmapEnabled = false;
                 changed = true;
             }
+            if (importer.npotScale != TextureImporterNPOTScale.None)
+            {
+                importer.npotScale = TextureImporterNPOTScale.None;
+                changed = true;
+            }
+            if (importer.textureCompression != TextureImporterCompression.Uncompressed)
+            {
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                changed = true;
+            }
+            if (importer.crunchedCompression)
+            {
+                importer.crunchedCompression = false;
+                changed = true;
+            }
             if (importer.filterMode != FilterMode.Bilinear)
             {
                 importer.filterMode = FilterMode.Bilinear;
