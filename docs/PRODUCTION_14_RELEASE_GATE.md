@@ -2,27 +2,22 @@
 
 Goal: finish Production 0.14 in one consolidated validation run instead of returning to small isolated checks.
 
-## A — Fresh compile
-1. Pull latest `production/0.14-premium-command-center`.
-2. Let Unity import/compile.
-3. Require **0 red compile errors**.
-4. Wenrexa setup may log: `DEADREACH 0.14 Wenrexa UI pack READY: 9 CC0 panel/button sprites available.`
+## A — Fresh compile — PASSED ✅
+- Latest orientation/release-hardening code compiled successfully enough to run the release validator.
+- No compile-blocking errors remain on the current user-tested head.
 
-## B — Static release validator
-Run:
-`DEADREACH > Validate Production 0.14 Release Readiness`
-
-Required result:
+## B — Static release validator — PASSED ✅
+User-confirmed result:
 `DEADREACH 0.14 RELEASE STATIC CHECK: PASS`
 
-This checks:
+Validated:
 - Bunker and expedition scene assets
 - both scenes enabled in Build Settings
 - required Quaternius command-center Resources
 - Wenrexa preparation/fallback availability
 - landscape-only orientation compatibility
 
-## C — Command Center deep interaction sweep
+## C — Command Center deep interaction sweep — NEXT
 Do this in one Bunker session:
 1. Overview visible; central hologram present.
 2. Arsenal: equip another secured weapon if available.
@@ -64,4 +59,4 @@ From the hardened 0.14 Bunker:
 12. Final Unity Console: **0 red runtime errors**.
 
 ## Release decision
-If A–E pass, Production 0.14 is ready to leave Draft and proceed to final merge/release packaging. Do not reopen visual redesign unless a real blocking visual defect appears.
+If C–E pass, Production 0.14 is ready to leave Draft and proceed to final merge/release packaging. Do not reopen visual redesign unless a real blocking visual defect appears.
