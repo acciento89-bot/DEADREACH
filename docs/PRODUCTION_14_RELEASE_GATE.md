@@ -27,6 +27,11 @@ Shipping presentation now uses:
 
 Visual design is frozen for 0.14. Do not reopen redesign unless a blocking defect appears.
 
+## Device Simulator editor state — RESOLVED
+- The local Unity Device Simulator `StoreSerializedStates` / duplicate `AdaptivePerformanceUIExtension` exceptions were cleared by rebuilding local Unity project state.
+- These were Unity editor-state exceptions, not DEADREACH runtime/gameplay faults.
+- Normal Game View is clean again for final runtime validation.
+
 ## D — Command Center interaction smoke — PENDING
 One consolidated Bunker session only:
 - Arsenal equip/salvage updates state and Scrap
@@ -46,7 +51,5 @@ One expedition only:
 6. Confirm rewards/progression and selected operator/level/weapon persist.
 7. Final gameplay/runtime Console has no red DEADREACH errors.
 
-Note: the known Unity Device Simulator `StoreSerializedStates` / duplicate `AdaptivePerformanceUIExtension` exceptions are Unity editor-state defects, not DEADREACH gameplay exceptions. Release gameplay validation should use normal Game View if that local Device Simulator state remains corrupted.
-
 ## Release decision
-Production 0.14 presentation and compile gate are accepted. PR may leave Draft. Final merge/release packaging requires only the consolidated D + E runtime smoke above; no further UI redesign or static micro-check loop is required.
+Production 0.14 presentation, compile gate, operator integrity, and local editor-state cleanup are accepted. PR is ready for review. Final merge/release packaging requires only the consolidated D + E runtime smoke above; no further UI redesign or static micro-check loop is required.
