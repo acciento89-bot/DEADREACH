@@ -41,7 +41,7 @@ namespace Kamilunavo.Deadreach.UI
                 $"OPERATOR   {op.Name.ToUpperInvariant()} // {op.Role.ToUpperInvariant()}\n" +
                 $"PRIMARY    {(weapon != null ? weapon.displayNameSnapshot.ToUpperInvariant() : "DR-7 FIELD ISSUE")}\n" +
                 $"STREAK     {data.currentExtractionStreak}   //   BEST {data.bestExtractionStreak}",
-                11, FontStyle.Bold, new Color(0.88f, 0.91f, 0.91f, 1f), TextAnchor.UpperLeft);
+                11, FontStyle.Bold, new Color(0.94f, 0.96f, 0.96f, 1f), TextAnchor.UpperLeft);
             Place(loadout.rectTransform, 0.075f, 0.10f, 0.92f, 0.295f);
             AddBoltPair(mission);
 
@@ -182,20 +182,36 @@ namespace Kamilunavo.Deadreach.UI
 
         private Text CreateLabel(string name, Transform parent, string value, int size, FontStyle style, Color color, TextAnchor anchor)
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text), typeof(Shadow));
             go.transform.SetParent(parent, false);
 
             var text = go.GetComponent<Text>();
             text.font = _font;
             text.text = value;
-            text.fontSize = size;
+            text.fontSize = ReadableFontSize(size);
             text.fontStyle = style;
             text.color = color;
             text.alignment = anchor;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Truncate;
             text.raycastTarget = false;
+
+            var shadow = go.GetComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.72f);
+            shadow.effectDistance = new Vector2(1f, -1f);
+            shadow.useGraphicAlpha = true;
             return text;
+        }
+
+        private static int ReadableFontSize(int requested)
+        {
+            if (requested <= 9)
+                return requested + 3;
+            if (requested <= 12)
+                return requested + 2;
+            if (requested <= 16)
+                return requested + 1;
+            return requested;
         }
 
         private Image CreateImage(string name, Transform parent, Color color)
