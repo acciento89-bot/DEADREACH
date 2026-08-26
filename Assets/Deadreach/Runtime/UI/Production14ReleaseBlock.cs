@@ -39,7 +39,7 @@ namespace Kamilunavo.Deadreach.UI
         private string _releaseCharacterId = string.Empty;
         private string _releaseWeaponId = string.Empty;
 
-        private void LateUpdate()
+        private void Update()
         {
             if (_root == null)
                 return;
@@ -65,31 +65,9 @@ namespace Kamilunavo.Deadreach.UI
             _releaseLastSafeArea = safe;
             _releaseLastScreenSize = size;
 
-            var min = safe.position;
-            var max = safe.position + safe.size;
-            min.x /= Mathf.Max(1f, Screen.width);
-            min.y /= Mathf.Max(1f, Screen.height);
-            max.x /= Mathf.Max(1f, Screen.width);
-            max.y /= Mathf.Max(1f, Screen.height);
-
-            _root.anchorMin = min;
-            _root.anchorMax = max;
-            _root.offsetMin = Vector2.zero;
-            _root.offsetMax = Vector2.zero;
-
-            var scaler = _root.GetComponentInParent<CanvasScaler>();
-            if (scaler != null)
-            {
-                var aspect = safe.width / Mathf.Max(1f, safe.height);
-                scaler.referenceResolution = new Vector2(1600f, 900f);
-                scaler.matchWidthOrHeight = aspect >= 2.05f
-                    ? 0.68f
-                    : aspect <= 1.45f
-                        ? 0.34f
-                        : aspect <= 1.72f
-                            ? 0.42f
-                            : 0.53f;
-            }
+            // Production14CommandCenterUI owns the single responsive frame/scaler implementation.
+            // Do not re-apply the old 1600x900 scaler here; it would undo the final readability pass.
+            ApplyResponsiveFrame(true);
 
             if (EventSystem.current != null)
                 EventSystem.current.pixelDragThreshold = Mathf.Max(EventSystem.current.pixelDragThreshold, 12);
@@ -333,9 +311,7 @@ namespace Kamilunavo.Deadreach.UI
             }
             else if (_releaseStashCount != stashCount)
             {
-                message = stashCount > _releaseStashCount
-                    ? $"ARSENAL UPDATED // {stashCount:00} SECURED WEAPONS"
-                    : $"ARSENAL UPDATED // {stashCount:00} SECURED WEAPONS";
+                message = $"ARSENAL UPDATED // {stashCount:00} SECURED WEAPONS";
                 accent = _cyan;
             }
             else if (_releaseScrap != data.securedScrap)
