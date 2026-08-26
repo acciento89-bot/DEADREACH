@@ -7,9 +7,9 @@ using UnityEngine;
 namespace Kamilunavo.Deadreach.Editor
 {
     /// <summary>
-    /// Converts Meshy/glTF material instances used by the prepared 0.15 bunker prefabs to URP/Lit.
-    /// Meshy GLBs can import with a glTF shader that renders magenta in the current URP project.
-    /// This pass keeps the imported textures/colors but writes stable project-owned materials.
+    /// Production 0.15 Meshy material hardening. Every renderer slot in every prepared bunker
+    /// prefab receives a project-owned URP/Lit material. This also repairs glTF imports where the
+    /// renderer slot is null by recovering embedded textures directly from the source GLB.
     /// </summary>
     public static class Production15MeshyMaterialRepair
     {
@@ -64,8 +64,8 @@ namespace Kamilunavo.Deadreach.Editor
 
             var repairedPrefabs = 0;
             var repairedSlots = 0;
+            var generatedFallbackSlots = 0;
             var missing = new List<string>();
-            var cache = new Dictionary<string, Material>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var stem in Required)
             {
@@ -76,41 +76,46 @@ namespace Kamilunavo.Deadreach.Editor
                     continue;
                 }
 
+                var sourcePath = ResolveSourcePath(stem);
+                var embeddedTextures = LoadEmbeddedTextures(sourcePath);
                 var root = PrefabUtility.LoadPrefabContents(prefabPath);
                 var changed = false;
 
                 try
                 {
-                    foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+                    var renderers = root.GetComponentsInChildren<Renderer>(true);
+                    foreach (var renderer in renderers)
                     {
-                        var sourceMaterials = renderer.sharedMaterials;
-                        var targetMaterials = new Material[sourceMaterials.Length];
+                        if (renderer == null)
+                            continue;
 
-                        for (var i = 0; i < sourceMaterials.Length; i++)
+                        var sourceMaterials = renderer.sharedMaterials ?? Array.Empty<Material>();
+                        var slotCount = Mathf.Max(sourceMaterials.Length, GetSubMeshCount(renderer));
+                        if (slotCount <= 0)
+                            slotCount = 1;
+
+                        var targetMaterials = new Material[slotCount];
+                        for (var i = 0; i < slotCount; i++)
                         {
-                            var source = sourceMaterials[i];
-                            if (source == null)
-                            {
-                                targetMaterials[i] = null;
-                                continue;
-                            }
-
-                            var key = BuildMaterialKey(stem, source, i);
-                            if (!cache.TryGetValue(key, out var target))
-                            {
-                                target = CreateOrUpdateUrpMaterial(shader, stem, source, key);
-                                cache[key] = target;
-                            }
+                            var source = i < sourceMaterials.Length ? sourceMaterials[i] : null;
+                            var target = CreateOrUpdateUrpMaterial(
+                                shader,
+                                stem,
+                                renderer.name,
+                                i,
+                                source,
+                                embeddedTextures,
+                                source == null);
 
                             targetMaterials[i] = target;
-                            if (source != target)
-                            {
-                                changed = true;
-                                repairedSlots++;
-                            }
+                            repairedSlots++;
+                            if (source == null)
+                                generatedFallbackSlots++;
                         }
 
                         renderer.sharedMaterials = targetMaterials;
+                        EditorUtility.SetDirty(renderer);
+                        changed = true;
                     }
 
                     if (changed)
@@ -131,19 +136,28 @@ namespace Kamilunavo.Deadreach.Editor
             if (missing.Count > 0)
             {
                 Debug.LogWarning(
-                    $"DEADREACH 0.15 Meshy material repair completed for {repairedPrefabs} prefabs / {repairedSlots} material slots. " +
+                    $"DEADREACH 0.15 Meshy material hard repair completed for {repairedPrefabs} prefabs / " +
+                    $"{repairedSlots} renderer slots ({generatedFallbackSlots} null slots rebuilt). " +
                     $"Prepared prefab missing for: {string.Join(", ", missing)}");
                 return;
             }
 
             Debug.Log(
-                $"DEADREACH 0.15 Meshy material repair PASSED: 18/18 prepared prefabs checked, " +
-                $"{repairedPrefabs} prefabs updated, {repairedSlots} material slots normalized to URP/Lit.");
+                $"DEADREACH 0.15 Meshy material hard repair PASSED: 18/18 prepared prefabs rewritten, " +
+                $"{repairedSlots} renderer slots forced to URP/Lit, {generatedFallbackSlots} null slots rebuilt from GLB textures/fallbacks.");
         }
 
-        private static Material CreateOrUpdateUrpMaterial(Shader shader, string stem, Material source, string key)
+        private static Material CreateOrUpdateUrpMaterial(
+            Shader shader,
+            string stem,
+            string rendererName,
+            int slot,
+            Material source,
+            List<Texture> embeddedTextures,
+            bool sourceWasNull)
         {
-            var safeName = SanitizeFileName(key);
+            var safeRenderer = SanitizeFileName(string.IsNullOrWhiteSpace(rendererName) ? "Renderer" : rendererName);
+            var safeName = SanitizeFileName($"{stem}_{safeRenderer}_Slot{slot}_URP");
             var path = $"{MaterialRoot}/{safeName}.mat";
             var target = AssetDatabase.LoadAssetAtPath<Material>(path);
 
@@ -152,16 +166,27 @@ namespace Kamilunavo.Deadreach.Editor
                 target = new Material(shader) { name = safeName };
                 AssetDatabase.CreateAsset(target, path);
             }
-            else
-            {
-                target.shader = shader;
-            }
 
-            var baseTexture = FindTexture(source, BaseTextureNames) ?? source.mainTexture;
-            var normalTexture = FindTexture(source, NormalTextureNames);
-            var emissionTexture = FindTexture(source, EmissionTextureNames);
-            var occlusionTexture = FindTexture(source, OcclusionTextureNames);
-            var baseColor = FindColor(source, BaseColorNames, Color.white);
+            target.shader = shader;
+
+            var baseTexture = source != null ? FindTexture(source, BaseTextureNames) ?? source.mainTexture : null;
+            var normalTexture = source != null ? FindTexture(source, NormalTextureNames) : null;
+            var emissionTexture = source != null ? FindTexture(source, EmissionTextureNames) : null;
+            var occlusionTexture = source != null ? FindTexture(source, OcclusionTextureNames) : null;
+
+            baseTexture ??= PickTexture(embeddedTextures, "basecolor", "base_color", "albedo", "diffuse", "color");
+            normalTexture ??= PickTexture(embeddedTextures, "normal");
+            emissionTexture ??= PickTexture(embeddedTextures, "emiss", "emission");
+            occlusionTexture ??= PickTexture(embeddedTextures, "occlusion", "ao");
+
+            // Meshy GLBs commonly contain a single atlas texture with a generic name. If no semantic
+            // match exists, use the first texture that is not clearly a normal/metallic utility map.
+            if (baseTexture == null)
+                baseTexture = PickBestGenericBaseTexture(embeddedTextures);
+
+            var baseColor = source != null
+                ? FindColor(source, BaseColorNames, Color.white)
+                : Color.white;
 
             if (target.HasProperty("_BaseMap"))
                 target.SetTexture("_BaseMap", baseTexture);
@@ -175,6 +200,7 @@ namespace Kamilunavo.Deadreach.Editor
             }
             else
             {
+                if (target.HasProperty("_BumpMap")) target.SetTexture("_BumpMap", null);
                 target.DisableKeyword("_NORMALMAP");
             }
 
@@ -183,10 +209,11 @@ namespace Kamilunavo.Deadreach.Editor
                 target.SetTexture("_OcclusionMap", occlusionTexture);
                 target.SetFloat("_OcclusionStrength", 1f);
             }
+            else if (target.HasProperty("_OcclusionMap"))
+            {
+                target.SetTexture("_OcclusionMap", null);
+            }
 
-            // glTF packs metallic/roughness differently than URP's metallic/smoothness map.
-            // Until a texture repack pass is warranted, conservative scalar values look correct
-            // and avoid feeding an incompatible packed texture into URP/Lit.
             if (target.HasProperty("_Metallic"))
                 target.SetFloat("_Metallic", GuessMetallic(stem));
             if (target.HasProperty("_Smoothness"))
@@ -201,12 +228,90 @@ namespace Kamilunavo.Deadreach.Editor
             }
             else
             {
+                if (target.HasProperty("_EmissionMap")) target.SetTexture("_EmissionMap", null);
                 target.DisableKeyword("_EMISSION");
             }
+
+            // Never leave a Meshy renderer with an error/missing shader appearance. If the GLB did
+            // not expose a recoverable base texture, use a neutral bunker-metal base instead of magenta.
+            if (sourceWasNull && baseTexture == null && target.HasProperty("_BaseColor"))
+                target.SetColor("_BaseColor", GuessFallbackColor(stem));
 
             target.enableInstancing = true;
             EditorUtility.SetDirty(target);
             return target;
+        }
+
+        private static int GetSubMeshCount(Renderer renderer)
+        {
+            if (renderer is SkinnedMeshRenderer skinned && skinned.sharedMesh != null)
+                return skinned.sharedMesh.subMeshCount;
+
+            var filter = renderer.GetComponent<MeshFilter>();
+            return filter != null && filter.sharedMesh != null ? filter.sharedMesh.subMeshCount : 0;
+        }
+
+        private static string ResolveSourcePath(string stem)
+        {
+            var extensions = new[] { ".glb", ".gltf", ".fbx" };
+            foreach (var extension in extensions)
+            {
+                var path = $"{AssetRoot}/{stem}{extension}";
+                var absolute = ToAbsoluteProjectPath(path);
+                if (File.Exists(absolute))
+                    return path;
+            }
+            return null;
+        }
+
+        private static List<Texture> LoadEmbeddedTextures(string sourcePath)
+        {
+            var textures = new List<Texture>();
+            if (string.IsNullOrWhiteSpace(sourcePath))
+                return textures;
+
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(sourcePath))
+            {
+                if (asset is Texture texture && !textures.Contains(texture))
+                    textures.Add(texture);
+            }
+            return textures;
+        }
+
+        private static Texture PickTexture(IEnumerable<Texture> textures, params string[] keywords)
+        {
+            foreach (var texture in textures)
+            {
+                if (texture == null)
+                    continue;
+                var name = texture.name ?? string.Empty;
+                foreach (var keyword in keywords)
+                {
+                    if (name.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0)
+                        return texture;
+                }
+            }
+            return null;
+        }
+
+        private static Texture PickBestGenericBaseTexture(IEnumerable<Texture> textures)
+        {
+            Texture first = null;
+            foreach (var texture in textures)
+            {
+                if (texture == null)
+                    continue;
+                first ??= texture;
+                var name = texture.name ?? string.Empty;
+                if (name.IndexOf("normal", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    name.IndexOf("metal", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    name.IndexOf("rough", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    name.IndexOf("occlusion", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    name.IndexOf("emiss", StringComparison.OrdinalIgnoreCase) >= 0)
+                    continue;
+                return texture;
+            }
+            return first;
         }
 
         private static Texture FindTexture(Material source, IEnumerable<string> names)
@@ -235,13 +340,18 @@ namespace Kamilunavo.Deadreach.Editor
             return fallback;
         }
 
-        private static string BuildMaterialKey(string stem, Material source, int slot)
+        private static Color GuessFallbackColor(string stem)
         {
-            var sourcePath = AssetDatabase.GetAssetPath(source);
-            var sourceName = string.IsNullOrWhiteSpace(source.name) ? $"Slot_{slot}" : source.name;
-            if (!string.IsNullOrWhiteSpace(sourcePath))
-                return $"{stem}_{sourceName}_{Math.Abs(sourcePath.GetHashCode())}";
-            return $"{stem}_{sourceName}_{slot}";
+            if (stem.Contains("Floor", StringComparison.OrdinalIgnoreCase)) return new Color(0.17f, 0.18f, 0.18f);
+            if (stem.Contains("Wall", StringComparison.OrdinalIgnoreCase)) return new Color(0.20f, 0.21f, 0.21f);
+            if (stem.Contains("Door", StringComparison.OrdinalIgnoreCase)) return new Color(0.13f, 0.14f, 0.14f);
+            return new Color(0.18f, 0.19f, 0.19f);
+        }
+
+        private static string ToAbsoluteProjectPath(string assetPath)
+        {
+            var projectRoot = Directory.GetParent(Application.dataPath)?.FullName ?? string.Empty;
+            return Path.Combine(projectRoot, assetPath.Replace('/', Path.DirectorySeparatorChar));
         }
 
         private static string SanitizeFileName(string value)
