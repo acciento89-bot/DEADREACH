@@ -83,12 +83,12 @@ namespace Kamilunavo.Deadreach.UI
             var weaponName = weapon.Find("Weapon")?.GetComponent<Text>();
             if (weaponName != null)
             {
-                SetAnchors(weaponName.rectTransform, 0.035f, 0.57f, 0.94f, 0.91f);
-                weaponName.fontSize = 15;
-                weaponName.resizeTextForBestFit = true;
-                weaponName.resizeTextMinSize = 11;
-                weaponName.resizeTextMaxSize = 15;
-                weaponName.horizontalOverflow = HorizontalWrapMode.Wrap;
+                SetAnchors(weaponName.rectTransform, 0.025f, 0.57f, 0.94f, 0.91f);
+                // One deliberate line. At 12 px the longest current family/name/power string fits the card
+                // without Unity choosing an ugly mid-name word wrap.
+                weaponName.fontSize = 12;
+                weaponName.resizeTextForBestFit = false;
+                weaponName.horizontalOverflow = HorizontalWrapMode.Overflow;
                 weaponName.verticalOverflow = VerticalWrapMode.Truncate;
             }
 
@@ -125,7 +125,7 @@ namespace Kamilunavo.Deadreach.UI
             if (boss != null)
                 SetAnchors(boss, 0.32f, 0.868f, 0.68f, 0.932f);
 
-            Debug.Log("DEADREACH 0.16 Field Ops compact presentation applied: reduced HUD footprint, duplicate mission alert removed, weapon card reflowed.");
+            Debug.Log("DEADREACH 0.16 Field Ops compact presentation applied: reduced HUD footprint, duplicate mission alert removed, weapon card forced to a clean single line.");
             return true;
         }
 
