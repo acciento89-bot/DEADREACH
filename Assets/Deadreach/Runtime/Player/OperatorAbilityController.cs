@@ -4,6 +4,7 @@ using Kamilunavo.Deadreach.Feedback;
 using Kamilunavo.Deadreach.Input;
 using Kamilunavo.Deadreach.Persistence;
 using Kamilunavo.Deadreach.Progression;
+using Kamilunavo.Deadreach.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -209,6 +210,12 @@ namespace Kamilunavo.Deadreach.Player
 
             var safe = Screen.safeArea;
             var touchCapable = Application.isMobilePlatform || Touchscreen.current != null;
+
+            // Production 0.16 owns desktop expedition HUD presentation. Keep this legacy overlay only
+            // where it is still a functional mobile touch control; keyboard input continues through Update().
+            if (!touchCapable && FindFirstObjectByType<Production16FieldOpsUI>() != null)
+                return;
+
             EnsureStyles(touchCapable);
 
             if (touchCapable)
