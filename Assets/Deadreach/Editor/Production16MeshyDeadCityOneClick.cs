@@ -15,7 +15,8 @@ namespace Kamilunavo.Deadreach.Editor
             Production16MeshyDeadCityLayout.Build();
             Production16MeshyDeadCityLayoutPolish.Apply();
             Production16MeshyDeadCityFinalPolish.Apply();
-            Debug.Log("DEADREACH 0.16 Meshy Dead City integration pass finished. Assets prepared, materials hardened, accepted layout rebuilt, placement polish + final static/light polish applied. Review Scene view and triangle-budget log.");
+            Production16MeshyDeadCityOptimizationGate.Audit();
+            Debug.Log("DEADREACH 0.16 Meshy Dead City integration pass finished. Assets prepared, materials hardened, accepted layout rebuilt, placement/final polish applied and mobile geometry gate evaluated. Review Scene view + RETOPO REQUIRED lines.");
         }
     }
 }
